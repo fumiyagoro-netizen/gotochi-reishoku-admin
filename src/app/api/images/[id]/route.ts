@@ -43,7 +43,7 @@ export async function GET(
 
     const resHeaders: Record<string, string> = {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=86400",
+      "Cache-Control": "public, max-age=31536000, immutable",
     };
 
     if (download) {
