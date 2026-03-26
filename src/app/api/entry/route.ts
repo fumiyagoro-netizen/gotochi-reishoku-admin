@@ -1,0 +1,143 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+async function generateAnswerNo(awardId: number): Promise<string> {
+  const award = await prisma.award.findUnique({ where: { id: awardId } });
+  const year = award?.year ?? new Date().getFullYear();
+  const prefix = `WEB-${year}-`;
+
+  const lastEntry = await prisma.entry.findFirst({
+    where: { answerNo: { startsWith: prefix } },
+    orderBy: { answerNo: "desc" },
+  });
+
+  let nextNum = 1;
+  if (lastEntry) {
+    const lastNum = parseInt(lastEntry.answerNo.replace(prefix, ""), 10);
+    if (!isNaN(lastNum)) nextNum = lastNum + 1;
+  }
+
+  return `${prefix}${String(nextNum).padStart(5, "0")}`;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Validate required fields
+    const required = [
+      "awardId", "companyName", "contactLastName", "contactFirstName",
+      "email", "tradeShowExhibition", "productName", "productCategory",
+      "price", "purchaseLocation", "retailPartnership",
+      "bacteriaInspection", "expirationInspection", "manufacturingLicense",
+      "entryProductLicense", "hygieneManager",
+    ];
+    for (const field of required) {
+      if (!body[field]) {
+        return NextResponse.json(
+          { success: false, message: `${field} は必須です` },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!body.images || !body.images.some((img: { imageType: string }) => img.imageType === "main")) {
+      return NextResponse.json(
+        { success: false, message: "メイン画像は必須です" },
+        { status: 400 }
+      );
+    }
+
+    // Check active award
+    const award = await prisma.award.findUnique({
+      where: { id: body.awardId },
+    });
+    if (!award || !award.isActive) {
+      return NextResponse.json(
+        { success: false, message: "現在エントリーを受け付けておりません" },
+        { status: 400 }
+      );
+    }
+
+    // Generate answer number
+    const answerNo = await generateAnswerNo(body.awardId);
+
+    // Get IP address
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ipAddress = forwarded?.split(",")[0]?.trim() || "unknown";
+
+    // Create entry with images in a transaction
+    const entry = await prisma.$transaction(async (tx) => {
+      const newEntry = await tx.entry.create({
+        data: {
+          awardId: body.awardId,
+          answerNo,
+          answeredAt: new Date().toISOString(),
+          ipAddress,
+          companyName: body.companyName,
+          department: body.department || "",
+          contactLastName: body.contactLastName,
+          contactFirstName: body.contactFirstName,
+          email: body.email,
+          phone: body.phone || "",
+          tradeShowExhibition: body.tradeShowExhibition,
+          productName: body.productName,
+          productCategory: body.productCategory,
+          price: body.price,
+          purchaseLocation: body.purchaseLocation,
+          referenceUrl: body.referenceUrl || "",
+          localAppeal: body.localAppeal || "",
+          tasteAppeal: body.tasteAppeal || "",
+          packageAppeal: body.packageAppeal || "",
+          cookingMethod: body.cookingMethod || "",
+          otherAppeal: body.otherAppeal || "",
+          retailPartnership: body.retailPartnership,
+          bacteriaInspection: body.bacteriaInspection,
+          expirationInspection: body.expirationInspection,
+          manufacturingLicense: body.manufacturingLicense,
+          entryProductLicense: body.entryProductLicense,
+          hygieneManager: body.hygieneManager,
+          remarks: body.remarks || "",
+        },
+      });
+
+      // Create image records
+      if (body.images && body.images.length > 0) {
+        await tx.entryImage.createMany({
+          data: body.images.map(
+            (img: { blobUrl: string; imageType: string; sortOrder: number }) => ({
+              entryId: newEntry.id,
+              imageUrl: img.blobUrl,
+              imageType: img.imageType,
+              sortOrder: img.sortOrder,
+            })
+          ),
+        });
+      }
+
+      // Audit log
+      await tx.auditLog.create({
+        data: {
+          action: "create",
+          target: "entry",
+          targetId: String(newEntry.id),
+          detail: `Webフォームからエントリー: ${body.productName} (${body.companyName}) [${answerNo}]`,
+        },
+      });
+
+      return newEntry;
+    });
+
+    return NextResponse.json({
+      success: true,
+      answerNo: entry.answerNo,
+      entryId: entry.id,
+    });
+  } catch (error) {
+    console.error("Entry submission error:", error);
+    return NextResponse.json(
+      { success: false, message: "エントリーの送信に失敗しました" },
+      { status: 500 }
+    );
+  }
+}
