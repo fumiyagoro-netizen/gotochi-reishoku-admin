@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("viewer") // "admin" | "editor" | "viewer"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Award {
+  id        Int      @id @default(autoincrement())
+  year      Int      @unique
+  name      String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  entries   Entry[]
+}
+
+model Entry {
+  id                   Int          @id @default(autoincrement())
+  awardId              Int
+  answerNo             String       @unique
+  answeredAt           String
+  ipAddress            String       @default("")
+  companyName          String
+  department           String       @default("")
+  contactLastName      String
+  contactFirstName     String
+  email                String
+  phone                String       @default("")
+  tradeShowExhibition  String       @default("")
+  productName          String
+  productCategory      String       @default("")
+  price                String       @default("")
+  purchaseLocation     String       @default("")
+  referenceUrl         String       @default("")
+  productPhotosRaw     String       @default("")
+  localAppeal          String       @default("")
+  tasteAppeal          String       @default("")
+  packageAppeal        String       @default("")
+  cookingMethod        String       @default("")
+  otherAppeal          String       @default("")
+  retailPartnership    String       @default("")
+  bacteriaInspection   String       @default("")
+  expirationInspection String       @default("")
+  manufacturingLicense String       @default("")
+  entryProductLicense  String       @default("")
+  hygieneManager       String       @default("")
+  remarks              String       @default("")
+  prizeLevel           String       @default("")
+  createdAt            DateTime     @default(now())
+  award                Award        @relation(fields: [awardId], references: [id])
+  images               EntryImage[]
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  userEmail String   @default("")
+  action    String   // "create" | "update" | "delete" | "prize" | "upload" | "login" | "bulk_prize"
+  target    String   // "entry" | "user" | "session"
+  targetId  String   @default("")
+  detail    String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model EntryImage {
+  id        Int    @id @default(autoincrement())
+  entryId   Int
+  imageUrl  String
+  imageType String // "main" or "sub"
+  sortOrder Int    @default(0)
+  entry     Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+}
