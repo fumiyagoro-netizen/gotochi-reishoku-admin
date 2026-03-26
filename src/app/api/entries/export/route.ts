@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
 
           if (imageBuffer) {
             const imageId = workbook.addImage({
-              buffer: imageBuffer as Buffer,
+              buffer: imageBuffer as unknown as Buffer,
               extension: ext as "jpeg" | "png" | "gif",
             });
             sheet.addImage(imageId, {
