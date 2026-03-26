@@ -139,10 +139,8 @@ export async function GET(request: NextRequest) {
           }
 
           if (imageBuffer) {
-            const imageId = workbook.addImage({
-              buffer: imageBuffer as unknown as Buffer,
-              extension: ext as "jpeg" | "png" | "gif",
-            });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const imageId = workbook.addImage({ buffer: imageBuffer, extension: ext } as any);
             sheet.addImage(imageId, {
               tl: { col: 13, row: rowIndex - 1 },
               ext: { width: 100, height: 75 },
