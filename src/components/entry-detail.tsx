@@ -158,7 +158,7 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
       <div className="flex items-start gap-6 mb-8">
         {mainImage && (
           <img
-            src={mainImage.imageUrl}
+            src={`/api/images/${mainImage.id}`}
             alt={entry.productName}
             className="w-32 h-32 object-cover rounded-xl border border-gray-200"
           />
@@ -260,7 +260,7 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
               {mainImage && (
                 <div>
                   <img
-                    src={mainImage.imageUrl}
+                    src={`/api/images/${mainImage.id}`}
                     alt="メインビジュアル"
                     className="w-full aspect-square object-cover rounded-lg border border-gray-200"
                   />
@@ -268,7 +268,7 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
                     <p className="text-xs text-gray-500">メインビジュアル</p>
                     {permissions.canDownload && (
                       <a
-                        href={mainImage.imageUrl}
+                        href={`/api/images/${mainImage.id}?download=1`}
                         download
                         className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
                       >
@@ -281,7 +281,7 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
               {subImages.map((img, i) => (
                 <div key={img.id}>
                   <img
-                    src={img.imageUrl}
+                    src={`/api/images/${img.id}`}
                     alt={`サブ画像 ${i + 1}`}
                     className="w-full aspect-square object-cover rounded-lg border border-gray-200"
                   />
@@ -289,7 +289,7 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
                     <p className="text-xs text-gray-500">サブ画像 {i + 1}</p>
                     {permissions.canDownload && (
                       <a
-                        href={img.imageUrl}
+                        href={`/api/images/${img.id}?download=1`}
                         download
                         className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
                       >

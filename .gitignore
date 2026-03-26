@@ -36,8 +36,9 @@ next-env.d.ts
 prisma/*.db
 prisma/*.db-journal
 
-# uploads (local script output, not public/uploads)
+# uploads (images stored in Vercel Blob)
 /uploads
+public/uploads/
 
 # other project files
 /aelle/

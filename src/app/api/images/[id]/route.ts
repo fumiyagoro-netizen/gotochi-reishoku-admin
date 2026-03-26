@@ -17,11 +17,19 @@ export async function GET(
   const download = request.nextUrl.searchParams.get("download") === "1";
 
   try {
-    const res = await fetch(image.imageUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
+    const headers: Record<string, string> = {
+      "User-Agent": "Mozilla/5.0",
+    };
+
+    // Private Vercel Blob requires authorization token
+    if (image.imageUrl.includes("private.blob.vercel-storage.com")) {
+      const token = process.env.BLOB_READ_WRITE_TOKEN;
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    const res = await fetch(image.imageUrl, { headers });
 
     if (!res.ok) {
       return NextResponse.json(

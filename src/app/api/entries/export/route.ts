@@ -112,18 +112,45 @@ export async function GET(request: NextRequest) {
 
       // Embed main image if available
       if (mainImage) {
-        const imagePath = path.join(publicDir, mainImage.imageUrl);
-        if (fs.existsSync(imagePath)) {
-          const ext = path.extname(imagePath).toLowerCase().replace(".", "");
-          const imageId = workbook.addImage({
-            filename: imagePath,
-            extension: ext as "jpeg" | "png" | "gif",
-          });
-          sheet.addImage(imageId, {
-            tl: { col: 13, row: rowIndex - 1 },
-            ext: { width: 100, height: 75 },
-          });
-          sheet.getRow(rowIndex).height = 60;
+        try {
+          let imageBuffer: Buffer | null = null;
+          let ext = "jpeg";
+
+          if (mainImage.imageUrl.startsWith("/uploads/")) {
+            // Local file
+            const imagePath = path.join(publicDir, mainImage.imageUrl);
+            if (fs.existsSync(imagePath)) {
+              imageBuffer = fs.readFileSync(imagePath);
+              ext = path.extname(imagePath).toLowerCase().replace(".", "");
+            }
+          } else {
+            // Remote URL (Vercel Blob etc.)
+            const fetchHeaders: Record<string, string> = {};
+            if (mainImage.imageUrl.includes("private.blob.vercel-storage.com")) {
+              const token = process.env.BLOB_READ_WRITE_TOKEN;
+              if (token) fetchHeaders["Authorization"] = `Bearer ${token}`;
+            }
+            const res = await fetch(mainImage.imageUrl, { headers: fetchHeaders });
+            if (res.ok) {
+              imageBuffer = Buffer.from(await res.arrayBuffer());
+              const ct = res.headers.get("content-type") || "";
+              ext = ct.includes("png") ? "png" : ct.includes("gif") ? "gif" : "jpeg";
+            }
+          }
+
+          if (imageBuffer) {
+            const imageId = workbook.addImage({
+              buffer: imageBuffer,
+              extension: ext as "jpeg" | "png" | "gif",
+            });
+            sheet.addImage(imageId, {
+              tl: { col: 13, row: rowIndex - 1 },
+              ext: { width: 100, height: 75 },
+            });
+            sheet.getRow(rowIndex).height = 60;
+          }
+        } catch {
+          // Skip image on error
         }
       }
 

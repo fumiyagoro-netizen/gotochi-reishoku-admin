@@ -159,7 +159,7 @@ export default async function AwardsPage({ searchParams }: Props) {
                   <td className="px-4 py-3">
                     {entry.images[0] ? (
                       <img
-                        src={entry.images[0].imageUrl}
+                        src={`/api/images/${entry.images[0].id}`}
                         alt=""
                         className="w-12 h-12 object-cover rounded-lg"
                       />

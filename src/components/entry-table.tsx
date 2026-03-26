@@ -15,7 +15,7 @@ interface EntryRow {
   contactFirstName: string;
   answeredAt: string;
   prizeLevel: string;
-  images: { imageUrl: string }[];
+  images: { id: number; imageUrl: string }[];
 }
 
 const PRIZE_LEVELS = ["最高金賞", "金賞", "銀賞", "銅賞"];
@@ -171,7 +171,7 @@ export function EntryTable({
                 <td className="px-4 py-3">
                   {entry.images[0] ? (
                     <img
-                      src={entry.images[0].imageUrl}
+                      src={`/api/images/${entry.images[0].id}`}
                       alt=""
                       className="w-12 h-12 object-cover rounded-lg"
                     />
