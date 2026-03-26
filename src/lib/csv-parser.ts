@@ -53,7 +53,7 @@ export function parseImageUrls(rawPhotos: string): ParsedImage[] {
   let sortOrder = 0;
 
   for (const line of lines) {
-    const urlMatch = line.match(/https:\/\/app\.qubo\.jp\/files\/[^\s\]]+/);
+    const urlMatch = line.match(/https:\/\/[^\s\]]+\.(jpg|jpeg|png|gif|webp|pdf)/i);
     if (urlMatch) {
       const isMain = line.includes("メインビジュアル");
       images.push({

@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 async function main() {
   const csvPath =
     process.argv[2] ||
-    resolve(process.env.HOME || "~", "Downloads/qubo-ggstcjzot8zb.csv");
+    resolve(process.env.HOME || "~", "Downloads/entries.csv");
 
   console.log(`Reading CSV from: ${csvPath}`);
   const text = readFileSync(csvPath, "utf-8");

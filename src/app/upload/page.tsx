@@ -78,7 +78,7 @@ function UploadForm() {
             />
           </label>
           <p className="mt-2 text-xs text-gray-400">
-            quboからエクスポートしたCSVファイルをアップロードしてください
+            エントリーデータのCSVファイルをアップロードしてください
           </p>
 
           <label className="block mt-4">
