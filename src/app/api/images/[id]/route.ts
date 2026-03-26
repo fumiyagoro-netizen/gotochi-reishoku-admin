@@ -41,7 +41,7 @@ export async function GET(
     const contentType = res.headers.get("content-type") || "image/jpeg";
     const buffer = await res.arrayBuffer();
 
-    const headers: Record<string, string> = {
+    const resHeaders: Record<string, string> = {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=86400",
     };
@@ -54,10 +54,10 @@ export async function GET(
         : contentType.includes("webp")
         ? ".webp"
         : ".jpg";
-      headers["Content-Disposition"] = `attachment; filename="image-${id}${ext}"`;
+      resHeaders["Content-Disposition"] = `attachment; filename="image-${id}${ext}"`;
     }
 
-    return new NextResponse(buffer, { status: 200, headers });
+    return new NextResponse(buffer, { status: 200, headers: resHeaders });
   } catch {
     return NextResponse.json(
       { error: "Failed to fetch image" },
