@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
 import Link from "next/link";
+import { ReviewNotifyButton } from "@/components/review-notify-button";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,13 @@ export default async function ReviewsPage({ searchParams }: Props) {
             {total}件
           </span>
         </h2>
+        {statusFilter && (
+          <ReviewNotifyButton
+            statusFilter={statusFilter}
+            statusLabel={REVIEW_STATUSES.find((s) => s.value === statusFilter)?.label || ""}
+            entryIds={entries.map((e) => e.id)}
+          />
+        )}
       </div>
 
       {/* Status Summary Cards */}

@@ -7,6 +7,9 @@ interface Award {
   year: number;
   name: string;
   isActive: boolean;
+  entryStartDate: string | null;
+  entryEndDate: string | null;
+  notifyEmails: string;
   createdAt: string;
   _count: { entries: number };
 }
@@ -19,6 +22,10 @@ export default function AwardSettingsPage() {
   const [newName, setNewName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
+  const [editNotify, setEditNotify] = useState("");
 
   const fetchAwards = useCallback(async () => {
     const res = await fetch("/api/awards");
@@ -70,6 +77,29 @@ export default function AwardSettingsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isActive: newActive }),
     });
+    fetchAwards();
+  }
+
+  function startEdit(award: Award) {
+    setEditingId(award.id);
+    setEditStart(award.entryStartDate ? award.entryStartDate.slice(0, 10) : "");
+    setEditEnd(award.entryEndDate ? award.entryEndDate.slice(0, 10) : "");
+    setEditNotify(award.notifyEmails);
+  }
+
+  async function saveEdit(awardId: number) {
+    setSaving(true);
+    await fetch(`/api/awards/${awardId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entryStartDate: editStart || null,
+        entryEndDate: editEnd || null,
+        notifyEmails: editNotify,
+      }),
+    });
+    setEditingId(null);
+    setSaving(false);
     fetchAwards();
   }
 
@@ -196,6 +226,12 @@ export default function AwardSettingsPage() {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => startEdit(award)}
+                  className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  設定
+                </button>
+                <button
                   onClick={() => toggleActive(award)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                     award.isActive
@@ -216,7 +252,74 @@ export default function AwardSettingsPage() {
               </div>
             </div>
 
-            {award.isActive && (
+            {/* Period & notification info */}
+            <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+              {award.entryStartDate && (
+                <span>受付開始: {new Date(award.entryStartDate).toLocaleDateString("ja-JP")}</span>
+              )}
+              {award.entryEndDate && (
+                <span>受付締切: {new Date(award.entryEndDate).toLocaleDateString("ja-JP")}</span>
+              )}
+              {award.notifyEmails && (
+                <span>通知先: {award.notifyEmails.split(",").length}件</span>
+              )}
+            </div>
+
+            {/* Edit panel */}
+            {editingId === award.id && (
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">受付開始日</label>
+                    <input
+                      type="date"
+                      value={editStart}
+                      onChange={(e) => setEditStart(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">受付締切日</label>
+                    <input
+                      type="date"
+                      value={editEnd}
+                      onChange={(e) => setEditEnd(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    エントリー通知先メールアドレス
+                  </label>
+                  <input
+                    type="text"
+                    value={editNotify}
+                    onChange={(e) => setEditNotify(e.target.value)}
+                    placeholder="例: admin@example.com, staff@example.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">カンマ区切りで複数設定可。エントリー時に通知が届きます。</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => saveEdit(award.id)}
+                    disabled={saving}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {saving ? "保存中..." : "保存"}
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {award.isActive && editingId !== award.id && (
               <div className="mt-4 pt-4 border-t border-green-200">
                 <p className="text-sm text-green-700">
                   エントリーフォーム: <code className="bg-green-100 px-2 py-0.5 rounded text-xs">/entry</code> からこの年度にエントリーが受け付けられます

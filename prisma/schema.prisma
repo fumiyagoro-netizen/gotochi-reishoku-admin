@@ -19,12 +19,15 @@ model User {
 }
 
 model Award {
-  id        Int      @id @default(autoincrement())
-  year      Int      @unique
-  name      String
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  entries   Entry[]
+  id              Int       @id @default(autoincrement())
+  year            Int       @unique
+  name            String
+  isActive        Boolean   @default(false)
+  entryStartDate  DateTime?
+  entryEndDate    DateTime?
+  notifyEmails    String    @default("") // comma-separated email addresses for admin notifications
+  createdAt       DateTime  @default(now())
+  entries         Entry[]
 }
 
 model Entry {

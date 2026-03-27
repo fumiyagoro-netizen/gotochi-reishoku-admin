@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendEntryConfirmation, sendAdminNotification } from "@/lib/email";
 
 async function generateAnswerNo(awardId: number): Promise<string> {
   const award = await prisma.award.findUnique({ where: { id: awardId } });
@@ -48,13 +49,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check active award
+    // Check active award and entry period
     const award = await prisma.award.findUnique({
       where: { id: body.awardId },
     });
     if (!award || !award.isActive) {
       return NextResponse.json(
         { success: false, message: "現在エントリーを受け付けておりません" },
+        { status: 400 }
+      );
+    }
+
+    // Check entry period
+    const now = new Date();
+    if (award.entryStartDate && now < new Date(award.entryStartDate)) {
+      return NextResponse.json(
+        { success: false, message: "エントリー受付期間前です" },
+        { status: 400 }
+      );
+    }
+    if (award.entryEndDate && now > new Date(award.entryEndDate)) {
+      return NextResponse.json(
+        { success: false, message: "エントリー受付は終了しました" },
         { status: 400 }
       );
     }
@@ -127,6 +143,41 @@ export async function POST(request: NextRequest) {
 
       return newEntry;
     });
+
+    // Send emails (non-blocking)
+    const contactName = `${body.contactLastName} ${body.contactFirstName}`;
+    const emailPromises: Promise<unknown>[] = [
+      sendEntryConfirmation({
+        to: body.email,
+        answerNo: entry.answerNo,
+        companyName: body.companyName,
+        productName: body.productName,
+        contactName,
+        awardName: award.name,
+      }),
+    ];
+
+    // Send admin notification if notify emails are set
+    if (award.notifyEmails) {
+      const adminEmails = award.notifyEmails.split(",").map((e: string) => e.trim()).filter(Boolean);
+      if (adminEmails.length > 0) {
+        emailPromises.push(
+          sendAdminNotification({
+            to: adminEmails,
+            answerNo: entry.answerNo,
+            companyName: body.companyName,
+            productName: body.productName,
+            contactName,
+            email: body.email,
+            phone: body.phone || "",
+            awardName: award.name,
+          })
+        );
+      }
+    }
+
+    // Don't await emails - let them send in background
+    Promise.allSettled(emailPromises).catch(console.error);
 
     return NextResponse.json({
       success: true,

@@ -23,7 +23,7 @@ export async function PATCH(
     return NextResponse.json({ success: false, message: "年度が見つかりません" }, { status: 404 });
   }
 
-  const updateData: { name?: string; isActive?: boolean } = {};
+  const updateData: Record<string, unknown> = {};
   const changes: string[] = [];
 
   if (body.name !== undefined && body.name !== award.name) {
@@ -42,6 +42,21 @@ export async function PATCH(
         data: { isActive: false },
       });
     }
+  }
+
+  if (body.entryStartDate !== undefined) {
+    updateData.entryStartDate = body.entryStartDate ? new Date(body.entryStartDate) : null;
+    changes.push(`受付開始: ${body.entryStartDate || "未設定"}`);
+  }
+
+  if (body.entryEndDate !== undefined) {
+    updateData.entryEndDate = body.entryEndDate ? new Date(body.entryEndDate) : null;
+    changes.push(`受付締切: ${body.entryEndDate || "未設定"}`);
+  }
+
+  if (body.notifyEmails !== undefined) {
+    updateData.notifyEmails = body.notifyEmails;
+    changes.push(`通知先: ${body.notifyEmails || "未設定"}`);
   }
 
   if (Object.keys(updateData).length === 0) {

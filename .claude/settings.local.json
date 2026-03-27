@@ -9,7 +9,8 @@
       "Bash(ls /Users/fumiyamifune/Desktop/aelle/next.config.*)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git -C /Users/fumiyamifune/Desktop/aelle pull origin main --rebase)"
     ]
   }
 }
