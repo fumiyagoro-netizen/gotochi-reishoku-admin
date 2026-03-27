@@ -12,6 +12,7 @@ interface EntryRow {
   productName: string;
   companyName: string;
   productCategory: string;
+  prefecture: string;
   contactLastName: string;
   contactFirstName: string;
   answeredAt: string;
@@ -224,6 +225,7 @@ export function EntryTable({
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">写真</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">商品名</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">企業名</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">ご当地</th>
               {permissions.canSeePrivateInfo && (
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">担当者</th>
               )}
@@ -274,6 +276,13 @@ export function EntryTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">{entry.companyName}</td>
+                <td className="px-4 py-3">
+                  {entry.prefecture && (
+                    <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs rounded-full">
+                      {entry.prefecture}
+                    </span>
+                  )}
+                </td>
                 {permissions.canSeePrivateInfo && (
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {entry.contactLastName} {entry.contactFirstName}

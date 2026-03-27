@@ -25,6 +25,7 @@ interface EntryData {
   contactFirstName: string;
   email: string;
   phone: string;
+  prefecture: string;
   productName: string;
   productCategory: string;
   price: string;
@@ -240,6 +241,7 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
         </Section>
 
         <Section title="商品情報">
+          <EditableRow label="ご当地（都道府県）" field="prefecture" editing={editing} draft={draft} entry={entry} onChange={updateField} />
           <EditableRow label="商品名" field="productName" editing={editing} draft={draft} entry={entry} onChange={updateField} />
           <EditableRow label="カテゴリ" field="productCategory" editing={editing} draft={draft} entry={entry} onChange={updateField} />
           <EditableRow label="販売価格" field="price" editing={editing} draft={draft} entry={entry} onChange={updateField} />
