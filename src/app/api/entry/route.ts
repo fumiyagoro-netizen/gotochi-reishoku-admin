@@ -82,6 +82,10 @@ export async function POST(request: NextRequest) {
     const forwarded = request.headers.get("x-forwarded-for");
     const ipAddress = forwarded?.split(",")[0]?.trim() || "unknown";
 
+    // Helper: combine "その他" with custom text
+    const withOther = (value: string, otherText: string) =>
+      value === "その他" && otherText ? `その他: ${otherText}` : value;
+
     // Create entry with images in a transaction
     const entry = await prisma.$transaction(async (tx) => {
       const newEntry = await tx.entry.create({
@@ -96,12 +100,14 @@ export async function POST(request: NextRequest) {
           contactFirstName: body.contactFirstName,
           email: body.email,
           phone: body.phone || "",
-          tradeShowExhibition: body.tradeShowExhibition,
+          tradeShowExhibition: withOther(body.tradeShowExhibition, body.tradeShowOther),
           prefecture: body.prefecture || "",
           productName: body.productName,
-          productCategory: body.productCategory,
+          productCategory: withOther(body.productCategory, body.productCategoryOther),
           price: body.price,
-          purchaseLocation: body.purchaseLocation,
+          purchaseLocation: body.purchaseLocation.includes("その他") && body.purchaseLocationOther
+            ? body.purchaseLocation.replace("その他", `その他: ${body.purchaseLocationOther}`)
+            : body.purchaseLocation,
           referenceUrl: body.referenceUrl || "",
           localAppeal: body.localAppeal || "",
           tasteAppeal: body.tasteAppeal || "",
@@ -109,11 +115,11 @@ export async function POST(request: NextRequest) {
           cookingMethod: body.cookingMethod || "",
           otherAppeal: body.otherAppeal || "",
           retailPartnership: body.retailPartnership,
-          bacteriaInspection: body.bacteriaInspection,
-          expirationInspection: body.expirationInspection,
-          manufacturingLicense: body.manufacturingLicense,
-          entryProductLicense: body.entryProductLicense,
-          hygieneManager: body.hygieneManager,
+          bacteriaInspection: withOther(body.bacteriaInspection, body.bacteriaInspectionOther),
+          expirationInspection: withOther(body.expirationInspection, body.expirationInspectionOther),
+          manufacturingLicense: withOther(body.manufacturingLicense, body.manufacturingLicenseOther),
+          entryProductLicense: withOther(body.entryProductLicense, body.entryProductLicenseOther),
+          hygieneManager: withOther(body.hygieneManager, body.hygieneManagerOther),
           remarks: body.remarks || "",
         },
       });
@@ -177,8 +183,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Don't await emails - let them send in background
-    Promise.allSettled(emailPromises).catch(console.error);
+    // Await emails before returning response (required for Vercel serverless)
+    await Promise.allSettled(emailPromises);
 
     return NextResponse.json({
       success: true,
