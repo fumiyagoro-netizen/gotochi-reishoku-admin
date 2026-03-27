@@ -221,15 +221,17 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
         <Section title="企業・担当者情報">
           <EditableRow label="企業名" field="companyName" editing={editing} draft={draft} entry={entry} onChange={updateField} />
           <EditableRow label="部署・役職" field="department" editing={editing} draft={draft} entry={entry} onChange={updateField} />
-          <EditableRow label="担当者（姓）" field="contactLastName" editing={editing} draft={draft} entry={entry} onChange={updateField} />
-          <EditableRow label="担当者（名）" field="contactFirstName" editing={editing} draft={draft} entry={entry} onChange={updateField} />
           {permissions.canSeePrivateInfo ? (
             <>
+              <EditableRow label="担当者（姓）" field="contactLastName" editing={editing} draft={draft} entry={entry} onChange={updateField} />
+              <EditableRow label="担当者（名）" field="contactFirstName" editing={editing} draft={draft} entry={entry} onChange={updateField} />
               <EditableRow label="メール" field="email" editing={editing} draft={draft} entry={entry} onChange={updateField} isEmail={!editing} />
               <EditableRow label="電話番号" field="phone" editing={editing} draft={draft} entry={entry} onChange={updateField} />
             </>
           ) : (
             <>
+              <MaskedRow label="担当者（姓）" value={entry.contactLastName} />
+              <MaskedRow label="担当者（名）" value={entry.contactFirstName} />
               <MaskedRow label="メール" value={entry.email} />
               <MaskedRow label="電話番号" value={entry.phone} />
             </>
