@@ -224,7 +224,6 @@ export function EntryTable({
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">写真</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">商品名</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">企業名</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">カテゴリ</th>
               {permissions.canSeePrivateInfo && (
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">担当者</th>
               )}
@@ -275,11 +274,6 @@ export function EntryTable({
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-700">{entry.companyName}</td>
-                <td className="px-4 py-3">
-                  <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                    {entry.productCategory || "未分類"}
-                  </span>
-                </td>
                 {permissions.canSeePrivateInfo && (
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {entry.contactLastName} {entry.contactFirstName}
