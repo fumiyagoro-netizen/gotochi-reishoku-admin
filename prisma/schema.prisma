@@ -59,6 +59,7 @@ model Entry {
   hygieneManager       String       @default("")
   remarks              String       @default("")
   prizeLevel           String       @default("")
+  reviewStatus         String       @default("")
   createdAt            DateTime     @default(now())
   award                Award        @relation(fields: [awardId], references: [id])
   images               EntryImage[]

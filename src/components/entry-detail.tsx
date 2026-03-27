@@ -6,6 +6,7 @@ import Link from "next/link";
 import { DeleteEntryButton } from "./delete-entry-button";
 import { PdfDownloadButton } from "./pdf-download-button";
 import { PrizeSelector } from "./prize-selector";
+import { ReviewStatusSelector, ReviewBadge } from "./review-status-selector";
 import { useRole } from "@/lib/role-context";
 
 interface EntryImage {
@@ -43,6 +44,7 @@ interface EntryData {
   hygieneManager: string;
   remarks: string;
   prizeLevel: string;
+  reviewStatus: string;
   images: EntryImage[];
 }
 
@@ -194,14 +196,23 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
               回答番号: {entry.answerNo}
             </span>
           </div>
-          <div className="mt-3">
-            {permissions.canSetPrize ? (
-              <PrizeSelector entryId={entry.id} currentPrize={entry.prizeLevel} />
-            ) : entry.prizeLevel ? (
-              <span className="inline-flex items-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-300 text-sm font-bold rounded-full">
-                🏆 {entry.prizeLevel}
-              </span>
-            ) : null}
+          <div className="mt-3 space-y-2">
+            <div>
+              {permissions.canSetPrize ? (
+                <PrizeSelector entryId={entry.id} currentPrize={entry.prizeLevel} />
+              ) : entry.prizeLevel ? (
+                <span className="inline-flex items-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-300 text-sm font-bold rounded-full">
+                  🏆 {entry.prizeLevel}
+                </span>
+              ) : null}
+            </div>
+            <div>
+              {permissions.canSetPrize ? (
+                <ReviewStatusSelector entryId={entry.id} currentStatus={entry.reviewStatus} />
+              ) : entry.reviewStatus ? (
+                <ReviewBadge status={entry.reviewStatus} />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

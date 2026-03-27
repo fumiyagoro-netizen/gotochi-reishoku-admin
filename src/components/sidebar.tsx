@@ -42,6 +42,7 @@ export function Sidebar({
     { href: "/", label: "ダッシュボード", icon: "📊", show: true },
     { href: "/entries", label: "エントリー一覧", icon: "📋", show: true },
     { href: "/awards", label: "受賞一覧", icon: "🏆", show: true },
+    { href: "/reviews", label: "審査状況", icon: "✅", show: true },
     { href: "/upload", label: "CSVアップロード", icon: "📁", show: perms.canUpload },
     { href: "/award-settings", label: "年度管理", icon: "📅", show: role === "admin" },
     { href: "/users", label: "ユーザー管理", icon: "👥", show: role === "admin" },

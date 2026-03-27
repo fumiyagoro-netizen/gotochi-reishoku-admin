@@ -30,6 +30,7 @@ const EDITABLE_FIELDS = [
   "hygieneManager",
   "remarks",
   "prizeLevel",
+  "reviewStatus",
 ];
 
 export async function PATCH(
@@ -51,6 +52,13 @@ export async function PATCH(
     if ("prizeLevel" in body && !perms.canSetPrize) {
       return NextResponse.json(
         { success: false, message: "受賞設定の権限がありません" },
+        { status: 403 }
+      );
+    }
+
+    if ("reviewStatus" in body && !perms.canSetPrize) {
+      return NextResponse.json(
+        { success: false, message: "審査状況設定の権限がありません" },
         { status: 403 }
       );
     }
@@ -88,10 +96,11 @@ export async function PATCH(
     if (changes.length > 0) {
       const user = await getUserFromRequest(request);
       const isPrize = "prizeLevel" in body && Object.keys(body).length === 1;
+      const isReview = "reviewStatus" in body && Object.keys(body).length === 1;
       await writeAuditLog({
         userId: user?.userId,
         userEmail: user?.email,
-        action: isPrize ? "prize" : "update",
+        action: isPrize ? "prize" : isReview ? "review" : "update",
         target: "entry",
         targetId: String(entryId),
         detail: `${entry.productName}（${entry.companyName}）: ${changes.join(", ")}`,

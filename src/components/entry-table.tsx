@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PrizeBadge } from "./prize-selector";
+import { ReviewBadge } from "./review-status-selector";
 import { useRole } from "@/lib/role-context";
 
 interface EntryRow {
@@ -15,6 +16,7 @@ interface EntryRow {
   contactFirstName: string;
   answeredAt: string;
   prizeLevel: string;
+  reviewStatus: string;
   images: { id: number; imageUrl: string }[];
 }
 
@@ -147,6 +149,7 @@ export function EntryTable({
               {permissions.canSeePrivateInfo && (
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">担当者</th>
               )}
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">審査状況</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">回答日</th>
             </tr>
           </thead>
@@ -203,6 +206,9 @@ export function EntryTable({
                     {entry.contactLastName} {entry.contactFirstName}
                   </td>
                 )}
+                <td className="px-4 py-3">
+                  <ReviewBadge status={entry.reviewStatus} />
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
                   {entry.answeredAt.split(" ")[0]}
                 </td>
