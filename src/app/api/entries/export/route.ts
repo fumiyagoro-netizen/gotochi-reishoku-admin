@@ -59,6 +59,8 @@ export async function GET(request: NextRequest) {
       { header: "営業許可証（商品）", key: "entryProductLicense", width: 20 },
       { header: "食品衛生責任者", key: "hygieneManager", width: 20 },
       { header: "備考", key: "remarks", width: 30 },
+      { header: "審査状況", key: "reviewStatus", width: 20 },
+      { header: "受賞結果", key: "prizeLevel", width: 15 },
     ];
     sheet.columns = columns;
 
@@ -108,6 +110,16 @@ export async function GET(request: NextRequest) {
         entryProductLicense: entry.entryProductLicense,
         hygieneManager: entry.hygieneManager,
         remarks: entry.remarks,
+        reviewStatus: entry.reviewStatus
+          ? entry.reviewStatus
+              .split(",")
+              .filter(Boolean)
+              .map((s: string) =>
+                s === "first_passed" ? "1次審査通過" : s === "second_passed" ? "2次審査通過" : s
+              )
+              .join("、")
+          : "",
+        prizeLevel: entry.prizeLevel || "",
       });
 
       // Embed main image if available
