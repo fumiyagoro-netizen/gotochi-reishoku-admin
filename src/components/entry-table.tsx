@@ -21,6 +21,10 @@ interface EntryRow {
 }
 
 const PRIZE_LEVELS = ["最高金賞", "金賞", "銀賞", "銅賞"];
+const REVIEW_STATUSES = [
+  { value: "first_passed", label: "1次審査通過" },
+  { value: "second_passed", label: "2次審査通過" },
+];
 
 export function EntryTable({
   entries,
@@ -31,7 +35,7 @@ export function EntryTable({
 }) {
   const { permissions } = useRole();
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState(false);
+  const [bulkAction, setBulkAction] = useState<"" | "prize" | "review">("");
   const [applying, setApplying] = useState(false);
   const router = useRouter();
 
@@ -61,7 +65,30 @@ export function EntryTable({
       const data = await res.json();
       if (data.success) {
         setSelected(new Set());
-        setBulkAction(false);
+        setBulkAction("");
+        router.refresh();
+      } else {
+        alert(data.message);
+      }
+    } catch {
+      alert("一括設定に失敗しました");
+    } finally {
+      setApplying(false);
+    }
+  }
+
+  async function applyReview(reviewStatus: string) {
+    setApplying(true);
+    try {
+      const res = await fetch("/api/entries/bulk-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryIds: Array.from(selected), reviewStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelected(new Set());
+        setBulkAction("");
         router.refresh();
       } else {
         alert(data.message);
@@ -81,15 +108,25 @@ export function EntryTable({
           <span className="text-sm font-medium text-blue-700">
             {selected.size}件選択中
           </span>
-          {!bulkAction ? (
-            <button
-              onClick={() => setBulkAction(true)}
-              className="px-3 py-1.5 bg-amber-500 text-white text-sm rounded-lg font-medium
-                hover:bg-amber-600 transition-colors"
-            >
-              🏆 受賞を一括設定
-            </button>
-          ) : (
+          {bulkAction === "" && (
+            <>
+              <button
+                onClick={() => setBulkAction("prize")}
+                className="px-3 py-1.5 bg-amber-500 text-white text-sm rounded-lg font-medium
+                  hover:bg-amber-600 transition-colors"
+              >
+                🏆 受賞を一括設定
+              </button>
+              <button
+                onClick={() => setBulkAction("review")}
+                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium
+                  hover:bg-green-700 transition-colors"
+              >
+                ✅ 審査状況を一括設定
+              </button>
+            </>
+          )}
+          {bulkAction === "prize" && (
             <div className="flex items-center gap-2 flex-wrap">
               {PRIZE_LEVELS.map((level) => (
                 <button
@@ -111,7 +148,36 @@ export function EntryTable({
                 取り消す
               </button>
               <button
-                onClick={() => setBulkAction(false)}
+                onClick={() => setBulkAction("")}
+                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
+              >
+                キャンセル
+              </button>
+            </div>
+          )}
+          {bulkAction === "review" && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {REVIEW_STATUSES.map((rs) => (
+                <button
+                  key={rs.value}
+                  onClick={() => applyReview(rs.value)}
+                  disabled={applying}
+                  className="px-3 py-1.5 border border-green-300 bg-white text-sm rounded-lg font-medium
+                    text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors"
+                >
+                  {rs.label}
+                </button>
+              ))}
+              <button
+                onClick={() => applyReview("")}
+                disabled={applying}
+                className="px-3 py-1.5 border border-red-300 bg-white text-sm rounded-lg
+                  text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              >
+                取り消す
+              </button>
+              <button
+                onClick={() => setBulkAction("")}
                 className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
               >
                 キャンセル
@@ -119,7 +185,7 @@ export function EntryTable({
             </div>
           )}
           <button
-            onClick={() => { setSelected(new Set()); setBulkAction(false); }}
+            onClick={() => { setSelected(new Set()); setBulkAction(""); }}
             className="ml-auto text-sm text-gray-500 hover:text-gray-700"
           >
             選択解除
