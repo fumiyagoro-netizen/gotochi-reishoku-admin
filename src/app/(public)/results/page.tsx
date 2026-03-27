@@ -93,7 +93,7 @@ export default async function ResultsPage() {
                     {mainImage ? (
                       <div className="aspect-square bg-gray-100">
                         <img
-                          src={mainImage.imageUrl}
+                          src={`/api/images/${mainImage.id}`}
                           alt={entry.productName}
                           className="w-full h-full object-cover"
                         />
