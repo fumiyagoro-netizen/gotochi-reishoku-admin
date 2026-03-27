@@ -13,6 +13,11 @@ const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }
   second_passed: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-300" },
 };
 
+function parseStatuses(raw: string): string[] {
+  if (!raw) return [];
+  return raw.split(",").filter(Boolean);
+}
+
 export function ReviewStatusSelector({
   entryId,
   currentStatus,
@@ -20,12 +25,18 @@ export function ReviewStatusSelector({
   entryId: number;
   currentStatus: string;
 }) {
-  const [status, setStatus] = useState(currentStatus);
+  const [statuses, setStatuses] = useState<string[]>(parseStatuses(currentStatus));
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
   async function toggleStatus(value: string) {
-    const newStatus = value === status ? "" : value;
+    const current = new Set(statuses);
+    if (current.has(value)) {
+      current.delete(value);
+    } else {
+      current.add(value);
+    }
+    const newStatus = Array.from(current).join(",");
     setSaving(true);
     try {
       const res = await fetch(`/api/entries/${entryId}`, {
@@ -35,7 +46,7 @@ export function ReviewStatusSelector({
       });
       const data = await res.json();
       if (data.success) {
-        setStatus(newStatus);
+        setStatuses(Array.from(current));
         router.refresh();
       }
     } catch {
@@ -48,7 +59,7 @@ export function ReviewStatusSelector({
   return (
     <div className="flex items-center gap-2">
       {REVIEW_STATUSES.map((rs) => {
-        const isActive = status === rs.value;
+        const isActive = statuses.includes(rs.value);
         const colors = REVIEW_COLORS[rs.value];
         return (
           <button
@@ -71,15 +82,23 @@ export function ReviewStatusSelector({
 }
 
 export function ReviewBadge({ status }: { status: string }) {
-  if (!status) return null;
-  const rs = REVIEW_STATUSES.find((r) => r.value === status);
-  if (!rs) return null;
-  const colors = REVIEW_COLORS[status];
+  const active = parseStatuses(status);
+  if (active.length === 0) return null;
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
-    >
-      {rs.icon} {rs.label}
-    </span>
+    <div className="flex items-center gap-1 flex-wrap">
+      {active.map((s) => {
+        const rs = REVIEW_STATUSES.find((r) => r.value === s);
+        if (!rs) return null;
+        const colors = REVIEW_COLORS[s];
+        return (
+          <span
+            key={s}
+            className={`inline-flex items-center px-2.5 py-0.5 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
+          >
+            {rs.icon} {rs.label}
+          </span>
+        );
+      })}
+    </div>
   );
 }

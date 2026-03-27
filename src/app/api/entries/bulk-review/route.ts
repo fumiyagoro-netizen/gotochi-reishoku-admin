@@ -5,6 +5,10 @@ import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 const VALID_STATUSES = ["first_passed", "second_passed", ""];
+const LABELS: Record<string, string> = {
+  first_passed: "1次審査通過",
+  second_passed: "2次審査通過",
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { entryIds, reviewStatus } = await request.json();
+    const { entryIds, reviewStatus, action } = await request.json();
+    // action: "add" (default), "remove", or "clear"
 
     if (!Array.isArray(entryIds) || entryIds.length === 0) {
       return NextResponse.json(
@@ -27,41 +32,84 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!VALID_STATUSES.includes(reviewStatus)) {
+    if (action !== "clear" && !VALID_STATUSES.includes(reviewStatus)) {
       return NextResponse.json(
         { success: false, message: "無効な審査状況です" },
         { status: 400 }
       );
     }
 
-    const LABELS: Record<string, string> = {
-      first_passed: "1次審査通過",
-      second_passed: "2次審査通過",
-    };
+    const ids = entryIds.map(Number);
 
-    const result = await prisma.entry.updateMany({
-      where: { id: { in: entryIds.map(Number) } },
-      data: { reviewStatus },
+    if (action === "clear") {
+      // Clear all review statuses
+      const result = await prisma.entry.updateMany({
+        where: { id: { in: ids } },
+        data: { reviewStatus: "" },
+      });
+
+      const user = await getUserFromRequest(request);
+      await writeAuditLog({
+        userId: user?.userId,
+        userEmail: user?.email,
+        action: "bulk_review",
+        target: "entry",
+        targetId: ids.join(","),
+        detail: `${result.count}件の審査状況をすべて取り消し`,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `${result.count}件の審査状況をすべて取り消しました`,
+        count: result.count,
+      });
+    }
+
+    // Add or remove a specific status
+    const entries = await prisma.entry.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, reviewStatus: true },
     });
 
+    let updatedCount = 0;
+    for (const entry of entries) {
+      const current = entry.reviewStatus ? entry.reviewStatus.split(",").filter(Boolean) : [];
+      let updated: string[];
+
+      if (action === "remove") {
+        updated = current.filter((s) => s !== reviewStatus);
+      } else {
+        // add (default)
+        if (current.includes(reviewStatus)) continue;
+        updated = [...current, reviewStatus];
+      }
+
+      await prisma.entry.update({
+        where: { id: entry.id },
+        data: { reviewStatus: updated.join(",") },
+      });
+      updatedCount++;
+    }
+
     const user = await getUserFromRequest(request);
+    const label = LABELS[reviewStatus] || reviewStatus;
     await writeAuditLog({
       userId: user?.userId,
       userEmail: user?.email,
       action: "bulk_review",
       target: "entry",
-      targetId: entryIds.join(","),
-      detail: reviewStatus
-        ? `${result.count}件を「${LABELS[reviewStatus]}」に設定`
-        : `${result.count}件の審査状況を取り消し`,
+      targetId: ids.join(","),
+      detail: action === "remove"
+        ? `${updatedCount}件から「${label}」を削除`
+        : `${updatedCount}件に「${label}」を追加`,
     });
 
     return NextResponse.json({
       success: true,
-      message: reviewStatus
-        ? `${result.count}件を「${LABELS[reviewStatus]}」に設定しました`
-        : `${result.count}件の審査状況を取り消しました`,
-      count: result.count,
+      message: action === "remove"
+        ? `${updatedCount}件から「${label}」を削除しました`
+        : `${updatedCount}件に「${label}」を追加しました`,
+      count: updatedCount,
     });
   } catch (error) {
     console.error("Bulk review error:", error);

@@ -32,14 +32,17 @@ export default async function ReviewsPage({ searchParams }: Props) {
   const year = await resolveAwardYear(params.year);
   const yearParam = year ? `&year=${year}` : "";
 
+  // Use "contains" to match comma-separated values
   const where = {
     AND: [
       awardId ? { awardId } : {},
-      { reviewStatus: statusFilter ? statusFilter : { not: "" } },
+      statusFilter
+        ? { reviewStatus: { contains: statusFilter } }
+        : { reviewStatus: { not: "" } },
     ],
   };
 
-  const [entries, total, statusCounts] = await Promise.all([
+  const [entries, total] = await Promise.all([
     prisma.entry.findMany({
       where,
       skip: (page - 1) * PAGE_SIZE,
@@ -53,20 +56,28 @@ export default async function ReviewsPage({ searchParams }: Props) {
       },
     }),
     prisma.entry.count({ where }),
-    prisma.entry.groupBy({
-      by: ["reviewStatus"],
-      where: {
-        AND: [
-          awardId ? { awardId } : {},
-          { reviewStatus: { not: "" } },
-        ],
-      },
-      _count: { id: true },
+  ]);
+
+  // Count entries that contain each status (can overlap)
+  const awardWhere = awardId ? { awardId } : {};
+  const [firstCount, secondCount, allReviewed] = await Promise.all([
+    prisma.entry.count({
+      where: { ...awardWhere, reviewStatus: { contains: "first_passed" } },
+    }),
+    prisma.entry.count({
+      where: { ...awardWhere, reviewStatus: { contains: "second_passed" } },
+    }),
+    prisma.entry.count({
+      where: { ...awardWhere, reviewStatus: { not: "" } },
     }),
   ]);
 
+  const statusCountMap: Record<string, number> = {
+    first_passed: firstCount,
+    second_passed: secondCount,
+  };
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const totalReviewed = statusCounts.reduce((sum, sc) => sum + sc._count.id, 0);
 
   return (
     <div className="p-8">
@@ -89,11 +100,11 @@ export default async function ReviewsPage({ searchParams }: Props) {
               : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
           }`}
         >
-          <p className="text-2xl font-bold">{totalReviewed}</p>
+          <p className="text-2xl font-bold">{allReviewed}</p>
           <p className="text-xs mt-0.5">すべて</p>
         </Link>
         {REVIEW_STATUSES.map((rs) => {
-          const count = statusCounts.find((sc) => sc.reviewStatus === rs.value)?._count.id || 0;
+          const count = statusCountMap[rs.value] || 0;
           const colors = REVIEW_COLORS[rs.value];
           const isActive = statusFilter === rs.value;
           return (
@@ -140,12 +151,9 @@ export default async function ReviewsPage({ searchParams }: Props) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {entries.map((entry) => {
-              const rs = REVIEW_STATUSES.find((r) => r.value === entry.reviewStatus);
-              const colors = REVIEW_COLORS[entry.reviewStatus] || {
-                bg: "bg-gray-50",
-                text: "text-gray-600",
-                border: "border-gray-300",
-              };
+              const activeStatuses = entry.reviewStatus
+                ? entry.reviewStatus.split(",").filter(Boolean)
+                : [];
               return (
                 <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
@@ -162,11 +170,24 @@ export default async function ReviewsPage({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-3 py-1 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
-                    >
-                      {rs?.icon} {rs?.label}
-                    </span>
+                    <div className="flex gap-1 flex-wrap">
+                      {activeStatuses.map((s) => {
+                        const rs = REVIEW_STATUSES.find((r) => r.value === s);
+                        const colors = REVIEW_COLORS[s] || {
+                          bg: "bg-gray-50",
+                          text: "text-gray-600",
+                          border: "border-gray-300",
+                        };
+                        return (
+                          <span
+                            key={s}
+                            className={`inline-block px-3 py-1 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
+                          >
+                            {rs?.icon} {rs?.label}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <Link

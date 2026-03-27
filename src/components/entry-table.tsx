@@ -77,13 +77,13 @@ export function EntryTable({
     }
   }
 
-  async function applyReview(reviewStatus: string) {
+  async function applyReview(reviewStatus: string, action: "add" | "remove" | "clear") {
     setApplying(true);
     try {
       const res = await fetch("/api/entries/bulk-review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entryIds: Array.from(selected), reviewStatus }),
+        body: JSON.stringify({ entryIds: Array.from(selected), reviewStatus, action }),
       });
       const data = await res.json();
       if (data.success) {
@@ -160,21 +160,34 @@ export function EntryTable({
               {REVIEW_STATUSES.map((rs) => (
                 <button
                   key={rs.value}
-                  onClick={() => applyReview(rs.value)}
+                  onClick={() => applyReview(rs.value, "add")}
                   disabled={applying}
                   className="px-3 py-1.5 border border-green-300 bg-white text-sm rounded-lg font-medium
                     text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors"
                 >
-                  {rs.label}
+                  + {rs.label}
                 </button>
               ))}
+              <span className="text-gray-300">|</span>
+              {REVIEW_STATUSES.map((rs) => (
+                <button
+                  key={`rm-${rs.value}`}
+                  onClick={() => applyReview(rs.value, "remove")}
+                  disabled={applying}
+                  className="px-3 py-1.5 border border-orange-300 bg-white text-sm rounded-lg font-medium
+                    text-orange-600 hover:bg-orange-50 disabled:opacity-50 transition-colors"
+                >
+                  - {rs.label}
+                </button>
+              ))}
+              <span className="text-gray-300">|</span>
               <button
-                onClick={() => applyReview("")}
+                onClick={() => applyReview("", "clear")}
                 disabled={applying}
                 className="px-3 py-1.5 border border-red-300 bg-white text-sm rounded-lg
                   text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
               >
-                取り消す
+                すべて取り消す
               </button>
               <button
                 onClick={() => setBulkAction("")}
