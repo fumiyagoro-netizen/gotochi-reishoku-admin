@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
           email: body.email,
           phone: body.phone || "",
           tradeShowExhibition: body.tradeShowExhibition,
+          prefecture: body.prefecture || "",
           productName: body.productName,
           productCategory: body.productCategory,
           price: body.price,

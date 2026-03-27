@@ -21,7 +21,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const year = await resolveAwardYear(params.year);
   const where = awardId ? { awardId } : {};
 
-  const [totalEntries, categories, companies, prizeCounts, categoryPrizeCounts] =
+  const [totalEntries, categories, companies, prizeCounts, categoryPrizeCounts, prefectureCounts] =
     await Promise.all([
       prisma.entry.count({ where }),
       prisma.entry.groupBy({
@@ -44,6 +44,12 @@ export default async function DashboardPage({ searchParams }: Props) {
         by: ["productCategory", "prizeLevel"],
         where: { ...where, prizeLevel: { not: "" } },
         _count: { id: true },
+      }),
+      prisma.entry.groupBy({
+        by: ["prefecture"],
+        where: { ...where, prefecture: { not: "" } },
+        _count: { id: true },
+        orderBy: { _count: { id: "desc" } },
       }),
     ]);
 
@@ -191,6 +197,21 @@ export default async function DashboardPage({ searchParams }: Props) {
               ))}
             </div>
           </div>
+
+          {/* Prefecture Distribution */}
+          {prefectureCounts.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6 lg:col-span-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">ご当地（都道府県）別エントリー数</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {prefectureCounts.map((pref) => (
+                  <div key={pref.prefecture} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">{pref.prefecture}</span>
+                    <span className="text-sm font-bold text-blue-600">{pref._count.id}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

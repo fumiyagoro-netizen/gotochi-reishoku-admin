@@ -20,6 +20,7 @@ interface FormData {
   phone: string;
   tradeShowExhibition: string;
   tradeShowOther: string;
+  prefecture: string;
   productName: string;
   productCategory: string;
   productCategoryOther: string;
@@ -57,6 +58,7 @@ const INITIAL_FORM: FormData = {
   phone: "",
   tradeShowExhibition: "",
   tradeShowOther: "",
+  prefecture: "",
   productName: "",
   productCategory: "",
   productCategoryOther: "",
@@ -84,6 +86,16 @@ const INITIAL_FORM: FormData = {
   agreePrivacy: false,
 };
 
+const PREFECTURES = [
+  "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
+  "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
+  "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県",
+  "岐阜県", "静岡県", "愛知県", "三重県",
+  "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県",
+  "鳥取県", "島根県", "岡山県", "広島県", "山口県",
+  "徳島県", "香川県", "愛媛県", "高知県",
+  "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県",
+];
 const CATEGORIES = ["お惣菜", "米飯", "スイーツ", "その他"];
 const PURCHASE_LOCATIONS = [
   "ネット直販",
@@ -248,6 +260,7 @@ export function EntryForm({
       errs.emailConfirm = "メールアドレスが一致しません";
     }
     if (!form.tradeShowExhibition) errs.tradeShowExhibition = "選択してください";
+    if (!form.prefecture) errs.prefecture = "ご当地（都道府県）を選択してください";
     if (!form.productName.trim()) errs.productName = "商品名は必須です";
     if (!form.productCategory) errs.productCategory = "カテゴリを選択してください";
     if (!form.price.trim()) errs.price = "販売価格は必須です";
@@ -358,6 +371,7 @@ export function EntryForm({
         </ConfirmSection>
 
         <ConfirmSection title="商品情報">
+          <ConfirmRow label="ご当地（都道府県）" value={form.prefecture} />
           <ConfirmRow label="商品名" value={form.productName} />
           <ConfirmRow label="商品カテゴリ" value={form.productCategory === "その他" ? `その他: ${form.productCategoryOther}` : form.productCategory} />
           <ConfirmRow label="販売価格" value={form.price ? `${form.price}円` : ""} />
@@ -480,6 +494,9 @@ export function EntryForm({
 
       {/* Section 3: Product Info */}
       <FormSection title="商品情報" num={3}>
+        <SelectInput label="ご当地（都道府県）" required value={form.prefecture} error={errors.prefecture}
+          options={PREFECTURES} placeholder="都道府県を選択してください"
+          onChange={(v) => updateField("prefecture", v)} />
         <TextInput label="商品名" required value={form.productName} error={errors.productName}
           onChange={(v) => updateField("productName", v)} />
         <SelectInput label="商品カテゴリ" required value={form.productCategory} error={errors.productCategory}

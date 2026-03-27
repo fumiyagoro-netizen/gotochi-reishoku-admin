@@ -43,6 +43,7 @@ model Entry {
   email                String
   phone                String       @default("")
   tradeShowExhibition  String       @default("")
+  prefecture           String       @default("")
   productName          String
   productCategory      String       @default("")
   price                String       @default("")
