@@ -5,12 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useRole } from "@/lib/role-context";
 
+type Mode = "create" | "update";
+
 function UploadForm() {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
+  const [mode, setMode] = useState<Mode>("create");
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultYear = searchParams.get("year") || String(new Date().getFullYear());
@@ -37,7 +40,8 @@ function UploadForm() {
     setResult(null);
 
     try {
-      const res = await fetch("/api/upload", {
+      const endpoint = mode === "update" ? "/api/upload/update" : "/api/upload";
+      const res = await fetch(endpoint, {
         method: "POST",
         body: formData,
       });
@@ -58,6 +62,44 @@ function UploadForm() {
 
   return (
     <div className="max-w-xl">
+      {/* Mode Toggle */}
+      <div className="flex gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => { setMode("create"); setResult(null); }}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            mode === "create"
+              ? "bg-blue-600 text-white"
+              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          新規登録
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode("update"); setResult(null); }}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            mode === "update"
+              ? "bg-blue-600 text-white"
+              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          一括更新
+        </button>
+      </div>
+
+      {mode === "update" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-amber-800 font-medium mb-1">一括更新モード</p>
+          <p className="text-xs text-amber-700">
+            受付番号で照合し、CSVに値が入っている項目のみ更新します。空欄の項目は既存データを維持します。
+          </p>
+          <p className="text-xs text-amber-700 mt-1">
+            手順: エントリー一覧からExcelをダウンロード → 編集 → CSVで保存 → アップロード
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-xl border border-gray-200 p-8">
           <label className="block">
@@ -81,23 +123,27 @@ function UploadForm() {
             エントリーデータのCSVファイルをアップロードしてください
           </p>
 
-          <label className="block mt-4">
-            <span className="text-sm font-medium text-gray-700">
-              アップロード先の年度
-            </span>
-            <input
-              type="number"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              min="2020"
-              max="2099"
-              className="mt-2 block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </label>
-          <p className="mt-1 text-xs text-gray-400">
-            新しい年度を入力すると自動的に作成されます
-          </p>
+          {mode === "create" && (
+            <>
+              <label className="block mt-4">
+                <span className="text-sm font-medium text-gray-700">
+                  アップロード先の年度
+                </span>
+                <input
+                  type="number"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  min="2020"
+                  max="2099"
+                  className="mt-2 block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </label>
+              <p className="mt-1 text-xs text-gray-400">
+                新しい年度を入力すると自動的に作成されます
+              </p>
+            </>
+          )}
         </div>
 
         <button
@@ -106,7 +152,10 @@ function UploadForm() {
           className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium
             hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {uploading ? "アップロード中..." : "アップロード"}
+          {uploading
+            ? (mode === "update" ? "更新中..." : "アップロード中...")
+            : (mode === "update" ? "一括更新する" : "アップロード")
+          }
         </button>
       </form>
 
