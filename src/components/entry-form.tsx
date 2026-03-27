@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface ImageFile {
@@ -19,10 +19,13 @@ interface FormData {
   emailConfirm: string;
   phone: string;
   tradeShowExhibition: string;
+  tradeShowOther: string;
   productName: string;
   productCategory: string;
+  productCategoryOther: string;
   price: string;
   purchaseLocation: string[];
+  purchaseLocationOther: string;
   referenceUrl: string;
   localAppeal: string;
   tasteAppeal: string;
@@ -31,10 +34,15 @@ interface FormData {
   otherAppeal: string;
   retailPartnership: string;
   bacteriaInspection: string;
+  bacteriaInspectionOther: string;
   expirationInspection: string;
+  expirationInspectionOther: string;
   manufacturingLicense: string;
+  manufacturingLicenseOther: string;
   entryProductLicense: string;
+  entryProductLicenseOther: string;
   hygieneManager: string;
+  hygieneManagerOther: string;
   remarks: string;
   agreePrivacy: boolean;
 }
@@ -48,10 +56,13 @@ const INITIAL_FORM: FormData = {
   emailConfirm: "",
   phone: "",
   tradeShowExhibition: "",
+  tradeShowOther: "",
   productName: "",
   productCategory: "",
+  productCategoryOther: "",
   price: "",
   purchaseLocation: [],
+  purchaseLocationOther: "",
   referenceUrl: "",
   localAppeal: "",
   tasteAppeal: "",
@@ -60,10 +71,15 @@ const INITIAL_FORM: FormData = {
   otherAppeal: "",
   retailPartnership: "",
   bacteriaInspection: "",
+  bacteriaInspectionOther: "",
   expirationInspection: "",
+  expirationInspectionOther: "",
   manufacturingLicense: "",
+  manufacturingLicenseOther: "",
   entryProductLicense: "",
+  entryProductLicenseOther: "",
   hygieneManager: "",
+  hygieneManagerOther: "",
   remarks: "",
   agreePrivacy: false,
 };
@@ -145,20 +161,13 @@ export function EntryForm({
     });
   }
 
-  function handleImageSelect(
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "main" | "sub",
-    index?: number
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
-      alert("JPEG, PNG, WebP 形式の画像のみアップロードできます");
+  function processImageFile(file: File, type: "main" | "sub", index?: number) {
+    if (!file.type.match(/^image\/(jpeg|png)$/)) {
+      alert("JPEG, PNG 形式の画像のみアップロードできます");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      alert("ファイルサイズは10MB以下にしてください");
+    if (file.size > 2 * 1024 * 1024) {
+      alert("ファイルサイズは2MB以下にしてください");
       return;
     }
 
@@ -180,6 +189,33 @@ export function EntryForm({
       });
     }
   }
+
+  function handleImageSelect(
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "main" | "sub",
+    index?: number
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processImageFile(file, type, index);
+  }
+
+  function handleDrop(
+    e: React.DragEvent<HTMLDivElement>,
+    type: "main" | "sub",
+    index?: number
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    processImageFile(file, type, index);
+  }
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   function removeImage(type: "main" | "sub", index?: number) {
     if (type === "main") {
@@ -317,15 +353,15 @@ export function EntryForm({
           <ConfirmRow label="電話番号" value={form.phone} />
         </ConfirmSection>
 
-        <ConfirmSection title="イベント出展">
-          <ConfirmRow label="スーパーマーケット・トレードショー出展" value={form.tradeShowExhibition} />
+        <ConfirmSection title="イベント展示情報">
+          <ConfirmRow label="スーパーマーケット・トレードショー出展" value={form.tradeShowExhibition === "その他" ? `その他: ${form.tradeShowOther}` : form.tradeShowExhibition} />
         </ConfirmSection>
 
         <ConfirmSection title="商品情報">
           <ConfirmRow label="商品名" value={form.productName} />
-          <ConfirmRow label="商品カテゴリ" value={form.productCategory} />
+          <ConfirmRow label="商品カテゴリ" value={form.productCategory === "その他" ? `その他: ${form.productCategoryOther}` : form.productCategory} />
           <ConfirmRow label="販売価格" value={form.price ? `${form.price}円` : ""} />
-          <ConfirmRow label="購入可能場所" value={form.purchaseLocation.join(", ")} />
+          <ConfirmRow label="購入可能場所" value={form.purchaseLocation.map(l => l === "その他" ? `その他: ${form.purchaseLocationOther}` : l).join(", ")} />
           <ConfirmRow label="参考URL" value={form.referenceUrl} />
         </ConfirmSection>
 
@@ -358,11 +394,11 @@ export function EntryForm({
 
         <ConfirmSection title="衛生管理・許可情報">
           <ConfirmRow label="協力小売業者での販売希望" value={form.retailPartnership} />
-          <ConfirmRow label="食品細菌検査" value={form.bacteriaInspection} />
-          <ConfirmRow label="賞味期限検査証" value={form.expirationInspection} />
-          <ConfirmRow label="冷凍食品製造営業許可" value={form.manufacturingLicense} />
-          <ConfirmRow label="該当商品営業許可" value={form.entryProductLicense} />
-          <ConfirmRow label="食品衛生責任者設置" value={form.hygieneManager} />
+          <ConfirmRow label="食品細菌検査" value={form.bacteriaInspection === "その他" ? `その他: ${form.bacteriaInspectionOther}` : form.bacteriaInspection} />
+          <ConfirmRow label="賞味期限検査証" value={form.expirationInspection === "その他" ? `その他: ${form.expirationInspectionOther}` : form.expirationInspection} />
+          <ConfirmRow label="冷凍食品製造営業許可" value={form.manufacturingLicense === "その他" ? `その他: ${form.manufacturingLicenseOther}` : form.manufacturingLicense} />
+          <ConfirmRow label="該当商品営業許可" value={form.entryProductLicense === "その他" ? `その他: ${form.entryProductLicenseOther}` : form.entryProductLicense} />
+          <ConfirmRow label="食品衛生責任者設置" value={form.hygieneManager === "その他" ? `その他: ${form.hygieneManagerOther}` : form.hygieneManager} />
         </ConfirmSection>
 
         <ConfirmSection title="その他">
@@ -429,12 +465,17 @@ export function EntryForm({
       </FormSection>
 
       {/* Section 2: Trade Show */}
-      <FormSection title="イベント出展情報" num={2}>
+      <FormSection title="イベント展示情報" num={2}>
         <p className="text-sm text-gray-600 mb-3">
-          第60回スーパーマーケット・トレードショー2026への出展について
+          第61回スーパーマーケット・トレードショー2027への出展について
+        </p>
+        <p className="text-xs text-gray-500 mb-3">
+          ※自社で出店する予定がある方はチェック下さい。
         </p>
         <RadioGroup options={TRADE_SHOW_OPTIONS} value={form.tradeShowExhibition} error={errors.tradeShowExhibition}
-          onChange={(v) => updateField("tradeShowExhibition", v)} />
+          onChange={(v) => updateField("tradeShowExhibition", v)}
+          otherValue={form.tradeShowOther}
+          onOtherChange={(v) => updateField("tradeShowOther", v)} />
       </FormSection>
 
       {/* Section 3: Product Info */}
@@ -443,7 +484,9 @@ export function EntryForm({
           onChange={(v) => updateField("productName", v)} />
         <SelectInput label="商品カテゴリ" required value={form.productCategory} error={errors.productCategory}
           options={CATEGORIES} placeholder="選択してください"
-          onChange={(v) => updateField("productCategory", v)} />
+          onChange={(v) => updateField("productCategory", v)}
+          otherValue={form.productCategoryOther}
+          onOtherChange={(v) => updateField("productCategoryOther", v)} />
         <TextInput label="販売価格（円）" required type="number" value={form.price} error={errors.price}
           onChange={(v) => updateField("price", v)}
           hint="オープン価格の場合は一般的な販売価格を記入してください" />
@@ -465,6 +508,15 @@ export function EntryForm({
             ))}
           </div>
           {errors.purchaseLocation && <p className="text-red-500 text-xs mt-1">{errors.purchaseLocation}</p>}
+          {form.purchaseLocation.includes("その他") && (
+            <input
+              type="text"
+              value={form.purchaseLocationOther}
+              onChange={(e) => updateField("purchaseLocationOther", e.target.value)}
+              placeholder="その他の購入場所を入力"
+              className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
         </div>
         <TextInput label="参考URL" type="url" value={form.referenceUrl}
           onChange={(v) => updateField("referenceUrl", v)}
@@ -473,6 +525,8 @@ export function EntryForm({
 
       {/* Section 4: Photos */}
       <FormSection title="商品写真" num={4}>
+        <p className="text-xs text-gray-500 mb-1">※1ファイルあたり2MB以下</p>
+        <p className="text-xs text-gray-500 mb-4">※jpeg/pngでアップロード下さい。</p>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             メインビジュアル <span className="text-red-500">*</span>
@@ -483,9 +537,19 @@ export function EntryForm({
               <button onClick={() => removeImage("main")} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">x</button>
             </div>
           ) : (
-            <div>
-              <input ref={mainRef} type="file" accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => handleImageSelect(e, "main")} className="text-sm" />
+            <div
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, "main")}
+              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
+              onClick={() => mainRef.current?.click()}
+            >
+              <svg className="mx-auto w-10 h-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-8m0 0l-3 3m3-3l3 3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+              </svg>
+              <p className="text-sm text-gray-600">ドラッグ＆ドロップ または クリックして選択</p>
+              <p className="text-xs text-gray-400 mt-1">JPEG / PNG（2MB以下）</p>
+              <input ref={mainRef} type="file" accept="image/jpeg,image/png"
+                onChange={(e) => handleImageSelect(e, "main")} className="hidden" />
             </div>
           )}
           {errors.mainImage && <p className="text-red-500 text-xs mt-1">{errors.mainImage}</p>}
@@ -502,8 +566,17 @@ export function EntryForm({
                 <button onClick={() => removeImage("sub", i)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">x</button>
               </div>
             ) : (
-              <input ref={subRefs[i]} type="file" accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => handleImageSelect(e, "sub", i)} className="text-sm" />
+              <div
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, "sub", i)}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
+                onClick={() => subRefs[i]?.current?.click()}
+              >
+                <p className="text-sm text-gray-600">ドラッグ＆ドロップ または クリック</p>
+                <p className="text-xs text-gray-400 mt-1">JPEG / PNG（2MB以下）</p>
+                <input ref={subRefs[i]} type="file" accept="image/jpeg,image/png"
+                  onChange={(e) => handleImageSelect(e, "sub", i)} className="hidden" />
+              </div>
             )}
           </div>
         ))}
@@ -530,19 +603,29 @@ export function EntryForm({
           onChange={(v) => updateField("retailPartnership", v)} />
         <RadioGroup label="食品細菌検査" required options={BACTERIA_OPTIONS}
           value={form.bacteriaInspection} error={errors.bacteriaInspection}
-          onChange={(v) => updateField("bacteriaInspection", v)} />
+          onChange={(v) => updateField("bacteriaInspection", v)}
+          otherValue={form.bacteriaInspectionOther}
+          onOtherChange={(v) => updateField("bacteriaInspectionOther", v)} />
         <RadioGroup label="賞味期限検査証" required options={EXPIRATION_OPTIONS}
           value={form.expirationInspection} error={errors.expirationInspection}
-          onChange={(v) => updateField("expirationInspection", v)} />
+          onChange={(v) => updateField("expirationInspection", v)}
+          otherValue={form.expirationInspectionOther}
+          onOtherChange={(v) => updateField("expirationInspectionOther", v)} />
         <RadioGroup label="冷凍食品製造営業許可" required options={MFG_LICENSE_OPTIONS}
           value={form.manufacturingLicense} error={errors.manufacturingLicense}
-          onChange={(v) => updateField("manufacturingLicense", v)} />
+          onChange={(v) => updateField("manufacturingLicense", v)}
+          otherValue={form.manufacturingLicenseOther}
+          onOtherChange={(v) => updateField("manufacturingLicenseOther", v)} />
         <RadioGroup label="該当商品営業許可" required options={PRODUCT_LICENSE_OPTIONS}
           value={form.entryProductLicense} error={errors.entryProductLicense}
-          onChange={(v) => updateField("entryProductLicense", v)} />
+          onChange={(v) => updateField("entryProductLicense", v)}
+          otherValue={form.entryProductLicenseOther}
+          onOtherChange={(v) => updateField("entryProductLicenseOther", v)} />
         <RadioGroup label="食品衛生責任者設置" required options={HYGIENE_OPTIONS}
           value={form.hygieneManager} error={errors.hygieneManager}
-          onChange={(v) => updateField("hygieneManager", v)} />
+          onChange={(v) => updateField("hygieneManager", v)}
+          otherValue={form.hygieneManagerOther}
+          onOtherChange={(v) => updateField("hygieneManagerOther", v)} />
       </FormSection>
 
       {/* Section 7: Remarks */}
@@ -646,10 +729,11 @@ function TextAreaInput({
 }
 
 function SelectInput({
-  label, value, onChange, options, error, required, placeholder,
+  label, value, onChange, options, error, required, placeholder, otherValue, onOtherChange,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   options: string[]; error?: string; required?: boolean; placeholder?: string;
+  otherValue?: string; onOtherChange?: (v: string) => void;
 }) {
   return (
     <div>
@@ -668,16 +752,25 @@ function SelectInput({
           <option key={o} value={o}>{o}</option>
         ))}
       </select>
+      {value === "その他" && onOtherChange && (
+        <input
+          type="text"
+          value={otherValue || ""}
+          onChange={(e) => onOtherChange(e.target.value)}
+          placeholder="その他の内容を入力"
+          className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      )}
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }
 
 function RadioGroup({
-  label, options, value, onChange, error, required,
+  label, options, value, onChange, error, required, otherValue, onOtherChange,
 }: {
   label?: string; options: string[]; value: string; onChange: (v: string) => void;
-  error?: string; required?: boolean;
+  error?: string; required?: boolean; otherValue?: string; onOtherChange?: (v: string) => void;
 }) {
   return (
     <div>
@@ -699,6 +792,15 @@ function RadioGroup({
           </label>
         ))}
       </div>
+      {value === "その他" && onOtherChange && (
+        <input
+          type="text"
+          value={otherValue || ""}
+          onChange={(e) => onOtherChange(e.target.value)}
+          placeholder="その他の内容を入力"
+          className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      )}
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
