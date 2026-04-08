@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
               .split(",")
               .filter(Boolean)
               .map((s: string) =>
-                s === "first_passed" ? "1次審査通過" : s === "second_passed" ? "2次審査通過" : s
+                s === "rejected" ? "選外" : s === "first_passed" ? "1次審査通過" : s === "second_passed" ? "2次審査通過" : s
               )
               .join("、")
           : "",

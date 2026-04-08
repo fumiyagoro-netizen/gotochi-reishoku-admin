@@ -14,11 +14,13 @@ interface Props {
 }
 
 const REVIEW_STATUSES = [
+  { value: "rejected", label: "選外", icon: "✕" },
   { value: "first_passed", label: "1次審査通過", icon: "①" },
   { value: "second_passed", label: "2次審査通過", icon: "②" },
 ];
 
 const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  rejected: { bg: "bg-red-50", text: "text-red-700", border: "border-red-300" },
   first_passed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-300" },
   second_passed: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-300" },
 };
@@ -27,7 +29,7 @@ const PAGE_SIZE = 20;
 
 export default async function ReviewsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const statusFilter = params.status || "";
+  const statusFilter = params.status || "rejected";
   const page = Math.max(1, parseInt(params.page || "1"));
   const awardId = await resolveAwardId(params.year);
   const year = await resolveAwardYear(params.year);
@@ -44,7 +46,7 @@ export default async function ReviewsPage({ searchParams }: Props) {
   };
 
   const awardWhere = awardId ? { awardId } : {};
-  const [entries, total, firstCount, secondCount, allReviewed] = await Promise.all([
+  const [entries, total, rejectedCount, firstCount, secondCount] = await Promise.all([
     prisma.entry.findMany({
       where,
       skip: (page - 1) * PAGE_SIZE,
@@ -59,17 +61,18 @@ export default async function ReviewsPage({ searchParams }: Props) {
     }),
     prisma.entry.count({ where }),
     prisma.entry.count({
+      where: { ...awardWhere, reviewStatus: { contains: "rejected" } },
+    }),
+    prisma.entry.count({
       where: { ...awardWhere, reviewStatus: { contains: "first_passed" } },
     }),
     prisma.entry.count({
       where: { ...awardWhere, reviewStatus: { contains: "second_passed" } },
     }),
-    prisma.entry.count({
-      where: { ...awardWhere, reviewStatus: { not: "" } },
-    }),
   ]);
 
   const statusCountMap: Record<string, number> = {
+    rejected: rejectedCount,
     first_passed: firstCount,
     second_passed: secondCount,
   };
@@ -96,17 +99,6 @@ export default async function ReviewsPage({ searchParams }: Props) {
 
       {/* Status Summary Cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <Link
-          href={`/reviews${year ? `?year=${year}` : ""}`}
-          className={`px-4 py-3 rounded-xl border text-center transition-colors ${
-            !statusFilter
-              ? "bg-blue-50 border-blue-300 text-blue-700"
-              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          <p className="text-2xl font-bold">{allReviewed}</p>
-          <p className="text-xs mt-0.5">すべて</p>
-        </Link>
         {REVIEW_STATUSES.map((rs) => {
           const count = statusCountMap[rs.value] || 0;
           const colors = REVIEW_COLORS[rs.value];

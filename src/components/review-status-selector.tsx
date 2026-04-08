@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const REVIEW_STATUSES = [
+  { value: "rejected", label: "選外", icon: "✕" },
   { value: "first_passed", label: "1次審査通過", icon: "①" },
   { value: "second_passed", label: "2次審査通過", icon: "②" },
 ];
 
 const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  rejected: { bg: "bg-red-50", text: "text-red-700", border: "border-red-300" },
   first_passed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-300" },
   second_passed: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-300" },
 };

@@ -4,8 +4,9 @@ import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
-const VALID_STATUSES = ["first_passed", "second_passed", ""];
+const VALID_STATUSES = ["rejected", "first_passed", "second_passed", ""];
 const LABELS: Record<string, string> = {
+  rejected: "選外",
   first_passed: "1次審査通過",
   second_passed: "2次審査通過",
 };
