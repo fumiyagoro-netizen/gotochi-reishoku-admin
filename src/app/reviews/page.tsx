@@ -14,9 +14,9 @@ interface Props {
 }
 
 const REVIEW_STATUSES = [
-  { value: "rejected", label: "選外", icon: "✕" },
   { value: "first_passed", label: "1次審査通過", icon: "①" },
   { value: "second_passed", label: "2次審査通過", icon: "②" },
+  { value: "rejected", label: "選外", icon: "✕" },
 ];
 
 const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -29,7 +29,7 @@ const PAGE_SIZE = 20;
 
 export default async function ReviewsPage({ searchParams }: Props) {
   const params = await searchParams;
-  const statusFilter = params.status || "rejected";
+  const statusFilter = params.status || "first_passed";
   const page = Math.max(1, parseInt(params.page || "1"));
   const awardId = await resolveAwardId(params.year);
   const year = await resolveAwardYear(params.year);
