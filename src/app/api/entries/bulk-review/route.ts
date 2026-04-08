@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { sendEmail } from "@/lib/email";
 
 const VALID_STATUSES = ["rejected", "first_passed", "second_passed", ""];
 const LABELS: Record<string, string> = {
@@ -94,16 +95,69 @@ export async function POST(request: NextRequest) {
 
     const user = await getUserFromRequest(request);
     const label = LABELS[reviewStatus] || reviewStatus;
+    const actionLabel = action === "remove"
+      ? `${updatedCount}件から「${label}」を削除`
+      : `${updatedCount}件に「${label}」を追加`;
+
     await writeAuditLog({
       userId: user?.userId,
       userEmail: user?.email,
       action: "bulk_review",
       target: "entry",
       targetId: ids.join(","),
-      detail: action === "remove"
-        ? `${updatedCount}件から「${label}」を削除`
-        : `${updatedCount}件に「${label}」を追加`,
+      detail: actionLabel,
     });
+
+    // Send admin notification
+    if (updatedCount > 0 && entries.length > 0) {
+      const firstEntry = await prisma.entry.findUnique({
+        where: { id: entries[0].id },
+        select: { awardId: true },
+      });
+      if (firstEntry) {
+        const award = await prisma.award.findUnique({
+          where: { id: firstEntry.awardId },
+          select: { name: true, notifyEmails: true },
+        });
+        if (award?.notifyEmails) {
+          const adminEmails = award.notifyEmails.split(",").map((e: string) => e.trim()).filter(Boolean);
+          if (adminEmails.length > 0) {
+            const entryNames = await prisma.entry.findMany({
+              where: { id: { in: ids } },
+              select: { productName: true, companyName: true },
+            });
+            const entryList = entryNames.map(e => `${e.productName}（${e.companyName}）`).join("<br>");
+            await sendEmail({
+              to: adminEmails,
+              subject: `【一括審査変更】${actionLabel} - ${award.name}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #4338ca; border-bottom: 2px solid #4338ca; padding-bottom: 10px;">
+                    一括審査状況変更通知
+                  </h2>
+                  <p>${award.name}のエントリーが一括変更されました。</p>
+                  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background: #f3f4f6;">
+                      <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; width: 140px;">操作内容</td>
+                      <td style="padding: 10px; border: 1px solid #e5e7eb; color: #4338ca; font-weight: bold;">${actionLabel}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold;">変更者</td>
+                      <td style="padding: 10px; border: 1px solid #e5e7eb;">${user?.email || "不明"}</td>
+                    </tr>
+                  </table>
+                  <p style="font-weight: bold; margin-top: 16px;">対象エントリー:</p>
+                  <p style="font-size: 14px; color: #374151;">${entryList}</p>
+                  <p style="font-size: 14px; margin-top: 16px;">
+                    <a href="https://dashboard.gotouchireisyoku.com/reviews" style="color: #4338ca;">管理画面で確認 →</a>
+                  </p>
+                </div>
+              `,
+            });
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,
