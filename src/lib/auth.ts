@@ -38,6 +38,10 @@ export async function getCurrentUser(): Promise<TokenPayload | null> {
   return { ...payload, role: user.role as Role };
 }
 
+// Cached version - use in layouts to avoid repeated DB calls in same request
+import { cache } from "react";
+export const getCachedCurrentUser = cache(getCurrentUser);
+
 /** Get user from request cookie - API routes */
 export async function getUserFromRequest(request: Request): Promise<TokenPayload | null> {
   const cookieHeader = request.headers.get("cookie") || "";

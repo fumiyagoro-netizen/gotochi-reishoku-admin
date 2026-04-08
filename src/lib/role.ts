@@ -1,12 +1,12 @@
 /** Server-only role utilities */
-import { getCurrentUser, getUserFromRequest as getUser } from "./auth";
+import { getCachedCurrentUser, getUserFromRequest as getUser } from "./auth";
 export type { Role, Permissions } from "./role-shared";
 export { ROLE_LABELS, ROLE_DESCRIPTIONS, PERMISSIONS, getPermissions } from "./role-shared";
 
 import type { Role } from "./role-shared";
 
 export async function getCurrentRole(): Promise<Role> {
-  const user = await getCurrentUser();
+  const user = await getCachedCurrentUser();
   return user?.role ?? "viewer";
 }
 

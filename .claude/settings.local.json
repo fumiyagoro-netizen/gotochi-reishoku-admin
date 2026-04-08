@@ -10,7 +10,10 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(git rm:*)",
-      "Bash(git -C /Users/fumiyamifune/Desktop/aelle pull origin main --rebase)"
+      "Bash(git -C /Users/fumiyamifune/Desktop/aelle pull origin main --rebase)",
+      "Bash(grep -n \"dynamic\\\\|revalidate\" /Users/fumiyamifune/Desktop/aelle/src/app/*.tsx /Users/fumiyamifune/Desktop/aelle/src/app/*/*.tsx)",
+      "Bash(echo \"EXIT_CODE:$?\")",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

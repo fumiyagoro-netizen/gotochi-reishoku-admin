@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { EntryForm } from "@/components/entry-form";
 
+// Revalidate every 30 seconds (entry period check doesn't need to be real-time)
+export const revalidate = 30;
+
 function ClosedMessage({ title, message }: { title: string; message: string }) {
   return (
     <div className="text-center py-16">

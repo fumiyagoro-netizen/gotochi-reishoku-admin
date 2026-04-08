@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
+// Revalidate every 60 seconds instead of on every request
+export const revalidate = 60;
+
 const PRIZE_ORDER: Record<string, number> = {
   "最高金賞": 1,
   "金賞": 2,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCachedCurrentUser } from "@/lib/auth";
 import { getPermissions } from "@/lib/role-shared";
 import { RoleProvider } from "@/lib/role-context";
 import { SidebarWrapper } from "@/components/sidebar-wrapper";
@@ -16,7 +16,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getCurrentUser();
+  const user = await getCachedCurrentUser();
 
   // Not logged in - render without sidebar (login page)
   if (!user) {
