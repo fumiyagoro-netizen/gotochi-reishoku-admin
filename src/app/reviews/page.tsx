@@ -43,7 +43,8 @@ export default async function ReviewsPage({ searchParams }: Props) {
     ],
   };
 
-  const [entries, total] = await Promise.all([
+  const awardWhere = awardId ? { awardId } : {};
+  const [entries, total, firstCount, secondCount, allReviewed] = await Promise.all([
     prisma.entry.findMany({
       where,
       skip: (page - 1) * PAGE_SIZE,
@@ -57,11 +58,6 @@ export default async function ReviewsPage({ searchParams }: Props) {
       },
     }),
     prisma.entry.count({ where }),
-  ]);
-
-  // Count entries that contain each status (can overlap)
-  const awardWhere = awardId ? { awardId } : {};
-  const [firstCount, secondCount, allReviewed] = await Promise.all([
     prisma.entry.count({
       where: { ...awardWhere, reviewStatus: { contains: "first_passed" } },
     }),

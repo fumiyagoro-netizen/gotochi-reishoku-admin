@@ -1,23 +1,32 @@
+import { cache } from "react";
 import { prisma } from "./prisma";
 
-export async function resolveAwardId(yearParam?: string): Promise<number | null> {
+interface ResolvedAward {
+  id: number | null;
+  year: number | null;
+}
+
+// Cache per request — resolveAwardId + resolveAwardYear share a single DB call
+const resolveAward = cache(async (yearParam?: string): Promise<ResolvedAward> => {
   if (yearParam) {
+    const y = parseInt(yearParam);
     const award = await prisma.award.findUnique({
-      where: { year: parseInt(yearParam) },
+      where: { year: y },
+      select: { id: true, year: true },
     });
-    return award?.id ?? null;
+    return { id: award?.id ?? null, year: award?.year ?? null };
   }
-  // Default to the most recent award
   const latest = await prisma.award.findFirst({
     orderBy: { year: "desc" },
+    select: { id: true, year: true },
   });
-  return latest?.id ?? null;
+  return { id: latest?.id ?? null, year: latest?.year ?? null };
+});
+
+export async function resolveAwardId(yearParam?: string): Promise<number | null> {
+  return (await resolveAward(yearParam)).id;
 }
 
 export async function resolveAwardYear(yearParam?: string): Promise<number | null> {
-  if (yearParam) return parseInt(yearParam);
-  const latest = await prisma.award.findFirst({
-    orderBy: { year: "desc" },
-  });
-  return latest?.year ?? null;
+  return (await resolveAward(yearParam)).year;
 }
