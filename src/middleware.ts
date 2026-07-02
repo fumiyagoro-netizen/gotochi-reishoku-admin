@@ -3,11 +3,22 @@ import { verifyToken } from "@/lib/auth-core";
 
 const PUBLIC_PATHS = ["/login", "/api/auth", "/entry", "/api/entry", "/results", "/api/images", "/favicon.ico", "/unsubscribe", "/api/unsubscribe"];
 
+// Public form paths: /f/<slug> (form page) and /api/forms/<slug>/submit (submission),
+// distinct from the admin /forms and /api/forms routes which stay protected.
+const PUBLIC_FORM_PATH = /^\/f(\/|$)/;
+const FORM_SUBMIT_PATH = /^\/api\/forms\/[^/]+\/submit$/;
+const FORM_UPLOAD_PATH = /^\/api\/forms\/upload$/;
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (
+    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
+    PUBLIC_FORM_PATH.test(pathname) ||
+    FORM_SUBMIT_PATH.test(pathname) ||
+    FORM_UPLOAD_PATH.test(pathname)
+  ) {
     return NextResponse.next();
   }
 

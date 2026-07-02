@@ -8,12 +8,17 @@ export interface UpsertContactData {
   phone?: string;
   source?: string; // "entry" | "csv" | "manual" | "form"
   note?: string;
+  /** Subscription state applied only when CREATING a new contact (default true).
+   *  Existing contacts keep their current subscription untouched. */
+  subscribed?: boolean;
 }
 
 /** Create or update a Contact, name-matched by email */
 export async function upsertContact(data: UpsertContactData) {
   const email = data.email.trim().toLowerCase();
   if (!email) throw new Error("email is required");
+
+  const subscribed = data.subscribed ?? true;
 
   return prisma.contact.upsert({
     where: { email },
@@ -30,7 +35,8 @@ export async function upsertContact(data: UpsertContactData) {
       phone: data.phone || "",
       source: data.source || "manual",
       note: data.note || "",
-      optInAt: new Date(),
+      subscribed,
+      optInAt: subscribed ? new Date() : null,
     },
   });
 }

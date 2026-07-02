@@ -145,3 +145,28 @@ model Setting {
   value     String   @default("")
   updatedAt DateTime @updatedAt
 }
+
+model Form {
+  id              Int      @id @default(autoincrement())
+  slug            String   @unique
+  title           String
+  description     String   @default("")
+  status          String   @default("draft") // "draft" | "published" | "closed"
+  fields          Json     // フィールド定義の配列 (see src/lib/form.ts for shape)
+  targetListId    Int?     // 回答者を登録する見込みリスト（任意）
+  requireOptIn    Boolean  @default(false)
+  thankYouMessage String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  submissions     FormSubmission[]
+}
+
+model FormSubmission {
+  id        Int      @id @default(autoincrement())
+  formId    Int
+  answers   Json     // { fieldId: value } 。ファイルはBlobのURL文字列（複数可なら配列）
+  contactId Int?
+  ipAddress String   @default("")
+  createdAt DateTime @default(now())
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+}
