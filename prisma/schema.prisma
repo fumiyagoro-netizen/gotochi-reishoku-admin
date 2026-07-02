@@ -88,3 +88,60 @@ model EntryImage {
   sortOrder Int    @default(0)
   entry     Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
 }
+
+model Contact {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String   @default("")
+  companyName String   @default("")
+  phone       String   @default("")
+  source      String   @default("") // "entry" | "csv" | "manual" | "form"
+  subscribed  Boolean  @default(true)
+  optInAt     DateTime?
+  note        String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  memberships ContactListMembership[]
+}
+
+model ContactList {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  memberships ContactListMembership[]
+}
+
+model ContactListMembership {
+  id        Int         @id @default(autoincrement())
+  contactId Int
+  listId    Int
+  addedAt   DateTime    @default(now())
+  contact   Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  list      ContactList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, listId])
+}
+
+model Suppression {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  reason    String   // "unsubscribe" | "bounce" | "manual"
+  createdAt DateTime @default(now())
+}
+
+model EmailLog {
+  id        Int      @id @default(autoincrement())
+  toEmail   String
+  subject   String
+  status    String   // "sent" | "failed" | "skipped"
+  sentBy    String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   @default("")
+  updatedAt DateTime @updatedAt
+}

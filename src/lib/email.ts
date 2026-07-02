@@ -1,9 +1,16 @@
 import { Resend } from "resend";
+import { prisma } from "./prisma";
+import { getEmailFooterSettings } from "./settings";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@gotouchireisyoku.com";
 const FROM_NAME = "ご当地冷凍食品大賞 事務局";
+
+// Marketing (Contact list) email sender - same domain as transactional email
+const MARKETING_FROM_EMAIL = process.env.MARKETING_FROM_EMAIL || "noreply@gotouchireisyoku.com";
+const MARKETING_FROM_NAME = process.env.MARKETING_FROM_NAME || "ご当地冷凍食品大賞 事務局";
+const APP_URL = process.env.APP_URL || "https://dashboard.gotouchireisyoku.com";
 
 interface SendEmailParams {
   to: string | string[];
@@ -183,4 +190,190 @@ export async function sendReviewPassNotification(params: {
       </div>
     `,
   });
+}
+
+// ---- Marketing (Contact list) email ----
+
+interface MarketingRecipient {
+  email: string;
+  name?: string;
+}
+
+interface SendMarketingEmailParams {
+  recipients: MarketingRecipient[];
+  subject: string;
+  html: string;
+  sentBy?: string;
+}
+
+interface SendMarketingEmailResult {
+  sent: number;
+  failed: number;
+  skipped: number;
+}
+
+function buildFooterHtml(footer: {
+  senderName: string;
+  orgName: string;
+  postalAddress: string;
+  contactEmail: string;
+  contactTel: string;
+}): string {
+  return `
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+    <p style="color: #9ca3af; font-size: 12px; line-height: 1.6;">
+      ${footer.orgName}<br>
+      ${footer.senderName}<br>
+      ${footer.postalAddress ? `${footer.postalAddress}<br>` : ""}
+      お問い合わせ: ${footer.contactEmail}${footer.contactTel ? ` / ${footer.contactTel}` : ""}
+    </p>
+  `;
+}
+
+function applyMergeTags(html: string, recipient: MarketingRecipient, companyName?: string): string {
+  return html
+    .replace(/\{\{\s*name\s*\}\}/g, recipient.name || "")
+    .replace(/\{\{\s*company\s*\}\}/g, companyName || "");
+}
+
+export async function sendMarketingEmail({
+  recipients,
+  subject,
+  html,
+  sentBy,
+}: SendMarketingEmailParams): Promise<SendMarketingEmailResult> {
+  const result: SendMarketingEmailResult = { sent: 0, failed: 0, skipped: 0 };
+  if (recipients.length === 0) return result;
+
+  const emails = recipients.map((r) => r.email);
+
+  // Exclude suppressed and unsubscribed contacts
+  const [suppressions, unsubscribedContacts] = await Promise.all([
+    prisma.suppression.findMany({
+      where: { email: { in: emails } },
+      select: { email: true },
+    }),
+    prisma.contact.findMany({
+      where: { email: { in: emails }, subscribed: false },
+      select: { email: true, companyName: true },
+    }),
+  ]);
+
+  const suppressedSet = new Set(suppressions.map((s) => s.email));
+  const unsubscribedSet = new Set(unsubscribedContacts.map((c) => c.email));
+
+  // Look up company names for merge tag support
+  const contacts = await prisma.contact.findMany({
+    where: { email: { in: emails } },
+    select: { email: true, companyName: true },
+  });
+  const companyByEmail = new Map(contacts.map((c) => [c.email, c.companyName]));
+
+  const sendable: MarketingRecipient[] = [];
+  const skippedLogs: { toEmail: string }[] = [];
+
+  for (const r of recipients) {
+    if (suppressedSet.has(r.email) || unsubscribedSet.has(r.email)) {
+      skippedLogs.push({ toEmail: r.email });
+    } else {
+      sendable.push(r);
+    }
+  }
+
+  if (skippedLogs.length > 0) {
+    await prisma.emailLog.createMany({
+      data: skippedLogs.map((s) => ({
+        toEmail: s.toEmail,
+        subject,
+        status: "skipped",
+        sentBy: sentBy || "",
+      })),
+    });
+    result.skipped = skippedLogs.length;
+  }
+
+  if (sendable.length === 0) return result;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not set, skipping marketing email send");
+    await prisma.emailLog.createMany({
+      data: sendable.map((r) => ({
+        toEmail: r.email,
+        subject,
+        status: "failed",
+        sentBy: sentBy || "",
+      })),
+    });
+    result.failed = sendable.length;
+    return result;
+  }
+
+  const footer = await getEmailFooterSettings();
+  const footerHtml = buildFooterHtml(footer);
+
+  const messages = sendable.map((r) => {
+    const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(r.email)}`;
+    const personalizedHtml = applyMergeTags(html, r, companyByEmail.get(r.email));
+    const fullHtml = `
+      ${personalizedHtml}
+      ${footerHtml}
+      <p style="color: #9ca3af; font-size: 12px; margin-top: 12px;">
+        配信停止をご希望の場合は<a href="${unsubscribeUrl}" style="color: #9ca3af;">こちら</a>から手続きできます。
+      </p>
+    `;
+    return {
+      from: `${MARKETING_FROM_NAME} <${MARKETING_FROM_EMAIL}>`,
+      to: [r.email],
+      subject,
+      html: fullHtml,
+    };
+  });
+
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < messages.length; i += BATCH_SIZE) {
+    const batch = messages.slice(i, i + BATCH_SIZE);
+    const batchRecipients = sendable.slice(i, i + BATCH_SIZE);
+
+    try {
+      const { data, error } = await resend.batch.send(batch);
+      if (error) {
+        console.error("Marketing email batch send error:", error);
+        await prisma.emailLog.createMany({
+          data: batchRecipients.map((r) => ({
+            toEmail: r.email,
+            subject,
+            status: "failed",
+            sentBy: sentBy || "",
+          })),
+        });
+        result.failed += batchRecipients.length;
+        continue;
+      }
+
+      const sentIds = data?.data ?? [];
+      await prisma.emailLog.createMany({
+        data: batchRecipients.map((r, idx) => ({
+          toEmail: r.email,
+          subject,
+          status: sentIds[idx] ? "sent" : "failed",
+          sentBy: sentBy || "",
+        })),
+      });
+      result.sent += sentIds.length;
+      result.failed += batchRecipients.length - sentIds.length;
+    } catch (error) {
+      console.error("Marketing email batch send exception:", error);
+      await prisma.emailLog.createMany({
+        data: batchRecipients.map((r) => ({
+          toEmail: r.email,
+          subject,
+          status: "failed",
+          sentBy: sentBy || "",
+        })),
+      });
+      result.failed += batchRecipients.length;
+    }
+  }
+
+  return result;
 }
