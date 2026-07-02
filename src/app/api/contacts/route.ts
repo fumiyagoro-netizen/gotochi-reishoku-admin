@@ -9,31 +9,60 @@ import { upsertContact } from "@/lib/contact";
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q") || "";
   const listId = request.nextUrl.searchParams.get("listId");
+  const t0 = Date.now();
 
-  const where = {
-    AND: [
-      q
-        ? {
-            OR: [
-              { email: { contains: q } },
-              { name: { contains: q } },
-              { companyName: { contains: q } },
-            ],
-          }
-        : {},
-      listId ? { memberships: { some: { listId: parseInt(listId) } } } : {},
-    ],
-  };
+  try {
+    // [診断] 接続プローブ（Vercel関数の実行上限より短い内部タイムアウトで切る）
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error("接続テスト(SELECT 1)が8秒応答なし＝関数からDBへの接続が確立できていません")
+            ),
+          8000
+        )
+      ),
+    ]);
+    const connMs = Date.now() - t0;
 
-  const contacts = await prisma.contact.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      memberships: { include: { list: { select: { id: true, name: true } } } },
-    },
-  });
+    const where = {
+      AND: [
+        q
+          ? {
+              OR: [
+                { email: { contains: q } },
+                { name: { contains: q } },
+                { companyName: { contains: q } },
+              ],
+            }
+          : {},
+        listId ? { memberships: { some: { listId: parseInt(listId) } } } : {},
+      ],
+    };
 
-  return NextResponse.json({ success: true, contacts });
+    const contacts = await prisma.contact.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        memberships: { include: { list: { select: { id: true, name: true } } } },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      contacts,
+      _diag: `接続${connMs}ms / 合計${Date.now() - t0}ms`,
+    });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[diag] contacts GET failed:", msg);
+    return NextResponse.json(
+      { success: false, message: `[診断] ${msg}（経過${Date.now() - t0}ms）` },
+      { status: 200 }
+    );
+  }
 }
 
 // POST: create a new contact

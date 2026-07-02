@@ -32,16 +32,24 @@ export default function ContactsPage() {
   const [showSend, setShowSend] = useState(false);
   const [showBulkSend, setShowBulkSend] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    if (listId) params.set("listId", listId);
-    const res = await fetch(`/api/contacts?${params.toString()}`);
-    const data = await res.json();
-    if (data.success) setContacts(data.contacts);
-    setLoading(false);
+    setErrorMsg("");
+    try {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (listId) params.set("listId", listId);
+      const res = await fetch(`/api/contacts?${params.toString()}`);
+      const data = await res.json();
+      if (data.success) setContacts(data.contacts);
+      else setErrorMsg(data.message || "取得に失敗しました");
+    } catch (e) {
+      setErrorMsg("通信エラー: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setLoading(false);
+    }
   }, [q, listId]);
 
   const fetchLists = useCallback(async () => {
@@ -124,6 +132,12 @@ export default function ContactsPage() {
           )}
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Search & Filter */}
       <form onSubmit={handleSearch} className="flex gap-3 mb-6">
