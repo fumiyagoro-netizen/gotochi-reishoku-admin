@@ -251,7 +251,17 @@ function applyMergeTags(text: string, values: MergeTagValues, defaultName: strin
   });
 }
 
-// Render subject and html for a single recipient (merge tags applied to both).
+// Convert a plain-text body into HTML line breaks. If the body already contains
+// block-level HTML (br/p/div/table/list/heading), it is treated as authored HTML
+// and left untouched so power users keep full control.
+function normalizeBodyHtml(body: string): string {
+  const hasBlockHtml = /<(br|p|div|table|ul|ol|li|h[1-6])\b/i.test(body);
+  if (hasBlockHtml) return body;
+  return body.replace(/\r\n?/g, "\n").replace(/\n/g, "<br>\n");
+}
+
+// Render subject and html for a single recipient (merge tags applied to both;
+// plain-text bodies also get automatic line breaks).
 function renderForRecipient(
   subject: string,
   html: string,
@@ -260,7 +270,7 @@ function renderForRecipient(
 ): { subject: string; html: string } {
   return {
     subject: applyMergeTags(subject, values, defaultName),
-    html: applyMergeTags(html, values, defaultName),
+    html: applyMergeTags(normalizeBodyHtml(html), values, defaultName),
   };
 }
 

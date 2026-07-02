@@ -587,7 +587,7 @@ function SendModal({
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-gray-700">本文（HTML可）</span>
+            <span className="text-sm font-medium text-gray-700">本文（改行OK・HTML可）</span>
             <div className="flex gap-1 mt-1 mb-1">
               <button
                 type="button"
@@ -616,7 +616,7 @@ function SendModal({
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-400">
-              配信停止リンクと事務局情報は自動で本文末尾に付与されます。
+              改行はそのまま反映されます（Enterで段落を分けられます）。配信停止リンクと事務局情報は自動で本文末尾に付与されます。
             </p>
           </label>
 
