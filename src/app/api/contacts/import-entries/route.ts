@@ -20,18 +20,20 @@ export async function POST(request: NextRequest) {
 
     const result = await importEntriesToContacts(awardId);
 
+    const listsLabel = result.lists.length > 0 ? result.lists.join("、") : "対象なし";
+
     const user = await getUserFromRequest(request);
     await writeAuditLog({
       userId: user?.userId,
       userEmail: user?.email,
       action: "import_contacts",
       target: "contact",
-      detail: `応募者取り込み（${result.listName}）: ${result.created}件登録、${result.updated}件更新、${result.skipped}件スキップ`,
+      detail: `応募者取り込み（${listsLabel}）: ${result.created}件登録、${result.updated}件更新、${result.skipped}件スキップ`,
     });
 
     return NextResponse.json({
       success: true,
-      message: `${result.created}件登録、${result.updated}件更新しました（${result.listName}）`,
+      message: `${result.created}件登録、${result.updated}件更新しました（${listsLabel}）`,
       result,
     });
   } catch (error) {

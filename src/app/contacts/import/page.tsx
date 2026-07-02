@@ -153,8 +153,11 @@ function ImportForm() {
         <h3 className="text-sm font-medium text-gray-700 mb-3">既存応募者を取り込む</h3>
         <div className="bg-white rounded-xl border border-gray-200 p-8">
           <p className="text-sm text-gray-600 mb-4">
-            現在選択中の年度のエントリーをメールアドレスで名寄せし、連絡先として取り込みます。
-            「&lt;年度&gt; 応募者」リストが自動作成されます。
+            <strong>全年度</strong>のエントリーをメールアドレスで名寄せし、連絡先として取り込みます。
+            同じ担当者は1件にまとまり、年度ごとに「&lt;年度&gt; 応募者」リスト（絞り込み用）へ自動振り分けされます。
+          </p>
+          <p className="text-xs text-gray-400 mb-4">
+            ※ 今後の新規エントリーは自動で連絡先に追加されます。この取り込みは既存分の一括登録用です。
           </p>
           <button
             onClick={handleImportEntries}
@@ -162,7 +165,7 @@ function ImportForm() {
             className="w-full py-3 px-4 bg-gray-800 text-white rounded-lg font-medium
               hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {importingEntries ? "取り込み中..." : "既存応募者を取り込む"}
+            {importingEntries ? "取り込み中..." : "全年度の応募者を取り込む"}
           </button>
         </div>
 

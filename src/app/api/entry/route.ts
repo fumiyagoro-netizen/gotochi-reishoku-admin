@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEntryConfirmation, sendAdminNotification } from "@/lib/email";
+import { addEntrantContact } from "@/lib/contact";
 
 async function generateAnswerNo(awardId: number): Promise<string> {
   const award = await prisma.award.findUnique({ where: { id: awardId } });
@@ -183,7 +184,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Await emails before returning response (required for Vercel serverless)
+    // Auto-register the entrant as a contact (award-related opt-in). Non-blocking.
+    emailPromises.push(
+      addEntrantContact({
+        email: body.email,
+        name: contactName,
+        companyName: body.companyName,
+        phone: body.phone || "",
+        year: award.year,
+      })
+    );
+
+    // Await emails + contact sync before returning response (required for Vercel serverless)
     await Promise.allSettled(emailPromises);
 
     return NextResponse.json({
