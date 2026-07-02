@@ -4,6 +4,9 @@ import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { importEntriesToContacts } from "@/lib/contact";
 
+// Allow longer execution for bulk import (capped by the Vercel plan; ignored on Hobby)
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);

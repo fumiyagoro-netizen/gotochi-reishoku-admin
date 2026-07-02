@@ -90,7 +90,8 @@ export async function addEntrantContact(params: {
  * Import Entry rows into Contact, deduplicated by email (year-independent master list).
  * Pass awardId to import a single year; omit it to import ALL years at once.
  * Each entrant is also added to their own "<year> 応募者" segment list.
- * Existing contacts are updated only (blank fields never overwrite).
+ * Existing contacts are updated only (blank fields never overwrite; subscription untouched).
+ * Uses bulk queries so a full multi-year import stays well within serverless time limits.
  */
 export async function importEntriesToContacts(awardId?: number) {
   const awards = awardId
@@ -119,32 +120,87 @@ export async function importEntriesToContacts(awardId?: number) {
     });
 
     // Deduplicate by email within this award (last entry wins)
-    const byEmail = new Map<string, (typeof entries)[number]>();
+    const byEmail = new Map<
+      string,
+      { email: string; name: string; companyName: string; phone: string }
+    >();
     for (const entry of entries) {
       const email = entry.email?.trim().toLowerCase();
       if (!email) continue;
-      byEmail.set(email, entry);
-    }
-
-    if (byEmail.size > 0) lists.push(`${award.year} 応募者`);
-
-    for (const [email, entry] of byEmail) {
-      const existing = await prisma.contact.findUnique({ where: { email } });
-      const name = `${entry.contactLastName || ""} ${entry.contactFirstName || ""}`.trim();
-
-      await addEntrantContact({
+      byEmail.set(email, {
         email,
-        name,
-        companyName: entry.companyName,
-        phone: entry.phone,
-        year: award.year,
+        name: `${entry.contactLastName || ""} ${entry.contactFirstName || ""}`.trim(),
+        companyName: entry.companyName || "",
+        phone: entry.phone || "",
       });
-
-      if (existing) updated++;
-      else created++;
     }
 
     skipped += entries.length - byEmail.size;
+    if (byEmail.size === 0) continue;
+
+    const emails = [...byEmail.keys()];
+    const rows = [...byEmail.values()];
+
+    // Get-or-create the year segment list once (not per-entrant)
+    const listName = `${award.year} 応募者`;
+    lists.push(listName);
+    const list =
+      (await prisma.contactList.findFirst({ where: { name: listName } })) ||
+      (await prisma.contactList.create({ data: { name: listName } }));
+
+    // One query for all existing contacts in this batch
+    const existing = await prisma.contact.findMany({
+      where: { email: { in: emails } },
+      select: { email: true },
+    });
+    const existingEmails = new Set(existing.map((c) => c.email));
+
+    // Bulk-create the new ones
+    const newRows = rows.filter((r) => !existingEmails.has(r.email));
+    if (newRows.length > 0) {
+      await prisma.contact.createMany({
+        data: newRows.map((r) => ({
+          email: r.email,
+          name: r.name,
+          companyName: r.companyName,
+          phone: r.phone,
+          source: "entry",
+          subscribed: true,
+          optInAt: new Date(),
+        })),
+        skipDuplicates: true,
+      });
+      created += newRows.length;
+    }
+
+    // Update existing ones (fill blanks only), in parallel chunks
+    const updateRows = rows.filter((r) => existingEmails.has(r.email));
+    const CHUNK = 25;
+    for (let i = 0; i < updateRows.length; i += CHUNK) {
+      await Promise.all(
+        updateRows.slice(i, i + CHUNK).map((r) =>
+          prisma.contact.update({
+            where: { email: r.email },
+            data: {
+              ...(r.name ? { name: r.name } : {}),
+              ...(r.companyName ? { companyName: r.companyName } : {}),
+              ...(r.phone ? { phone: r.phone } : {}),
+            },
+          })
+        )
+      );
+    }
+    updated += updateRows.length;
+
+    // Attach everyone to the year list (bulk, idempotent)
+    const contacts = await prisma.contact.findMany({
+      where: { email: { in: emails } },
+      select: { id: true },
+    });
+    await prisma.contactListMembership.createMany({
+      data: contacts.map((c) => ({ contactId: c.id, listId: list.id })),
+      skipDuplicates: true,
+    });
   }
 
   return { created, updated, skipped, lists };
