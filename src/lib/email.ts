@@ -204,6 +204,7 @@ interface SendMarketingEmailParams {
   subject: string;
   html: string;
   sentBy?: string;
+  defaultName?: string;
 }
 
 interface SendMarketingEmailResult {
@@ -230,10 +231,37 @@ function buildFooterHtml(footer: {
   `;
 }
 
-function applyMergeTags(html: string, recipient: MarketingRecipient, companyName?: string): string {
-  return html
-    .replace(/\{\{\s*name\s*\}\}/g, recipient.name || "")
-    .replace(/\{\{\s*company\s*\}\}/g, companyName || "");
+// Merge tag values available for personalization
+interface MergeTagValues {
+  name?: string;
+  company?: string;
+  email?: string;
+}
+
+// Replace {{tag}} / {{tag|fallback}} occurrences with values from `values`.
+// If a tag has no fallback and its value is empty, `defaultName` is used for
+// the `name` tag only; other tags fall back to an empty string.
+function applyMergeTags(text: string, values: MergeTagValues, defaultName: string = "ご担当者様"): string {
+  return text.replace(/\{\{\s*(name|company|email)\s*(?:\|\s*([^}]*?)\s*)?\}\}/g, (_match, tag: string, fallback?: string) => {
+    const raw = values[tag as keyof MergeTagValues];
+    if (raw) return raw;
+    if (fallback !== undefined) return fallback;
+    if (tag === "name") return defaultName;
+    return "";
+  });
+}
+
+// Render subject and html for a single recipient (merge tags applied to both).
+function renderForRecipient(
+  subject: string,
+  html: string,
+  values: MergeTagValues,
+  defaultName?: string
+): { subject: string; html: string } {
+  return {
+    subject: applyMergeTags(subject, values, defaultName),
+    html: applyMergeTags(html, values, defaultName),
+  };
 }
 
 export async function sendMarketingEmail({
@@ -241,6 +269,7 @@ export async function sendMarketingEmail({
   subject,
   html,
   sentBy,
+  defaultName,
 }: SendMarketingEmailParams): Promise<SendMarketingEmailResult> {
   const result: SendMarketingEmailResult = { sent: 0, failed: 0, skipped: 0 };
   if (recipients.length === 0) return result;
@@ -313,9 +342,10 @@ export async function sendMarketingEmail({
 
   const messages = sendable.map((r) => {
     const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(r.email)}`;
-    const personalizedHtml = applyMergeTags(html, r, companyByEmail.get(r.email));
+    const values: MergeTagValues = { name: r.name, company: companyByEmail.get(r.email), email: r.email };
+    const rendered = renderForRecipient(subject, html, values, defaultName);
     const fullHtml = `
-      ${personalizedHtml}
+      ${rendered.html}
       ${footerHtml}
       <p style="color: #9ca3af; font-size: 12px; margin-top: 12px;">
         配信停止をご希望の場合は<a href="${unsubscribeUrl}" style="color: #9ca3af;">こちら</a>から手続きできます。
@@ -324,7 +354,7 @@ export async function sendMarketingEmail({
     return {
       from: `${MARKETING_FROM_NAME} <${MARKETING_FROM_EMAIL}>`,
       to: [r.email],
-      subject,
+      subject: rendered.subject,
       html: fullHtml,
     };
   });
@@ -376,4 +406,112 @@ export async function sendMarketingEmail({
   }
 
   return result;
+}
+
+// Sample data used for previewing/test-sending marketing emails
+const PREVIEW_SAMPLE: MergeTagValues = {
+  name: "サンプル 太郎",
+  company: "サンプル株式会社",
+  email: "sample@example.com",
+};
+
+interface RenderMarketingPreviewParams {
+  subject: string;
+  html: string;
+  defaultName?: string;
+}
+
+// Render subject/html with sample data, footer, and a dummy unsubscribe link.
+// Does not send anything.
+export async function renderMarketingPreview({
+  subject,
+  html,
+  defaultName,
+}: RenderMarketingPreviewParams): Promise<{ subject: string; html: string }> {
+  const footer = await getEmailFooterSettings();
+  const footerHtml = buildFooterHtml(footer);
+  const rendered = renderForRecipient(subject, html, PREVIEW_SAMPLE, defaultName);
+  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(PREVIEW_SAMPLE.email!)}`;
+  const fullHtml = `
+    ${rendered.html}
+    ${footerHtml}
+    <p style="color: #9ca3af; font-size: 12px; margin-top: 12px;">
+      配信停止をご希望の場合は<a href="${unsubscribeUrl}" style="color: #9ca3af;">こちら</a>から手続きできます。
+    </p>
+  `;
+  return { subject: rendered.subject, html: fullHtml };
+}
+
+interface SendTestEmailParams {
+  to: string;
+  subject: string;
+  html: string;
+  defaultName?: string;
+  sentBy?: string;
+}
+
+// Send a single test email to `to` using sample merge-tag data.
+// Bypasses suppression/subscription checks since this is not sent to a real contact.
+export async function sendTestEmail({
+  to,
+  subject,
+  html,
+  defaultName,
+  sentBy,
+}: SendTestEmailParams): Promise<{ success: boolean }> {
+  const rendered = renderForRecipient(subject, html, PREVIEW_SAMPLE, defaultName);
+  const testSubject = `[テスト送信] ${rendered.subject}`;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not set, skipping test email send");
+    await prisma.emailLog.create({
+      data: {
+        toEmail: to,
+        subject: testSubject,
+        status: "test",
+        sentBy: sentBy || "",
+      },
+    });
+    return { success: false };
+  }
+
+  const footer = await getEmailFooterSettings();
+  const footerHtml = buildFooterHtml(footer);
+  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const fullHtml = `
+    ${rendered.html}
+    ${footerHtml}
+    <p style="color: #9ca3af; font-size: 12px; margin-top: 12px;">
+      配信停止をご希望の場合は<a href="${unsubscribeUrl}" style="color: #9ca3af;">こちら</a>から手続きできます。
+    </p>
+  `;
+
+  try {
+    const result = await resend.emails.send({
+      from: `${MARKETING_FROM_NAME} <${MARKETING_FROM_EMAIL}>`,
+      to: [to],
+      subject: testSubject,
+      html: fullHtml,
+    });
+    await prisma.emailLog.create({
+      data: {
+        toEmail: to,
+        subject: testSubject,
+        status: "test",
+        sentBy: sentBy || "",
+      },
+    });
+    return { success: !!result };
+  } catch (error) {
+    console.error("Test email send error:", error);
+    await prisma.emailLog.create({
+      data: {
+        toEmail: to,
+        subject: testSubject,
+        status: "test",
+        sentBy: sentBy || "",
+      },
+    });
+    return { success: false };
+  }
 }

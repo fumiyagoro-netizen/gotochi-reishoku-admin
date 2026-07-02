@@ -134,7 +134,7 @@ model EmailLog {
   id        Int      @id @default(autoincrement())
   toEmail   String
   subject   String
-  status    String   // "sent" | "failed" | "skipped"
+  status    String   // "sent" | "failed" | "skipped" | "test"
   sentBy    String   @default("")
   createdAt DateTime @default(now())
 }

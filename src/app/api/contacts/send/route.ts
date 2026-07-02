@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
-import { sendMarketingEmail } from "@/lib/email";
+import { sendMarketingEmail, renderMarketingPreview, sendTestEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,13 +17,49 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { contactIds, listId, subject, html } = body;
+    const { contactIds, listId, subject, html, defaultName, testEmail, preview } = body;
 
     if (!subject || !html) {
       return NextResponse.json(
         { success: false, message: "件名と本文は必須です" },
         { status: 400 }
       );
+    }
+
+    // Preview: render sample-personalized subject/html, do not send anything
+    if (preview) {
+      const renderedPreview = await renderMarketingPreview({ subject, html, defaultName });
+      return NextResponse.json({ success: true, preview: renderedPreview });
+    }
+
+    // Test send: single email to testEmail with sample merge-tag data
+    if (testEmail) {
+      const user = await getUserFromRequest(request);
+      const testResult = await sendTestEmail({
+        to: testEmail,
+        subject,
+        html,
+        defaultName,
+        sentBy: user?.email || "",
+      });
+
+      await writeAuditLog({
+        userId: user?.userId,
+        userEmail: user?.email,
+        action: "send_email_test",
+        target: "contact",
+        targetId: testEmail,
+        detail: `テスト送信「${subject}」宛先: ${testEmail}`,
+      });
+
+      if (!testResult.success) {
+        return NextResponse.json(
+          { success: false, message: "テスト送信に失敗しました" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ success: true, message: "テスト送信しました" });
     }
 
     if ((!Array.isArray(contactIds) || contactIds.length === 0) && !listId) {
@@ -57,6 +93,7 @@ export async function POST(request: NextRequest) {
       subject,
       html,
       sentBy,
+      defaultName,
     });
 
     await writeAuditLog({

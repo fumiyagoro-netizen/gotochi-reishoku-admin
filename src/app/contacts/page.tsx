@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRole } from "@/lib/role-context";
 
@@ -30,6 +30,7 @@ export default function ContactsPage() {
   const [listId, setListId] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [showSend, setShowSend] = useState(false);
+  const [showBulkSend, setShowBulkSend] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
   const fetchContacts = useCallback(async () => {
@@ -102,6 +103,15 @@ export default function ContactsPage() {
             >
               CSVインポート
             </Link>
+          )}
+          {permissions.canEdit && (
+            <button
+              onClick={() => setShowBulkSend(true)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
+                hover:bg-gray-50 transition-colors"
+            >
+              ✉️ 一括配信
+            </button>
           )}
           {permissions.canEdit && (
             <button
@@ -266,11 +276,20 @@ export default function ContactsPage() {
       {showSend && (
         <SendModal
           contactIds={Array.from(selected)}
+          lists={lists}
           onClose={() => setShowSend(false)}
           onSent={() => {
             setSelected(new Set());
             setShowSend(false);
           }}
+        />
+      )}
+
+      {showBulkSend && (
+        <SendModal
+          lists={lists}
+          onClose={() => setShowBulkSend(false)}
+          onSent={() => setShowBulkSend(false)}
         />
       )}
 
@@ -286,19 +305,41 @@ export default function ContactsPage() {
 
 function SendModal({
   contactIds,
+  lists,
   onClose,
   onSent,
 }: {
-  contactIds: number[];
+  contactIds?: number[];
+  lists: ContactList[];
   onClose: () => void;
   onSent: () => void;
 }) {
+  const hasSelection = !!contactIds && contactIds.length > 0;
+  const [target, setTarget] = useState<"selection" | "list">(hasSelection ? "selection" : "list");
+  const [selectedListId, setSelectedListId] = useState("");
+  const [listSubscribedCount, setListSubscribedCount] = useState<number | null>(null);
+  const [listTotalCount, setListTotalCount] = useState<number | null>(null);
+
   const [subject, setSubject] = useState("");
   const [html, setHtml] = useState("");
+  const [defaultName, setDefaultName] = useState("ご担当者様");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
   const [postalAddress, setPostalAddress] = useState<string | null>(null);
+
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<{ subject: string; html: string } | null>(null);
+  const [previewError, setPreviewError] = useState("");
+
+  const [testEmail, setTestEmail] = useState("");
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState("");
+  const [testError, setTestError] = useState("");
+
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const htmlRef = useRef<HTMLTextAreaElement>(null);
+  const lastFocusedRef = useRef<"subject" | "html">("html");
 
   useEffect(() => {
     fetch("/api/settings")
@@ -308,17 +349,120 @@ function SendModal({
       });
   }, []);
 
+  useEffect(() => {
+    if (target !== "list" || !selectedListId) {
+      setListSubscribedCount(null);
+      setListTotalCount(null);
+      return;
+    }
+    fetch(`/api/contacts?listId=${selectedListId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          const contactsInList: { subscribed: boolean }[] = data.contacts;
+          setListTotalCount(contactsInList.length);
+          setListSubscribedCount(contactsInList.filter((c) => c.subscribed).length);
+        }
+      });
+  }, [target, selectedListId]);
+
+  const targetCount =
+    target === "selection" ? (contactIds?.length ?? 0) : listSubscribedCount;
+
+  const canSend =
+    (target === "selection" && hasSelection) ||
+    (target === "list" && !!selectedListId);
+
+  function insertTag(tag: string) {
+    const placeholder = `{{${tag}}}`;
+    if (lastFocusedRef.current === "subject") {
+      const el = subjectRef.current;
+      const pos = el?.selectionStart ?? subject.length;
+      const next = subject.slice(0, pos) + placeholder + subject.slice(pos);
+      setSubject(next);
+      requestAnimationFrame(() => {
+        el?.focus();
+        el?.setSelectionRange(pos + placeholder.length, pos + placeholder.length);
+      });
+    } else {
+      const el = htmlRef.current;
+      const pos = el?.selectionStart ?? html.length;
+      const next = html.slice(0, pos) + placeholder + html.slice(pos);
+      setHtml(next);
+      requestAnimationFrame(() => {
+        el?.focus();
+        el?.setSelectionRange(pos + placeholder.length, pos + placeholder.length);
+      });
+    }
+  }
+
+  async function handlePreview() {
+    setPreviewLoading(true);
+    setPreviewError("");
+    setPreviewData(null);
+    try {
+      const res = await fetch("/api/contacts/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, html, defaultName, preview: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPreviewData(data.preview);
+      } else {
+        setPreviewError(data.message);
+      }
+    } catch {
+      setPreviewError("プレビューの取得に失敗しました");
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  async function handleTestSend() {
+    setTestSending(true);
+    setTestError("");
+    setTestResult("");
+    try {
+      const res = await fetch("/api/contacts/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, html, defaultName, testEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestResult(data.message);
+      } else {
+        setTestError(data.message);
+      }
+    } catch {
+      setTestError("テスト送信に失敗しました");
+    } finally {
+      setTestSending(false);
+    }
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
+    if (!canSend) return;
+
+    const countLabel = targetCount != null ? `${targetCount}件` : "選択した宛先";
+    if (!window.confirm(`${countLabel}に送信します。よろしいですか？`)) return;
+
     setSending(true);
     setError("");
     setResult("");
 
     try {
+      const body =
+        target === "selection"
+          ? { contactIds, subject, html, defaultName }
+          : { listId: selectedListId, subject, html, defaultName };
+
       const res = await fetch("/api/contacts/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactIds, subject, html }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.success) {
@@ -338,9 +482,17 @@ function SendModal({
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">
-          メール送信
+          メール配信
         </h3>
-        <p className="text-sm text-gray-500 mb-4">{contactIds.length}件に送信します</p>
+        <p className="text-sm text-gray-500 mb-4">
+          {target === "selection"
+            ? `選択した連絡先（${contactIds?.length ?? 0}件）に送信します`
+            : selectedListId
+              ? listSubscribedCount != null
+                ? `配信対象: ${listSubscribedCount}件（購読中のみ、リスト全体${listTotalCount}件）`
+                : "配信対象を読み込み中..."
+              : "配信先のリストを選択してください"}
+        </p>
 
         {postalAddress === "" && (
           <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg">
@@ -364,33 +516,181 @@ function SendModal({
         )}
 
         <form onSubmit={handleSend} className="space-y-4">
+          {/* Target selector */}
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+            <span className="text-sm font-medium text-gray-700 block">配信先</span>
+            <div className="flex flex-col gap-2">
+              {hasSelection && (
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="radio"
+                    checked={target === "selection"}
+                    onChange={() => setTarget("selection")}
+                  />
+                  選択した連絡先（{contactIds?.length}件）
+                </label>
+              )}
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="radio"
+                  checked={target === "list"}
+                  onChange={() => setTarget("list")}
+                />
+                リストから選択
+              </label>
+              {target === "list" && (
+                <select
+                  value={selectedListId}
+                  onChange={(e) => setSelectedListId(e.target.value)}
+                  className="ml-6 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">リストを選択してください</option>
+                  {lists.map((list) => (
+                    <option key={list.id} value={list.id}>
+                      {list.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+
           <label className="block">
             <span className="text-sm font-medium text-gray-700">件名</span>
+            <div className="flex gap-1 mt-1 mb-1">
+              <button
+                type="button"
+                onClick={() => insertTag("name")}
+                className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+              >
+                [お名前]
+              </button>
+              <button
+                type="button"
+                onClick={() => insertTag("company")}
+                className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+              >
+                [会社名]
+              </button>
+            </div>
             <input
+              ref={subjectRef}
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
+              onFocus={() => (lastFocusedRef.current = "subject")}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </label>
 
           <label className="block">
             <span className="text-sm font-medium text-gray-700">本文（HTML可）</span>
+            <div className="flex gap-1 mt-1 mb-1">
+              <button
+                type="button"
+                onClick={() => insertTag("name")}
+                className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+              >
+                [お名前]
+              </button>
+              <button
+                type="button"
+                onClick={() => insertTag("company")}
+                className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+              >
+                [会社名]
+              </button>
+            </div>
             <textarea
+              ref={htmlRef}
               value={html}
               onChange={(e) => setHtml(e.target.value)}
+              onFocus={() => (lastFocusedRef.current = "html")}
               required
               rows={10}
-              placeholder="本文を入力してください。{{name}} / {{company}} で宛先ごとに差し込みできます。"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono
+              placeholder="本文を入力してください。{{name}} / {{company}} / {{email}} で宛先ごとに差し込みできます。{{name|ご担当者様}} のようにフォールバック文字列も指定できます。"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="mt-1 text-xs text-gray-400">
               配信停止リンクと事務局情報は自動で本文末尾に付与されます。
             </p>
           </label>
+
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">名前が空のときの初期値</span>
+            <input
+              type="text"
+              value={defaultName}
+              onChange={(e) => setDefaultName(e.target.value)}
+              className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              {"{{name}}"} に値がなく、フォールバック指定もない場合に使われます。
+            </p>
+          </label>
+
+          {/* Preview */}
+          <div className="p-3 border border-gray-200 rounded-lg space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">プレビュー</span>
+              <button
+                type="button"
+                onClick={handlePreview}
+                disabled={previewLoading || !subject || !html}
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700
+                  hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                {previewLoading ? "読み込み中..." : "プレビュー表示"}
+              </button>
+            </div>
+            {previewError && (
+              <p className="text-sm text-red-600">{previewError}</p>
+            )}
+            {previewData && (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-sm text-gray-700">
+                  件名: {previewData.subject}
+                </div>
+                <iframe
+                  srcDoc={previewData.html}
+                  sandbox=""
+                  className="w-full h-64 bg-white"
+                  title="メールプレビュー"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Test send */}
+          <div className="p-3 border border-gray-200 rounded-lg space-y-2">
+            <span className="text-sm font-medium text-gray-700 block">テスト送信</span>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="test@example.com"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleTestSend}
+                disabled={testSending || !testEmail || !subject || !html}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-700
+                  hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                {testSending ? "送信中..." : "テスト送信"}
+              </button>
+            </div>
+            {testError && <p className="text-sm text-red-600">{testError}</p>}
+            {testResult && <p className="text-sm text-green-600">{testResult}</p>}
+          </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <button
@@ -403,7 +703,7 @@ function SendModal({
             </button>
             <button
               type="submit"
-              disabled={sending}
+              disabled={sending || !canSend}
               className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg font-medium
                 hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
