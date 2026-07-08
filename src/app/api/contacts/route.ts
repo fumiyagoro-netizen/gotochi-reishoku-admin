@@ -9,24 +9,8 @@ import { upsertContact } from "@/lib/contact";
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q") || "";
   const listId = request.nextUrl.searchParams.get("listId");
-  const t0 = Date.now();
 
   try {
-    // [診断] 接続プローブ（Vercel関数の実行上限より短い内部タイムアウトで切る）
-    await Promise.race([
-      prisma.$queryRaw`SELECT 1`,
-      new Promise((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new Error("接続テスト(SELECT 1)が8秒応答なし＝関数からDBへの接続が確立できていません")
-            ),
-          8000
-        )
-      ),
-    ]);
-    const connMs = Date.now() - t0;
-
     const where = {
       AND: [
         q
@@ -50,17 +34,12 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      contacts,
-      _diag: `接続${connMs}ms / 合計${Date.now() - t0}ms`,
-    });
+    return NextResponse.json({ success: true, contacts });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error("[diag] contacts GET failed:", msg);
+    console.error("Contacts GET error:", error);
     return NextResponse.json(
-      { success: false, message: `[診断] ${msg}（経過${Date.now() - t0}ms）` },
-      { status: 200 }
+      { success: false, message: "連絡先の取得に失敗しました" },
+      { status: 500 }
     );
   }
 }
