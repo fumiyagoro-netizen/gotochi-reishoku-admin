@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Keep the Neon serverless driver + ws out of the webpack bundle; they have
+  // native/optional deps that break when bundled and must be loaded at runtime.
+  serverExternalPackages: ["@prisma/adapter-neon", "@neondatabase/serverless", "ws"],
   async headers() {
     return [
       {
