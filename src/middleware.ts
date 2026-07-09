@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth-core";
 
-const PUBLIC_PATHS = ["/login", "/api/auth", "/entry", "/api/entry", "/results", "/api/images", "/favicon.ico", "/unsubscribe", "/api/unsubscribe"];
+const PUBLIC_PATHS = ["/login", "/api/auth", "/entry", "/api/entry", "/results", "/api/images", "/favicon.ico", "/unsubscribe", "/api/unsubscribe", "/api/diag"];
 
 // Public form paths: /f/<slug> (form page) and /api/forms/<slug>/submit (submission),
 // distinct from the admin /forms and /api/forms routes which stay protected.
