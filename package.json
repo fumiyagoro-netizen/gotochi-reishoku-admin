@@ -13,6 +13,8 @@
     "create-admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^6.19.2",
     "@prisma/client": "^6.3.0",
     "@vercel/blob": "^2.3.1",
     "bcryptjs": "^3.0.3",
@@ -25,7 +27,8 @@
     "papaparse": "^5.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "resend": "^6.9.4"
+    "resend": "^6.9.4",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -36,6 +39,7 @@
     "@types/papaparse": "^5.3.15",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "prisma": "^6.3.0",
