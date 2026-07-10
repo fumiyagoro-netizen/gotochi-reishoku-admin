@@ -197,6 +197,11 @@ export async function sendReviewPassNotification(params: {
 interface MarketingRecipient {
   email: string;
   name?: string;
+  /** Optional caller-supplied company name for the {{company}} merge tag.
+   *  When omitted, falls back to a Contact lookup by email (existing
+   *  behavior, unchanged for callers that don't set this — e.g. the
+   *  Contact/ContactList marketing flow at /api/contacts/send). */
+  company?: string;
 }
 
 interface SendMarketingEmailParams {
@@ -352,7 +357,11 @@ export async function sendMarketingEmail({
 
   const messages = sendable.map((r) => {
     const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(r.email)}`;
-    const values: MergeTagValues = { name: r.name, company: companyByEmail.get(r.email), email: r.email };
+    const values: MergeTagValues = {
+      name: r.name,
+      company: r.company ?? companyByEmail.get(r.email),
+      email: r.email,
+    };
     const rendered = renderForRecipient(subject, html, values, defaultName);
     const fullHtml = `
       ${rendered.html}

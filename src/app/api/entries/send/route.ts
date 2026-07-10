@@ -109,7 +109,10 @@ export async function POST(request: NextRequest) {
     const sentBy = user?.email || "";
 
     const result = await sendMarketingEmail({
-      recipients: recipients.map((r) => ({ email: r.email, name: r.name })),
+      // name/company come straight from the matched Entry (see entry-mail.ts),
+      // not from Contact — applicant merge tags are always filled from
+      // application data, independent of Contact sync state.
+      recipients: recipients.map((r) => ({ email: r.email, name: r.name, company: r.company })),
       subject,
       html,
       sentBy,
