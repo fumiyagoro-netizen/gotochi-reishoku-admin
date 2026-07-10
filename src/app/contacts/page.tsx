@@ -112,7 +112,7 @@ export default function ContactsPage() {
               CSVインポート
             </Link>
           )}
-          {permissions.canEdit && (
+          {permissions.canSendEmail && (
             <button
               onClick={() => setShowBulkSend(true)}
               className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
@@ -182,7 +182,7 @@ export default function ContactsPage() {
       </form>
 
       {/* Bulk Action Bar */}
-      {permissions.canEdit && selected.size > 0 && (
+      {permissions.canSendEmail && selected.size > 0 && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3">
           <span className="text-sm font-medium text-blue-700">
             {selected.size}件選択中
@@ -210,7 +210,7 @@ export default function ContactsPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {permissions.canEdit && (
+                {permissions.canSendEmail && (
                   <th className="px-3 py-3 w-10">
                     <input
                       type="checkbox"
@@ -236,7 +236,7 @@ export default function ContactsPage() {
                     selected.has(contact.id) ? "bg-blue-50/50" : ""
                   }`}
                 >
-                  {permissions.canEdit && (
+                  {permissions.canSendEmail && (
                     <td className="px-3 py-3">
                       <input
                         type="checkbox"

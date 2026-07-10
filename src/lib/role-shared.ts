@@ -22,6 +22,10 @@ export const PERMISSIONS = {
     canUpload: true,
     canDownload: true,
     canSeePrivateInfo: true,
+    // Mass email (marketing-style) sending is restricted to admins only.
+    // Fixed-template transactional mail (entry confirmation, admin
+    // notifications, review-pass notices) is NOT gated by this flag.
+    canSendEmail: true,
   },
   editor: {
     canDelete: false,
@@ -30,6 +34,7 @@ export const PERMISSIONS = {
     canUpload: true,
     canDownload: true,
     canSeePrivateInfo: true,
+    canSendEmail: false,
   },
   viewer: {
     canDelete: false,
@@ -38,6 +43,7 @@ export const PERMISSIONS = {
     canUpload: false,
     canDownload: false,
     canSeePrivateInfo: false,
+    canSendEmail: false,
   },
 } as const;
 

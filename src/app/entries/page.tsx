@@ -79,15 +79,26 @@ export default async function EntriesPage({ searchParams }: Props) {
             {total}件
           </span>
         </h2>
-        {total > 0 && perms.canDownload && (
-          <a
-            href={`/api/entries/export${year ? `?year=${year}` : ""}`}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-              hover:bg-gray-50 transition-colors"
-          >
-            📥 Excelダウンロード
-          </a>
-        )}
+        <div className="flex items-center gap-2">
+          {perms.canSendEmail && (
+            <Link
+              href="/entries/email"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
+                hover:bg-gray-50 transition-colors"
+            >
+              ✉️ 応募者へメール配信
+            </Link>
+          )}
+          {total > 0 && perms.canDownload && (
+            <a
+              href={`/api/entries/export${year ? `?year=${year}` : ""}`}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
+                hover:bg-gray-50 transition-colors"
+            >
+              📥 Excelダウンロード
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Search & Filter */}

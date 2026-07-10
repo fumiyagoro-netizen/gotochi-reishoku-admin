@@ -9,9 +9,9 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canEdit) {
+    if (!perms.canSendEmail) {
       return NextResponse.json(
-        { success: false, message: "送信権限がありません" },
+        { success: false, message: "メール配信は管理者のみ実行できます" },
         { status: 403 }
       );
     }
