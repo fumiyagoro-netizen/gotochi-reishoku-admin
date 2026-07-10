@@ -4,10 +4,13 @@ import { handleFormSubmission } from "@/lib/form";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { slug } = await params;
+    // Route segment is named [id] to match sibling admin routes under
+    // /api/forms/[id]/* (Next.js requires one dynamic segment name per level).
+    // The value itself is still the form's slug, not its numeric id.
+    const { id: slug } = await params;
 
     const form = await prisma.form.findUnique({ where: { slug } });
     if (!form || form.status !== "published") {

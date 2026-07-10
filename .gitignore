@@ -42,3 +42,4 @@ public/uploads/
 
 # other project files
 /aelle/
+.env*
