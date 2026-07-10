@@ -23,7 +23,7 @@ export async function PATCH(
 
     const data: Record<string, unknown> = {};
     if (body.name !== undefined) data.name = body.name;
-    if (body.role !== undefined && ["admin", "editor", "viewer"].includes(body.role)) {
+    if (body.role !== undefined && ["admin", "representative", "editor", "viewer"].includes(body.role)) {
       data.role = body.role;
     }
     if (body.isActive !== undefined) data.isActive = Boolean(body.isActive);

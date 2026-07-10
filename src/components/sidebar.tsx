@@ -54,6 +54,7 @@ export function Sidebar({
 
   const roleColors: Record<Role, string> = {
     admin: "bg-red-100 text-red-700",
+    representative: "bg-purple-100 text-purple-700",
     editor: "bg-blue-100 text-blue-700",
     viewer: "bg-gray-100 text-gray-600",
   };

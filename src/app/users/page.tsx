@@ -262,6 +262,7 @@ function UserFormModal({
                 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="admin">管理者 — すべての操作が可能</option>
+              <option value="representative">代表者 — 設定・ユーザー管理・操作ログ・年度管理・削除以外</option>
               <option value="editor">編集者 — 削除・受賞設定以外</option>
               <option value="viewer">閲覧者 — 閲覧のみ</option>
             </select>

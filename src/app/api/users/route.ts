@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["admin", "editor", "viewer"].includes(role)) {
+    if (!["admin", "representative", "editor", "viewer"].includes(role)) {
       return NextResponse.json(
         { success: false, message: "無効なロールです" },
         { status: 400 }

@@ -7,8 +7,8 @@ import { sendReviewPassNotification } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   const role = await getRoleFromRequest(request);
-  if (role !== "admin") {
-    return NextResponse.json({ success: false, message: "管理者のみ実行できます" }, { status: 403 });
+  if (role !== "admin" && role !== "representative") {
+    return NextResponse.json({ success: false, message: "管理者・代表者のみ実行できます" }, { status: 403 });
   }
 
   const user = await getUserFromRequest(request);
