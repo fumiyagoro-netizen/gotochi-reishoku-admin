@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { upsertContact } from "./contact";
+import { sendFormAutoReply } from "./email";
 
 /**
  * FormField definition shape (stored as JSON in Form.fields):
@@ -67,6 +68,9 @@ export interface FormLike {
   fields: unknown;
   targetListId: number | null;
   requireOptIn: boolean;
+  autoReplyEnabled: boolean;
+  autoReplySubject: string;
+  autoReplyBody: string;
 }
 
 /** Validate required fields and normalize answers against the field definitions. */
@@ -117,6 +121,12 @@ export async function handleFormSubmission(
   const emailField = fields.find((f) => f.mapTo === "email");
   let contactId: number | undefined;
 
+  // Auto-reply destination/merge-tag values, resolved below alongside the
+  // Contact mapping (same mapTo:"email"/"name"/"companyName" fields).
+  let autoReplyTo: string | undefined;
+  let autoReplyName: string | undefined;
+  let autoReplyCompany: string | undefined;
+
   if (emailField) {
     const rawEmail = answers[emailField.id];
     const email = (Array.isArray(rawEmail) ? rawEmail[0] : rawEmail || "").trim();
@@ -131,6 +141,10 @@ export async function handleFormSubmission(
         const v = answers[f.id];
         return Array.isArray(v) ? v.join(", ") : v;
       };
+
+      autoReplyTo = email;
+      autoReplyName = pick(nameField);
+      autoReplyCompany = pick(companyField);
 
       const contact = await upsertContact({
         email,
@@ -171,6 +185,22 @@ export async function handleFormSubmission(
       ipAddress: ip,
     },
   });
+
+  // Auto-reply to the respondent (best-effort: failures must never fail the
+  // submission itself, since the answer is already persisted above).
+  if (form.autoReplyEnabled && autoReplyTo) {
+    try {
+      await sendFormAutoReply({
+        to: autoReplyTo,
+        subject: form.autoReplySubject,
+        body: form.autoReplyBody,
+        name: autoReplyName,
+        company: autoReplyCompany,
+      });
+    } catch (error) {
+      console.error("Form auto-reply send error:", error);
+    }
+  }
 
   return submission;
 }

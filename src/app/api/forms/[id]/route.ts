@@ -13,6 +13,9 @@ const EDITABLE_FIELDS = [
   "requireOptIn",
   "thankYouMessage",
   "slug",
+  "autoReplyEnabled",
+  "autoReplySubject",
+  "autoReplyBody",
 ];
 
 export async function GET(
@@ -81,7 +84,7 @@ export async function PATCH(
       if (key in body) {
         if (key === "targetListId") {
           data[key] = body[key] ? parseInt(body[key]) : null;
-        } else if (key === "requireOptIn") {
+        } else if (key === "requireOptIn" || key === "autoReplyEnabled") {
           data[key] = !!body[key];
         } else {
           data[key] = body[key];

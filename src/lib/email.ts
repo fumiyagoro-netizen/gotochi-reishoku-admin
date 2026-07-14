@@ -246,7 +246,7 @@ interface MergeTagValues {
 // Replace {{tag}} / {{tag|fallback}} occurrences with values from `values`.
 // If a tag has no fallback and its value is empty, `defaultName` is used for
 // the `name` tag only; other tags fall back to an empty string.
-function applyMergeTags(text: string, values: MergeTagValues, defaultName: string = "ご担当者様"): string {
+export function applyMergeTags(text: string, values: MergeTagValues, defaultName: string = "ご担当者様"): string {
   return text.replace(/\{\{\s*(name|company|email)\s*(?:\|\s*([^}]*?)\s*)?\}\}/g, (_match, tag: string, fallback?: string) => {
     const raw = values[tag as keyof MergeTagValues];
     if (raw) return raw;
@@ -259,7 +259,7 @@ function applyMergeTags(text: string, values: MergeTagValues, defaultName: strin
 // Convert a plain-text body into HTML line breaks. If the body already contains
 // block-level HTML (br/p/div/table/list/heading), it is treated as authored HTML
 // and left untouched so power users keep full control.
-function normalizeBodyHtml(body: string): string {
+export function normalizeBodyHtml(body: string): string {
   const hasBlockHtml = /<(br|p|div|table|ul|ol|li|h[1-6])\b/i.test(body);
   if (hasBlockHtml) return body;
   return body.replace(/\r\n?/g, "\n").replace(/\n/g, "<br>\n");
@@ -277,6 +277,36 @@ function renderForRecipient(
     subject: applyMergeTags(subject, values, defaultName),
     html: applyMergeTags(normalizeBodyHtml(html), values, defaultName),
   };
+}
+
+// ---- Form builder auto-reply email ----
+
+interface SendFormAutoReplyParams {
+  to: string;
+  subject: string;
+  body: string; // admin-authored subject/body; supports {{name}} / {{company}} merge tags
+  name?: string;
+  company?: string;
+}
+
+// Sends the form's configured auto-reply to the respondent. Merge tags are
+// applied and plain-text line breaks are normalized to <br>, reusing the
+// same renderer as marketing email. Callers (handleFormSubmission) are
+// expected to catch/log errors so a send failure never blocks the
+// underlying form submission from succeeding.
+export async function sendFormAutoReply({ to, subject, body, name, company }: SendFormAutoReplyParams) {
+  const values: MergeTagValues = { name, company, email: to };
+  const rendered = renderForRecipient(subject, body, values);
+
+  return sendEmail({
+    to,
+    subject: rendered.subject,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        ${rendered.html}
+      </div>
+    `,
+  });
 }
 
 export async function sendMarketingEmail({

@@ -156,6 +156,9 @@ model Form {
   targetListId    Int?     // 回答者を登録する見込みリスト（任意）
   requireOptIn    Boolean  @default(false)
   thankYouMessage String   @default("")
+  autoReplyEnabled Boolean @default(false)
+  autoReplySubject String  @default("")
+  autoReplyBody    String  @default("")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   submissions     FormSubmission[]

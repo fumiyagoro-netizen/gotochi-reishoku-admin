@@ -69,6 +69,9 @@ export async function POST(request: NextRequest) {
         targetListId: body.targetListId ? parseInt(body.targetListId) : null,
         requireOptIn: !!body.requireOptIn,
         thankYouMessage: body.thankYouMessage || "",
+        autoReplyEnabled: !!body.autoReplyEnabled,
+        autoReplySubject: body.autoReplySubject || "",
+        autoReplyBody: body.autoReplyBody || "",
       },
     });
 

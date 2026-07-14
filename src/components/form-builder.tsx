@@ -19,6 +19,9 @@ export interface FormData {
   targetListId: number | null;
   requireOptIn: boolean;
   thankYouMessage: string;
+  autoReplyEnabled: boolean;
+  autoReplySubject: string;
+  autoReplyBody: string;
 }
 
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
@@ -57,6 +60,9 @@ const EMPTY_FORM: FormData = {
   targetListId: null,
   requireOptIn: false,
   thankYouMessage: "",
+  autoReplyEnabled: false,
+  autoReplySubject: "",
+  autoReplyBody: "",
 };
 
 export function FormBuilder({ initial }: { initial?: FormData }) {
@@ -80,6 +86,7 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
   }, [fetchLists]);
 
   const publicUrl = form.slug ? `${typeof window !== "undefined" ? window.location.origin : ""}/f/${form.slug}` : "";
+  const hasEmailField = form.fields.some((f) => f.mapTo === "email");
 
   function update<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -146,6 +153,9 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
           targetListId: form.targetListId,
           requireOptIn: form.requireOptIn,
           thankYouMessage: form.thankYouMessage,
+          autoReplyEnabled: form.autoReplyEnabled,
+          autoReplySubject: form.autoReplySubject,
+          autoReplyBody: form.autoReplyBody,
         }),
       });
       const data = await res.json();
@@ -270,6 +280,55 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
           />
           <span className="text-sm text-gray-700">メルマガ配信の同意を求める（同意した回答者のみ配信対象になります）</span>
         </label>
+
+        <div className="pt-2 border-t border-gray-100 space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.autoReplyEnabled}
+              onChange={(e) => update("autoReplyEnabled", e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-700">自動返信メールを送る</span>
+          </label>
+
+          {!hasEmailField && (
+            <p className="text-xs text-amber-600">
+              「メールアドレス」にマッピングされた項目がまだありません。自動返信を送るには、項目のいずれかで「連絡先へのマッピング」を「メールアドレス」に設定してください。
+            </p>
+          )}
+
+          {form.autoReplyEnabled && (
+            <div className="space-y-3 pl-6">
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">件名</span>
+                <input
+                  type="text"
+                  value={form.autoReplySubject}
+                  onChange={(e) => update("autoReplySubject", e.target.value)}
+                  placeholder="お問い合わせありがとうございます"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">本文</span>
+                <textarea
+                  value={form.autoReplyBody}
+                  onChange={(e) => update("autoReplyBody", e.target.value)}
+                  rows={6}
+                  placeholder={"{{name}} 様\n\nこの度はお問い合わせいただきありがとうございます。\n内容を確認の上、担当者よりご連絡いたします。"}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="mt-1 block text-xs text-gray-400">
+                  差し込みタグ {"{{name}}"}（名前）・{"{{company}}"}（企業名）が使えます。改行はそのままメール本文に反映されます。
+                </span>
+              </label>
+            </div>
+          )}
+        </div>
 
         {isEdit && (
           <div className="pt-2 border-t border-gray-100">
