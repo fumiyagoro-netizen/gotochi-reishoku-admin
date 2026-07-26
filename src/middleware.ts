@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth-core";
-
-const PUBLIC_PATHS = ["/login", "/api/auth", "/entry", "/api/entry", "/results", "/api/images", "/favicon.ico", "/unsubscribe", "/api/unsubscribe", "/api/diag", "/api/ping"];
-
-// Public form paths: /f/<slug> (form page) and /api/forms/<slug>/submit (submission),
-// distinct from the admin /forms and /api/forms routes which stay protected.
-const PUBLIC_FORM_PATH = /^\/f(\/|$)/;
-const FORM_SUBMIT_PATH = /^\/api\/forms\/[^/]+\/submit$/;
-const FORM_UPLOAD_PATH = /^\/api\/forms\/upload$/;
+import {
+  PUBLIC_PATHS,
+  PUBLIC_FORM_PATH,
+  FORM_SUBMIT_PATH,
+  FORM_UPLOAD_PATH,
+  matchesPathPrefix,
+} from "@/lib/public-paths";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Propagate the current pathname to Server Components via a request
+  // header, since Next.js has no built-in API to read it there (e.g.
+  // RootLayout uses this to decide whether to render the admin sidebar).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  const next = () => NextResponse.next({ request: { headers: requestHeaders } });
+
   // Allow public paths
   if (
-    PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
+    PUBLIC_PATHS.some((p) => matchesPathPrefix(pathname, p)) ||
     PUBLIC_FORM_PATH.test(pathname) ||
     FORM_SUBMIT_PATH.test(pathname) ||
     FORM_UPLOAD_PATH.test(pathname)
   ) {
-    return NextResponse.next();
+    return next();
   }
 
   // Allow static assets and Next.js internals
@@ -28,7 +34,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/uploads") ||
     pathname.startsWith("/favicon")
   ) {
-    return NextResponse.next();
+    return next();
   }
 
   // Check auth token
@@ -44,7 +50,7 @@ export async function middleware(request: NextRequest) {
     return res;
   }
 
-  return NextResponse.next();
+  return next();
 }
 
 export const config = {

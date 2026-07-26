@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getCachedCurrentUser } from "@/lib/auth";
 import { getPermissions } from "@/lib/role-shared";
 import { RoleProvider } from "@/lib/role-context";
 import { SidebarWrapper } from "@/components/sidebar-wrapper";
+import { isPublicPagePath } from "@/lib/public-paths";
 
 export const metadata: Metadata = {
   title: "ご当地冷凍食品大賞 管理システム",
@@ -16,10 +18,15 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const headerList = await headers();
+  const pathname = headerList.get("x-pathname") ?? "";
+
   const user = await getCachedCurrentUser();
 
+  // Public pages (src/app/(public)/*, e.g. /f/<slug>, /entry, /results,
+  // /unsubscribe) never show the admin sidebar, regardless of login state.
   // Not logged in - render without sidebar (login page)
-  if (!user) {
+  if (isPublicPagePath(pathname) || !user) {
     return (
       <html lang="ja">
         <body className="bg-gray-50 min-h-screen">{children}</body>
