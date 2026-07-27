@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
         autoReplyEnabled: !!body.autoReplyEnabled,
         autoReplySubject: body.autoReplySubject || "",
         autoReplyBody: body.autoReplyBody || "",
+        notifyEmails: body.notifyEmails || "",
       },
     });
 

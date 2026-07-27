@@ -2,7 +2,19 @@ import { Resend } from "resend";
 import { prisma } from "./prisma";
 import { getEmailFooterSettings } from "./settings";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// The Resend client is created on first send rather than at module scope:
+// `new Resend(undefined)` throws immediately, which fails `next build` (page
+// data collection imports this module) in any environment without
+// RESEND_API_KEY. Every sender below already checks the key before calling
+// getResend(), so a missing key degrades to "skip the send", not a crash.
+let resendClient: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@gotouchireisyoku.com";
 const FROM_NAME = "ご当地冷凍食品大賞 事務局";
@@ -25,7 +37,7 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
   }
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: Array.isArray(to) ? to : [to],
       subject,
@@ -279,6 +291,75 @@ function renderForRecipient(
   };
 }
 
+// ---- Form builder admin notification email ----
+
+// Minimal HTML-escaping for values that originate from public form
+// submissions (anyone can POST to /api/forms/[id]/submit). Unlike the
+// entry-flow emails above, this notification renders an arbitrary,
+// admin-defined set of fields, so every label/value must be escaped before
+// being interpolated into the HTML string.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+interface SendFormAdminNotificationParams {
+  to: string[];
+  formTitle: string;
+  formId: number;
+  answers: Array<{ label: string; value: string }>;
+  submissionId?: number;
+}
+
+// Notifies admins of a new form-builder submission. Field definitions are
+// dynamic per-form, so (unlike sendAdminNotification's fixed Entry columns)
+// this renders a generic label/value table from whatever fields the form
+// author configured. Callers (handleFormSubmission) are expected to
+// catch/log errors so a send failure never blocks the underlying form
+// submission from succeeding.
+export async function sendFormAdminNotification({
+  to,
+  formTitle,
+  formId,
+  answers,
+  submissionId,
+}: SendFormAdminNotificationParams) {
+  if (to.length === 0) return null;
+
+  const rows = answers
+    .map(
+      (a, i) => `
+          <tr style="background: ${i % 2 === 0 ? "#f3f4f6" : "#ffffff"};">
+            <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; width: 140px;">${escapeHtml(a.label)}</td>
+            <td style="padding: 10px; border: 1px solid #e5e7eb;">${escapeHtml(a.value) || "未入力"}</td>
+          </tr>`
+    )
+    .join("");
+
+  return sendEmail({
+    to,
+    subject: `【フォーム回答】${formTitle}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #059669; border-bottom: 2px solid #059669; padding-bottom: 10px;">
+          新規フォーム回答通知
+        </h2>
+        <p>「${escapeHtml(formTitle)}」に新しい回答がありました。</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          ${rows}
+        </table>
+        <p style="font-size: 14px;">
+          <a href="${APP_URL}/forms/${formId}/submissions" style="color: #1e40af;">管理画面で回答を確認 →</a>
+        </p>
+      </div>
+    `,
+  });
+}
+
 // ---- Form builder auto-reply email ----
 
 interface SendFormAutoReplyParams {
@@ -414,7 +495,7 @@ export async function sendMarketingEmail({
     const batchRecipients = sendable.slice(i, i + BATCH_SIZE);
 
     try {
-      const { data, error } = await resend.batch.send(batch);
+      const { data, error } = await getResend().batch.send(batch);
       if (error) {
         console.error("Marketing email batch send error:", error);
         await prisma.emailLog.createMany({
@@ -536,7 +617,7 @@ export async function sendTestEmail({
   `;
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: `${MARKETING_FROM_NAME} <${MARKETING_FROM_EMAIL}>`,
       to: [to],
       subject: testSubject,

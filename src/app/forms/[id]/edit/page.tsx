@@ -28,6 +28,7 @@ export default function EditFormPage({ params }: { params: Promise<{ id: string 
             autoReplyEnabled: data.form.autoReplyEnabled,
             autoReplySubject: data.form.autoReplySubject,
             autoReplyBody: data.form.autoReplyBody,
+            notifyEmails: data.form.notifyEmails,
           });
         } else {
           setError(data.message);

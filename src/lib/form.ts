@@ -1,6 +1,6 @@
 import { prisma } from "./prisma";
 import { upsertContact } from "./contact";
-import { sendFormAutoReply } from "./email";
+import { sendFormAutoReply, sendFormAdminNotification } from "./email";
 
 /**
  * FormField definition shape (stored as JSON in Form.fields):
@@ -65,12 +65,14 @@ export async function generateSlug(title?: string): Promise<string> {
 
 export interface FormLike {
   id: number;
+  title: string;
   fields: unknown;
   targetListId: number | null;
   requireOptIn: boolean;
   autoReplyEnabled: boolean;
   autoReplySubject: string;
   autoReplyBody: string;
+  notifyEmails: string;
 }
 
 /** Validate required fields and normalize answers against the field definitions. */
@@ -199,6 +201,31 @@ export async function handleFormSubmission(
       });
     } catch (error) {
       console.error("Form auto-reply send error:", error);
+    }
+  }
+
+  // Admin notification (best-effort: same failure-isolation as the
+  // auto-reply above — the answer is already persisted regardless).
+  const notifyEmails = form.notifyEmails
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  if (notifyEmails.length > 0) {
+    try {
+      const notifyAnswers = fields.map((f) => {
+        const v = answers[f.id];
+        const value = Array.isArray(v) ? v.join(", ") : v || "";
+        return { label: f.label, value };
+      });
+      await sendFormAdminNotification({
+        to: notifyEmails,
+        formTitle: form.title,
+        formId: form.id,
+        answers: notifyAnswers,
+        submissionId: submission.id,
+      });
+    } catch (error) {
+      console.error("Form admin notification send error:", error);
     }
   }
 

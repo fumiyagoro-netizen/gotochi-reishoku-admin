@@ -22,6 +22,7 @@ export interface FormData {
   autoReplyEnabled: boolean;
   autoReplySubject: string;
   autoReplyBody: string;
+  notifyEmails: string;
 }
 
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
@@ -63,6 +64,7 @@ const EMPTY_FORM: FormData = {
   autoReplyEnabled: false,
   autoReplySubject: "",
   autoReplyBody: "",
+  notifyEmails: "",
 };
 
 export function FormBuilder({ initial }: { initial?: FormData }) {
@@ -156,6 +158,7 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
           autoReplyEnabled: form.autoReplyEnabled,
           autoReplySubject: form.autoReplySubject,
           autoReplyBody: form.autoReplyBody,
+          notifyEmails: form.notifyEmails,
         }),
       });
       const data = await res.json();
@@ -328,6 +331,23 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
               </label>
             </div>
           )}
+        </div>
+
+        <div className="pt-2 border-t border-gray-100 space-y-3">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">管理者への通知先メールアドレス</span>
+            <input
+              type="text"
+              value={form.notifyEmails}
+              onChange={(e) => update("notifyEmails", e.target.value)}
+              placeholder="例: admin@example.com, staff@example.com"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="mt-1 block text-xs text-gray-400">
+              カンマ区切りで複数設定できます。回答があるたびに通知メールが届きます。空欄の場合は通知しません。
+            </span>
+          </label>
         </div>
 
         {isEdit && (

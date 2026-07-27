@@ -16,6 +16,7 @@ const EDITABLE_FIELDS = [
   "autoReplyEnabled",
   "autoReplySubject",
   "autoReplyBody",
+  "notifyEmails",
 ];
 
 export async function GET(

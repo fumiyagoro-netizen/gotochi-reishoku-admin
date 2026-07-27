@@ -159,6 +159,7 @@ model Form {
   autoReplyEnabled Boolean @default(false)
   autoReplySubject String  @default("")
   autoReplyBody    String  @default("")
+  notifyEmails    String   @default("") // comma-separated email addresses for admin notifications
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   submissions     FormSubmission[]
