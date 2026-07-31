@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { setContactLists } from "@/lib/contact";
 
 const EDITABLE_FIELDS = ["name", "companyName", "phone", "note", "subscribed", "email"];
 
@@ -69,6 +70,35 @@ export async function PATCH(
       where: { id: contactId },
       data,
     });
+
+    // listIds が body に無ければリスト所属には一切触れない（スカラー項目だけの
+    // 更新でリストが消えることを防ぐ）。存在する場合のみ完全同期する。
+    if ("listIds" in body) {
+      const listIds = Array.isArray(body.listIds)
+        ? body.listIds.map((v: unknown) => Number(v)).filter((n: number) => Number.isFinite(n))
+        : [];
+
+      const before = await prisma.contactListMembership.findMany({
+        where: { contactId },
+        include: { list: { select: { name: true } } },
+      });
+      const beforeNames = before.map((m) => m.list.name).sort();
+
+      await setContactLists(contactId, listIds);
+
+      const afterLists =
+        listIds.length > 0
+          ? await prisma.contactList.findMany({
+              where: { id: { in: listIds } },
+              select: { name: true },
+            })
+          : [];
+      const afterNames = afterLists.map((l) => l.name).sort();
+
+      if (beforeNames.join(",") !== afterNames.join(",")) {
+        changes.push(`リスト: ${afterNames.length > 0 ? afterNames.join(", ") : "なし"}`);
+      }
+    }
 
     const user = await getUserFromRequest(request);
     if (changes.length > 0) {

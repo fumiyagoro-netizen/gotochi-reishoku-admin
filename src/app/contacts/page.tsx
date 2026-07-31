@@ -23,6 +23,8 @@ interface Contact {
 
 export default function ContactsPage() {
   const { permissions } = useRole();
+  // 行選択（チェックボックス）は一斉送信・リスト一括追加のどちらかが使える人に表示
+  const canSelect = permissions.canSendEmail || permissions.canEdit;
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,8 +34,10 @@ export default function ContactsPage() {
   const [showSend, setShowSend] = useState(false);
   const [showBulkSend, setShowBulkSend] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showAddToList, setShowAddToList] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [feedbackMsg, setFeedbackMsg] = useState("");
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -140,6 +144,12 @@ export default function ContactsPage() {
         </div>
       )}
 
+      {feedbackMsg && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg break-words">
+          {feedbackMsg}
+        </div>
+      )}
+
       {/* Search & Filter */}
       <form onSubmit={handleSearch} className="flex gap-3 mb-6">
         <input
@@ -183,18 +193,29 @@ export default function ContactsPage() {
       </form>
 
       {/* Bulk Action Bar */}
-      {permissions.canSendEmail && selected.size > 0 && (
+      {canSelect && selected.size > 0 && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3">
           <span className="text-sm font-medium text-blue-700">
             {selected.size}件選択中
           </span>
-          <button
-            onClick={() => setShowSend(true)}
-            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium
-              hover:bg-blue-700 transition-colors"
-          >
-            ✉️ 選択して送信
-          </button>
+          {permissions.canSendEmail && (
+            <button
+              onClick={() => setShowSend(true)}
+              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg font-medium
+                hover:bg-blue-700 transition-colors"
+            >
+              ✉️ 選択して送信
+            </button>
+          )}
+          {permissions.canEdit && (
+            <button
+              onClick={() => setShowAddToList(true)}
+              className="px-3 py-1.5 border border-blue-300 text-blue-700 bg-white text-sm rounded-lg
+                font-medium hover:bg-blue-100 transition-colors"
+            >
+              リストに追加
+            </button>
+          )}
           <button
             onClick={() => setSelected(new Set())}
             className="ml-auto text-sm text-gray-500 hover:text-gray-700"
@@ -211,7 +232,7 @@ export default function ContactsPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {permissions.canSendEmail && (
+                {canSelect && (
                   <th className="px-3 py-3 w-10">
                     <input
                       type="checkbox"
@@ -240,7 +261,7 @@ export default function ContactsPage() {
                     selected.has(contact.id) ? "bg-blue-50/50" : ""
                   }`}
                 >
-                  {permissions.canSendEmail && (
+                  {canSelect && (
                     <td className="px-3 py-3">
                       <input
                         type="checkbox"
@@ -292,7 +313,7 @@ export default function ContactsPage() {
               {contacts.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6 + (permissions.canSendEmail ? 1 : 0) + (permissions.canEdit ? 1 : 0)}
+                    colSpan={6 + (canSelect ? 1 : 0) + (permissions.canEdit ? 1 : 0)}
                     className="px-4 py-12 text-center text-gray-400"
                   >
                     連絡先データがありません
@@ -327,8 +348,22 @@ export default function ContactsPage() {
       {showForm && (
         <ContactFormModal
           contact={editingContact}
+          lists={lists}
           onClose={() => { setShowForm(false); setEditingContact(null); }}
           onSaved={fetchContacts}
+        />
+      )}
+
+      {showAddToList && (
+        <AddToListModal
+          contactIds={Array.from(selected)}
+          lists={lists}
+          onClose={() => setShowAddToList(false)}
+          onAdded={(message) => {
+            setFeedbackMsg(message);
+            setSelected(new Set());
+            fetchContacts();
+          }}
         />
       )}
     </div>
@@ -773,10 +808,12 @@ function SendModal({
 
 function ContactFormModal({
   contact,
+  lists,
   onClose,
   onSaved,
 }: {
   contact: Contact | null;
+  lists: ContactList[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -785,8 +822,17 @@ function ContactFormModal({
   const [name, setName] = useState(contact?.name || "");
   const [companyName, setCompanyName] = useState(contact?.companyName || "");
   const [phone, setPhone] = useState(contact?.phone || "");
+  const [selectedListIds, setSelectedListIds] = useState<string[]>(
+    contact?.memberships.map((m) => String(m.list.id)) || []
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function toggleListId(id: string) {
+    setSelectedListIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -799,7 +845,13 @@ function ContactFormModal({
         {
           method: isEdit ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, name, companyName, phone }),
+          body: JSON.stringify({
+            email,
+            name,
+            companyName,
+            phone,
+            listIds: selectedListIds.map((id) => Number(id)),
+          }),
         }
       );
       const data = await res.json();
@@ -872,6 +924,31 @@ function ContactFormModal({
             />
           </label>
 
+          <div>
+            <span className="text-sm font-medium text-gray-700 block mb-1">リスト</span>
+            <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white p-2 space-y-1">
+              {lists.length === 0 ? (
+                <p className="text-sm text-gray-400 px-1 py-0.5">リストがありません</p>
+              ) : (
+                lists.map((list) => (
+                  <label
+                    key={list.id}
+                    className="flex items-center gap-2 text-sm text-gray-700 px-1 py-0.5 rounded
+                      hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedListIds.includes(String(list.id))}
+                      onChange={() => toggleListId(String(list.id))}
+                      className="rounded border-gray-300"
+                    />
+                    {list.name}
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
@@ -888,6 +965,109 @@ function ContactFormModal({
                 hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               {saving ? "保存中..." : "保存"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AddToListModal({
+  contactIds,
+  lists,
+  onClose,
+  onAdded,
+}: {
+  contactIds: number[];
+  lists: ContactList[];
+  onClose: () => void;
+  onAdded: (message: string) => void;
+}) {
+  const [listId, setListId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!listId) return;
+    setSaving(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/contacts/add-to-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds, listId: Number(listId) }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onAdded(data.message);
+        onClose();
+      } else {
+        setError(data.message);
+      }
+    } catch {
+      setError("追加に失敗しました");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">リストに追加</h3>
+        <p className="text-sm text-gray-500 mb-4">
+          {contactIds.length}件の連絡先を追加します
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">追加先リスト</span>
+            <select
+              value={listId}
+              onChange={(e) => setListId(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
+                focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="" disabled>
+                リストを選択してください
+              </option>
+              {lists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  {list.name}
+                </option>
+              ))}
+            </select>
+            {lists.length === 0 && (
+              <p className="mt-1 text-sm text-gray-400">リストがありません</p>
+            )}
+          </label>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg
+                hover:bg-gray-50 transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="submit"
+              disabled={saving || !listId}
+              className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg font-medium
+                hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {saving ? "追加中..." : "追加する"}
             </button>
           </div>
         </form>

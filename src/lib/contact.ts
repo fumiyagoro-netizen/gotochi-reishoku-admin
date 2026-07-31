@@ -41,12 +41,57 @@ export async function upsertContact(data: UpsertContactData) {
   });
 }
 
-async function addToList(contactId: number, listId: number) {
+export async function addToList(contactId: number, listId: number) {
   await prisma.contactListMembership.upsert({
     where: { contactId_listId: { contactId, listId } },
     update: {},
     create: { contactId, listId },
   });
+}
+
+/**
+ * Sync a single contact's list memberships to exactly `listIds` (full replace):
+ * lists not in `listIds` are removed, lists newly present are added.
+ * Idempotent — calling twice with the same `listIds` is a no-op the second time.
+ */
+export async function setContactLists(contactId: number, listIds: number[]) {
+  const desired = [...new Set(listIds)];
+
+  const current = await prisma.contactListMembership.findMany({
+    where: { contactId },
+    select: { listId: true },
+  });
+  const currentIds = current.map((m) => m.listId);
+
+  const toAdd = desired.filter((id) => !currentIds.includes(id));
+  const toRemove = currentIds.filter((id) => !desired.includes(id));
+
+  if (toRemove.length > 0) {
+    await prisma.contactListMembership.deleteMany({
+      where: { contactId, listId: { in: toRemove } },
+    });
+  }
+  if (toAdd.length > 0) {
+    await prisma.contactListMembership.createMany({
+      data: toAdd.map((listId) => ({ contactId, listId })),
+      skipDuplicates: true,
+    });
+  }
+}
+
+/**
+ * Add multiple contacts to a single list. Contacts already in the list are
+ * skipped (no error) via skipDuplicates. Returns the number newly added.
+ */
+export async function addContactsToList(contactIds: number[], listId: number) {
+  const ids = [...new Set(contactIds)];
+  if (ids.length === 0) return { added: 0 };
+
+  const result = await prisma.contactListMembership.createMany({
+    data: ids.map((contactId) => ({ contactId, listId })),
+    skipDuplicates: true,
+  });
+  return { added: result.count };
 }
 
 /**

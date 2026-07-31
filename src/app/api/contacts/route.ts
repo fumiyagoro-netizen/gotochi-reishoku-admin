@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
-import { upsertContact } from "@/lib/contact";
+import { upsertContact, addToList } from "@/lib/contact";
 
 // GET: list contacts with optional search and list filter
 export async function GET(request: NextRequest) {
@@ -78,6 +78,23 @@ export async function POST(request: NextRequest) {
       note: body.note,
     });
 
+    // 指定されたリストへ追加（既存の所属には影響しない = 加算のみ）
+    const listIds = Array.isArray(body.listIds)
+      ? body.listIds.map((v: unknown) => Number(v)).filter((n: number) => Number.isFinite(n))
+      : [];
+
+    let listNames: string[] = [];
+    if (listIds.length > 0) {
+      const targetLists = await prisma.contactList.findMany({
+        where: { id: { in: listIds } },
+        select: { name: true },
+      });
+      listNames = targetLists.map((l) => l.name);
+      for (const listId of listIds) {
+        await addToList(contact.id, listId);
+      }
+    }
+
     const user = await getUserFromRequest(request);
     await writeAuditLog({
       userId: user?.userId,
@@ -85,7 +102,7 @@ export async function POST(request: NextRequest) {
       action: "create",
       target: "contact",
       targetId: String(contact.id),
-      detail: `連絡先作成: ${contact.email}`,
+      detail: `連絡先作成: ${contact.email}${listNames.length > 0 ? ` / リスト: ${listNames.join(", ")}` : ""}`,
     });
 
     return NextResponse.json({ success: true, contact });

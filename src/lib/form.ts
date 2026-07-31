@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { upsertContact } from "./contact";
+import { upsertContact, addToList } from "./contact";
 import { sendFormAutoReply, sendFormAdminNotification } from "./email";
 
 /**
@@ -93,14 +93,6 @@ function validateAnswers(fields: FormField[], answers: FormAnswers): string | nu
     }
   }
   return null;
-}
-
-async function addToList(contactId: number, listId: number) {
-  await prisma.contactListMembership.upsert({
-    where: { contactId_listId: { contactId, listId } },
-    update: {},
-    create: { contactId, listId },
-  });
 }
 
 /**
