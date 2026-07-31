@@ -4,7 +4,7 @@ import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
-const EDITABLE_FIELDS = ["name", "companyName", "phone", "note", "subscribed"];
+const EDITABLE_FIELDS = ["name", "companyName", "phone", "note", "subscribed", "email"];
 
 export async function PATCH(
   request: NextRequest,
@@ -30,6 +30,26 @@ export async function PATCH(
         { success: false, message: "連絡先が見つかりません" },
         { status: 404 }
       );
+    }
+
+    if ("email" in body) {
+      const normalizedEmail = String(body.email ?? "").trim().toLowerCase();
+      if (!normalizedEmail || !normalizedEmail.includes("@")) {
+        return NextResponse.json(
+          { success: false, message: "有効なメールアドレスを入力してください" },
+          { status: 400 }
+        );
+      }
+      if (normalizedEmail !== contact.email) {
+        const duplicate = await prisma.contact.findUnique({ where: { email: normalizedEmail } });
+        if (duplicate && duplicate.id !== contactId) {
+          return NextResponse.json(
+            { success: false, message: "このメールアドレスは既に登録されています" },
+            { status: 400 }
+          );
+        }
+      }
+      body.email = normalizedEmail;
     }
 
     const data: Record<string, unknown> = {};

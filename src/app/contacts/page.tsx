@@ -32,6 +32,7 @@ export default function ContactsPage() {
   const [showSend, setShowSend] = useState(false);
   const [showBulkSend, setShowBulkSend] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   const fetchContacts = useCallback(async () => {
@@ -123,7 +124,7 @@ export default function ContactsPage() {
           )}
           {permissions.canEdit && (
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => { setEditingContact(null); setShowForm(true); }}
               className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
                 hover:bg-blue-700 transition-colors"
             >
@@ -226,6 +227,9 @@ export default function ContactsPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">リスト</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">購読状態</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">登録元</th>
+                {permissions.canEdit && (
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">操作</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -273,11 +277,24 @@ export default function ContactsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{contact.source || "-"}</td>
+                  {permissions.canEdit && (
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => { setEditingContact(contact); setShowForm(true); }}
+                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        編集
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
               {contacts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                  <td
+                    colSpan={6 + (permissions.canSendEmail ? 1 : 0) + (permissions.canEdit ? 1 : 0)}
+                    className="px-4 py-12 text-center text-gray-400"
+                  >
                     連絡先データがありません
                   </td>
                 </tr>
@@ -309,7 +326,8 @@ export default function ContactsPage() {
 
       {showForm && (
         <ContactFormModal
-          onClose={() => setShowForm(false)}
+          contact={editingContact}
+          onClose={() => { setShowForm(false); setEditingContact(null); }}
           onSaved={fetchContacts}
         />
       )}
@@ -731,16 +749,19 @@ function SendModal({
 }
 
 function ContactFormModal({
+  contact,
   onClose,
   onSaved,
 }: {
+  contact: Contact | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [phone, setPhone] = useState("");
+  const isEdit = !!contact;
+  const [email, setEmail] = useState(contact?.email || "");
+  const [name, setName] = useState(contact?.name || "");
+  const [companyName, setCompanyName] = useState(contact?.companyName || "");
+  const [phone, setPhone] = useState(contact?.phone || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -750,11 +771,14 @@ function ContactFormModal({
     setError("");
 
     try {
-      const res = await fetch("/api/contacts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, companyName, phone }),
-      });
+      const res = await fetch(
+        isEdit ? `/api/contacts/${contact!.id}` : "/api/contacts",
+        {
+          method: isEdit ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name, companyName, phone }),
+        }
+      );
       const data = await res.json();
       if (data.success) {
         onSaved();
@@ -772,7 +796,9 @@ function ContactFormModal({
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">連絡先追加</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          {isEdit ? "連絡先編集" : "連絡先追加"}
+        </h3>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
