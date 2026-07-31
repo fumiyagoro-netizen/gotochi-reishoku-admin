@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 import { getRoleFromRequest } from "@/lib/role";
 import { writeAuditLog } from "@/lib/audit";
+import { jstDateStringToStartOfDayUtc, jstDateStringToEndOfDayUtc } from "@/lib/award-dates";
 
 // PATCH: update award (name, isActive)
 export async function PATCH(
@@ -45,12 +46,12 @@ export async function PATCH(
   }
 
   if (body.entryStartDate !== undefined) {
-    updateData.entryStartDate = body.entryStartDate ? new Date(body.entryStartDate) : null;
+    updateData.entryStartDate = jstDateStringToStartOfDayUtc(body.entryStartDate);
     changes.push(`受付開始: ${body.entryStartDate || "未設定"}`);
   }
 
   if (body.entryEndDate !== undefined) {
-    updateData.entryEndDate = body.entryEndDate ? new Date(body.entryEndDate) : null;
+    updateData.entryEndDate = jstDateStringToEndOfDayUtc(body.entryEndDate);
     changes.push(`受付締切: ${body.entryEndDate || "未設定"}`);
   }
 

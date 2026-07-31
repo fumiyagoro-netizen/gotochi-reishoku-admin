@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 import { getRoleFromRequest } from "@/lib/role";
 import { writeAuditLog } from "@/lib/audit";
+import { jstDateStringToStartOfDayUtc, jstDateStringToEndOfDayUtc } from "@/lib/award-dates";
 
 // GET: list all awards
 export async function GET(request: NextRequest) {
@@ -45,6 +46,11 @@ export async function POST(request: NextRequest) {
       year: body.year,
       name: body.name,
       isActive: body.isActive || false,
+      // Not currently sent by the create form (dates are set afterwards via
+      // the PATCH edit panel), but handled here too in case a caller ever
+      // passes them at creation time — same JST conversion as PATCH.
+      entryStartDate: jstDateStringToStartOfDayUtc(body.entryStartDate),
+      entryEndDate: jstDateStringToEndOfDayUtc(body.entryEndDate),
     },
   });
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRole } from "@/lib/role-context";
+import { utcToJstDateInputValue } from "@/lib/award-dates";
 
 interface Award {
   id: number;
@@ -94,8 +95,8 @@ export default function AwardSettingsPage() {
 
   function startEdit(award: Award) {
     setEditingId(award.id);
-    setEditStart(award.entryStartDate ? award.entryStartDate.slice(0, 10) : "");
-    setEditEnd(award.entryEndDate ? award.entryEndDate.slice(0, 10) : "");
+    setEditStart(utcToJstDateInputValue(award.entryStartDate));
+    setEditEnd(utcToJstDateInputValue(award.entryEndDate));
     setEditNotify(award.notifyEmails);
   }
 
@@ -267,10 +268,10 @@ export default function AwardSettingsPage() {
             {/* Period & notification info */}
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
               {award.entryStartDate && (
-                <span>受付開始: {new Date(award.entryStartDate).toLocaleDateString("ja-JP")}</span>
+                <span>受付開始: {new Date(award.entryStartDate).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}</span>
               )}
               {award.entryEndDate && (
-                <span>受付締切: {new Date(award.entryEndDate).toLocaleDateString("ja-JP")}</span>
+                <span>受付締切: {new Date(award.entryEndDate).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}</span>
               )}
               {award.notifyEmails && (
                 <span>通知先: {award.notifyEmails.split(",").length}件</span>

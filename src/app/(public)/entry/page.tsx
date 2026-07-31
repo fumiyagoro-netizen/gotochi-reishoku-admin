@@ -32,7 +32,7 @@ export default async function EntryPage() {
 
   if (award.entryStartDate && now < new Date(award.entryStartDate)) {
     const startStr = new Date(award.entryStartDate).toLocaleDateString("ja-JP", {
-      year: "numeric", month: "long", day: "numeric",
+      year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Tokyo",
     });
     return <ClosedMessage title="エントリー受付はまだ開始されていません" message={`受付開始日: ${startStr}`} />;
   }
@@ -44,7 +44,7 @@ export default async function EntryPage() {
   // Show deadline if set
   const deadlineStr = award.entryEndDate
     ? new Date(award.entryEndDate).toLocaleDateString("ja-JP", {
-        year: "numeric", month: "long", day: "numeric",
+        year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Tokyo",
       })
     : null;
 
