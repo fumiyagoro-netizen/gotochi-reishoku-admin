@@ -17,7 +17,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { contactIds, listId, subject, html, defaultName, testEmail, preview } = body;
+    const { contactIds, listId, listIds, subject, html, defaultName, testEmail, preview } = body;
+
+    // Accept either `listIds` (array, current UI) or the legacy singular
+    // `listId` for backward compatibility with any other callers.
+    const listIdList: number[] = (
+      Array.isArray(listIds) ? listIds : listId != null ? [listId] : []
+    )
+      .map((id: number | string) => parseInt(String(id), 10))
+      .filter((id: number) => !Number.isNaN(id));
 
     if (!subject || !html) {
       return NextResponse.json(
@@ -62,16 +70,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: "テスト送信しました" });
     }
 
-    if ((!Array.isArray(contactIds) || contactIds.length === 0) && !listId) {
+    if ((!Array.isArray(contactIds) || contactIds.length === 0) && listIdList.length === 0) {
       return NextResponse.json(
         { success: false, message: "送信先を選択してください" },
         { status: 400 }
       );
     }
 
-    const where = listId
-      ? { memberships: { some: { listId: parseInt(listId) } } }
-      : { id: { in: (contactIds as (number | string)[]).map(Number) } };
+    // `some` + `in` matches contacts belonging to any of the selected lists,
+    // and Contact.findMany naturally dedupes at the contact level, so a
+    // contact in multiple selected lists is still only fetched (and sent to) once.
+    const where =
+      listIdList.length > 0
+        ? { memberships: { some: { listId: { in: listIdList } } } }
+        : { id: { in: (contactIds as (number | string)[]).map(Number) } };
 
     const contacts = await prisma.contact.findMany({
       where,
@@ -101,7 +113,10 @@ export async function POST(request: NextRequest) {
       userEmail: user?.email,
       action: "send_email",
       target: "contact",
-      targetId: listId ? `list:${listId}` : (contactIds as (number | string)[]).join(","),
+      targetId:
+        listIdList.length > 0
+          ? `list:${listIdList.join(",")}`
+          : (contactIds as (number | string)[]).join(","),
       detail: `件名「${subject}」: ${result.sent}件送信、${result.failed}件失敗、${result.skipped}件スキップ`,
     });
 

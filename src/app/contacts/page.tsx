@@ -348,7 +348,7 @@ function SendModal({
 }) {
   const hasSelection = !!contactIds && contactIds.length > 0;
   const [target, setTarget] = useState<"selection" | "list">(hasSelection ? "selection" : "list");
-  const [selectedListId, setSelectedListId] = useState("");
+  const [selectedListIds, setSelectedListIds] = useState<string[]>([]);
   const [listSubscribedCount, setListSubscribedCount] = useState<number | null>(null);
   const [listTotalCount, setListTotalCount] = useState<number | null>(null);
 
@@ -382,28 +382,43 @@ function SendModal({
   }, []);
 
   useEffect(() => {
-    if (target !== "list" || !selectedListId) {
+    if (target !== "list" || selectedListIds.length === 0) {
       setListSubscribedCount(null);
       setListTotalCount(null);
       return;
     }
-    fetch(`/api/contacts?listId=${selectedListId}`)
+    const params = new URLSearchParams();
+    selectedListIds.forEach((id) => params.append("listId", id));
+    // /api/contacts dedupes contacts belonging to multiple selected lists
+    // at the database level, so this count matches the actual send count.
+    fetch(`/api/contacts?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          const contactsInList: { subscribed: boolean }[] = data.contacts;
-          setListTotalCount(contactsInList.length);
-          setListSubscribedCount(contactsInList.filter((c) => c.subscribed).length);
+          const contactsInLists: { subscribed: boolean }[] = data.contacts;
+          setListTotalCount(contactsInLists.length);
+          setListSubscribedCount(contactsInLists.filter((c) => c.subscribed).length);
         }
       });
-  }, [target, selectedListId]);
+  }, [target, selectedListIds]);
 
   const targetCount =
     target === "selection" ? (contactIds?.length ?? 0) : listSubscribedCount;
 
   const canSend =
     (target === "selection" && hasSelection) ||
-    (target === "list" && !!selectedListId);
+    (target === "list" && selectedListIds.length > 0);
+
+  const selectedListNames = lists
+    .filter((list) => selectedListIds.includes(String(list.id)))
+    .map((list) => list.name)
+    .join("、");
+
+  function toggleListId(id: string) {
+    setSelectedListIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
 
   function insertTag(tag: string) {
     const placeholder = `{{${tag}}}`;
@@ -489,7 +504,7 @@ function SendModal({
       const body =
         target === "selection"
           ? { contactIds, subject, html, defaultName }
-          : { listId: selectedListId, subject, html, defaultName };
+          : { listIds: selectedListIds, subject, html, defaultName };
 
       const res = await fetch("/api/contacts/send", {
         method: "POST",
@@ -519,9 +534,9 @@ function SendModal({
         <p className="text-sm text-gray-500 mb-4">
           {target === "selection"
             ? `選択した連絡先（${contactIds?.length ?? 0}件）に送信します`
-            : selectedListId
+            : selectedListIds.length > 0
               ? listSubscribedCount != null
-                ? `配信対象: ${listSubscribedCount}件（購読中のみ、リスト全体${listTotalCount}件）`
+                ? `配信対象: ${listSubscribedCount}件（購読中のみ、リスト全体${listTotalCount}件） / 対象リスト: ${selectedListNames}`
                 : "配信対象を読み込み中..."
               : "配信先のリストを選択してください"}
         </p>
@@ -568,22 +583,30 @@ function SendModal({
                   checked={target === "list"}
                   onChange={() => setTarget("list")}
                 />
-                リストから選択
+                リストから選択（複数選択可）
               </label>
               {target === "list" && (
-                <select
-                  value={selectedListId}
-                  onChange={(e) => setSelectedListId(e.target.value)}
-                  className="ml-6 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
-                    focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">リストを選択してください</option>
-                  {lists.map((list) => (
-                    <option key={list.id} value={list.id}>
-                      {list.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="ml-6 max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white p-2 space-y-1">
+                  {lists.length === 0 ? (
+                    <p className="text-sm text-gray-400 px-1 py-0.5">リストがありません</p>
+                  ) : (
+                    lists.map((list) => (
+                      <label
+                        key={list.id}
+                        className="flex items-center gap-2 text-sm text-gray-700 px-1 py-0.5 rounded
+                          hover:bg-gray-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedListIds.includes(String(list.id))}
+                          onChange={() => toggleListId(String(list.id))}
+                          className="rounded border-gray-300"
+                        />
+                        {list.name}
+                      </label>
+                    ))
+                  )}
+                </div>
               )}
             </div>
           </div>

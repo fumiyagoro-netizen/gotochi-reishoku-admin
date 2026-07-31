@@ -8,7 +8,12 @@ import { upsertContact } from "@/lib/contact";
 // GET: list contacts with optional search and list filter
 export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q") || "";
-  const listId = request.nextUrl.searchParams.get("listId");
+  // Supports repeated ?listId=1&listId=2 as well as the single-value form.
+  // Matches contacts in ANY of the given lists (Contact-level dedupe via `some`).
+  const listIds = request.nextUrl.searchParams
+    .getAll("listId")
+    .map((id) => parseInt(id, 10))
+    .filter((id) => !Number.isNaN(id));
 
   try {
     const where = {
@@ -22,7 +27,7 @@ export async function GET(request: NextRequest) {
               ],
             }
           : {},
-        listId ? { memberships: { some: { listId: parseInt(listId) } } } : {},
+        listIds.length > 0 ? { memberships: { some: { listId: { in: listIds } } } } : {},
       ],
     };
 
