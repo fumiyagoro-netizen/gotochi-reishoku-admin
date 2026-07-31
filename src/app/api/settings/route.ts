@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/auth";
 import { getRoleFromRequest } from "@/lib/role";
+import { getPermissions } from "@/lib/role-shared";
 import { writeAuditLog } from "@/lib/audit";
 import { getEmailFooterSettings, setSetting } from "@/lib/settings";
 
-export async function GET() {
+// GET: 設定閲覧は管理者専用画面(settings/page.tsx)に加え、一斉メール送信系
+// (contacts/page.tsx の一括配信モーダル・entry-email-composer.tsx)が
+// 法令必須の郵送先住所を表示するために使う。これらは canSendEmail を持つ
+// 管理者/代表者のみが到達できる画面なので、同じ条件で許可する。
+export async function GET(request: NextRequest) {
+  const role = await getRoleFromRequest(request);
+  const perms = getPermissions(role);
+  if (role !== "admin" && !perms.canSendEmail) {
+    return NextResponse.json({ success: false, message: "権限がありません" }, { status: 403 });
+  }
+
   const footer = await getEmailFooterSettings();
   return NextResponse.json({ success: true, settings: footer });
 }

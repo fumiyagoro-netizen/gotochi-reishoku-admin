@@ -5,7 +5,12 @@ import { getRoleFromRequest } from "@/lib/role";
 import { writeAuditLog } from "@/lib/audit";
 
 // GET: list all awards
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const role = await getRoleFromRequest(request);
+  if (role !== "admin") {
+    return NextResponse.json({ success: false, message: "管理者のみ実行できます" }, { status: 403 });
+  }
+
   const awards = await prisma.award.findMany({
     orderBy: { year: "desc" },
     include: {

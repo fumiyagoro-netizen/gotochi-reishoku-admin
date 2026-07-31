@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
 import Link from "next/link";
 import { getCurrentRole, getPermissions } from "@/lib/role";
+import { stripEntryPrivateFields } from "@/lib/entry-privacy";
 import { EntryTable } from "@/components/entry-table";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,16 @@ export default async function EntriesPage({ searchParams }: Props) {
   ]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // viewer has canSeePrivateInfo=false and the table hides the "担当者"
+  // column entirely for them, but Server Component props are shipped to the
+  // browser verbatim regardless of what the UI renders — so the applicant's
+  // contact name / email / phone / submitter IP must be stripped here,
+  // before the data is handed to the "use client" EntryTable, not just
+  // hidden in JSX. See src/lib/entry-privacy.ts.
+  const visibleEntries = perms.canSeePrivateInfo
+    ? entries
+    : entries.map(stripEntryPrivateFields);
 
   return (
     <div className="p-8">
@@ -144,7 +155,7 @@ export default async function EntriesPage({ searchParams }: Props) {
       </form>
 
       {/* Entry Table with checkboxes */}
-      <EntryTable entries={entries} year={year} />
+      <EntryTable entries={visibleEntries} year={year} />
 
       {/* Pagination */}
       {totalPages > 1 && (

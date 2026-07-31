@@ -1,7 +1,27 @@
 /** Core auth utilities - Edge-compatible (no jsonwebtoken) */
 import type { Role } from "./role-shared";
 
-const JWT_SECRET = process.env.JWT_SECRET || "gotochi-reishoku-admin-change-this-in-production";
+/**
+ * There is deliberately no fallback secret here. A hardcoded default would
+ * sit in the repository in plaintext, so anyone who could read the source
+ * could forge a session for any user if the env var ever went missing —
+ * and it would fail silently, which is the worst version of that bug.
+ *
+ * Read lazily rather than at module load so that importing this module
+ * (e.g. during `next build` page-data collection) never depends on the
+ * environment. If the secret is absent, signing and verification throw:
+ * verifyToken() turns that into "not authenticated" and login fails
+ * outright, so a misconfigured deploy locks people out instead of
+ * accepting forgeable tokens.
+ */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.error("JWT_SECRET is not set — refusing to sign or verify auth tokens.");
+    throw new Error("JWT_SECRET is not set");
+  }
+  return secret;
+}
 
 export const COOKIE_NAME = "auth_token";
 export const TOKEN_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -35,7 +55,7 @@ async function hmacSign(data: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(JWT_SECRET),
+    encoder.encode(getJwtSecret()),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]

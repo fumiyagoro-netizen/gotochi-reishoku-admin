@@ -9,9 +9,14 @@ interface RoleContextValue {
   permissions: Permissions;
 }
 
+// Fail-secure default: if a component ever renders outside RoleProvider
+// (e.g. missed wiring, test render), it must not silently behave as admin.
+// In normal operation layout.tsx always wraps authenticated pages in
+// RoleProvider with the DB-verified role, so this fallback should never
+// actually be exercised.
 const RoleContext = createContext<RoleContextValue>({
-  role: "admin",
-  permissions: PERMISSIONS.admin,
+  role: "viewer",
+  permissions: PERMISSIONS.viewer,
 });
 
 export function RoleProvider({

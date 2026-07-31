@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRole } from "@/lib/role-context";
 
 interface Award {
   id: number;
@@ -15,6 +16,7 @@ interface Award {
 }
 
 export default function AwardSettingsPage() {
+  const { role } = useRole();
   const [awards, setAwards] = useState<Award[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -43,6 +45,16 @@ export default function AwardSettingsPage() {
       setNewName(`ご当地冷凍食品大賞 ${newYear}`);
     }
   }, [showForm, newYear]);
+
+  if (role !== "admin") {
+    return (
+      <div className="p-8">
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-gray-500">年度管理の閲覧・編集権限がありません</p>
+        </div>
+      </div>
+    );
+  }
 
   async function handleCreate() {
     setSaving(true);

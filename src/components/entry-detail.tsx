@@ -49,18 +49,6 @@ interface EntryData {
   images: EntryImage[];
 }
 
-function maskValue(value: string): string {
-  if (!value) return "";
-  if (value.includes("@")) {
-    const [local, domain] = value.split("@");
-    return local.slice(0, 2) + "***@" + domain;
-  }
-  if (value.match(/^[\d-]+$/)) {
-    return value.slice(0, 3) + "****" + value.slice(-2);
-  }
-  return "***";
-}
-
 export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
@@ -362,12 +350,16 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+// `value` is expected to already be masked server-side (see
+// src/lib/entry-privacy.ts maskEntryPrivateFields) for roles without
+// canSeePrivateInfo — this component must never receive the plaintext
+// applicant contact info, so it must not re-derive a mask from it either.
 function MaskedRow({ label, value }: { label: string; value: string }) {
   if (!value) return null;
   return (
     <div className="flex gap-3">
       <span className="text-xs text-gray-500 w-32 shrink-0 pt-0.5">{label}</span>
-      <span className="text-sm text-gray-400 italic">{maskValue(value)}</span>
+      <span className="text-sm text-gray-400 italic">{value}</span>
     </div>
   );
 }
