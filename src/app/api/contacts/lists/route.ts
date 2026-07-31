@@ -5,7 +5,17 @@ import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 
 // GET: list all contact lists (with contact counts)
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Part of the contacts feature, gated the same way as the contacts
+  // themselves so viewers get nothing from it.
+  const role = await getRoleFromRequest(request);
+  if (!getPermissions(role).canSeePrivateInfo) {
+    return NextResponse.json(
+      { success: false, message: "閲覧権限がありません" },
+      { status: 403 }
+    );
+  }
+
   const lists = await prisma.contactList.findMany({
     orderBy: { createdAt: "desc" },
     include: {

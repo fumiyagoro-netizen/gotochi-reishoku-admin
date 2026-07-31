@@ -91,6 +91,18 @@ export default function ContactsPage() {
     fetchContacts();
   }
 
+  // Contacts are personal data, which viewers must not see. The API enforces
+  // this too; this only keeps the page from rendering an empty shell.
+  if (!permissions.canSeePrivateInfo) {
+    return (
+      <div className="p-8">
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-gray-500">閲覧権限がありません</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">

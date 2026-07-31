@@ -7,6 +7,17 @@ import { upsertContact, addToList } from "@/lib/contact";
 
 // GET: list contacts with optional search and list filter
 export async function GET(request: NextRequest) {
+  // Contacts are personal data (name/email/phone), so viewers — who are
+  // defined as "閲覧のみ（個人情報は非表示）" — must not read them, via the
+  // UI or by calling this route directly.
+  const role = await getRoleFromRequest(request);
+  if (!getPermissions(role).canSeePrivateInfo) {
+    return NextResponse.json(
+      { success: false, message: "閲覧権限がありません" },
+      { status: 403 }
+    );
+  }
+
   const q = request.nextUrl.searchParams.get("q") || "";
   // Supports repeated ?listId=1&listId=2 as well as the single-value form.
   // Matches contacts in ANY of the given lists (Contact-level dedupe via `some`).
