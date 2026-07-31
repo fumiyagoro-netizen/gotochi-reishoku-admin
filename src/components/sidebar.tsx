@@ -87,7 +87,12 @@ export function Sidebar({
         </div>
       )}
 
-      <nav className="flex-1 p-4 space-y-1">
+      {/* Only the nav scrolls, so the user/logout block below stays reachable
+          however many items are shown or however short the window is.
+          min-h-0 is required: a flex item defaults to min-height:auto, which
+          would let the nav outgrow the fixed h-screen aside and push the
+          logout button off-screen instead of scrolling. */}
+      <nav className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1">
         {navItems
           .filter((item) => item.show)
           .map((item) => {
@@ -113,7 +118,7 @@ export function Sidebar({
       </nav>
 
       {/* User Info & Logout */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="shrink-0 p-4 border-t border-gray-200">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
             {userName.charAt(0).toUpperCase()}
