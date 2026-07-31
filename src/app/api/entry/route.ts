@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEntryConfirmation, sendAdminNotification } from "@/lib/email";
 import { addEntrantContact } from "@/lib/contact";
+import { formatAnsweredAtJst } from "@/lib/entry-timestamp";
 
 async function generateAnswerNo(awardId: number): Promise<string> {
   const award = await prisma.award.findUnique({ where: { id: awardId } });
@@ -93,7 +94,9 @@ export async function POST(request: NextRequest) {
         data: {
           awardId: body.awardId,
           answerNo,
-          answeredAt: new Date().toISOString(),
+          // Stored as JST "YYYY/MM/DD HH:mm:ss" to match the pre-existing
+          // CSV-imported entries (see src/lib/entry-timestamp.ts for why).
+          answeredAt: formatAnsweredAtJst(),
           ipAddress,
           companyName: body.companyName,
           department: body.department || "",
