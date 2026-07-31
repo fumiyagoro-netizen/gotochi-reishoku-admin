@@ -9,7 +9,10 @@ import { PERMISSIONS, type Role } from "./role-shared";
 // list, so adding a new Role to role-shared.ts can never silently leave this
 // check out of sync (a role missing here falls back to "viewer" in every API
 // route, even though the DB/page-level role is correct — easy to miss).
-function isKnownRole(value: unknown): value is Role {
+// Exported so other role-validation call sites (e.g. the user
+// create/update API routes) can reuse the same PERMISSIONS-derived check
+// instead of maintaining their own hardcoded role list.
+export function isKnownRole(value: unknown): value is Role {
   return typeof value === "string" && value in PERMISSIONS;
 }
 

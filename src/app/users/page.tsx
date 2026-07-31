@@ -46,6 +46,7 @@ export default function UsersPage() {
     admin: "bg-red-100 text-red-700",
     editor: "bg-blue-100 text-blue-700",
     viewer: "bg-gray-100 text-gray-600",
+    judge: "bg-green-100 text-green-700",
   };
 
   return (
@@ -265,6 +266,7 @@ function UserFormModal({
               <option value="representative">代表者 — 設定・ユーザー管理・操作ログ・年度管理・削除以外</option>
               <option value="editor">編集者 — 削除・受賞設定以外</option>
               <option value="viewer">閲覧者 — 閲覧のみ</option>
+              <option value="judge">審査員 — 閲覧のみ＋審査コメントの投稿</option>
             </select>
           </label>
 

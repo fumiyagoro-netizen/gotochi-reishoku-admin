@@ -57,6 +57,7 @@ export function Sidebar({
     representative: "bg-purple-100 text-purple-700",
     editor: "bg-blue-100 text-blue-700",
     viewer: "bg-gray-100 text-gray-600",
+    judge: "bg-green-100 text-green-700",
   };
 
   return (

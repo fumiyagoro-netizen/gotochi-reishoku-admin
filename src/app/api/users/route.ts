@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest, hashPassword } from "@/lib/auth";
+import { isKnownRole } from "@/lib/role";
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!["admin", "representative", "editor", "viewer"].includes(role)) {
+    if (!isKnownRole(role)) {
       return NextResponse.json(
         { success: false, message: "無効なロールです" },
         { status: 400 }

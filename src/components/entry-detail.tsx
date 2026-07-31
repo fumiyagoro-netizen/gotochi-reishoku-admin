@@ -7,6 +7,7 @@ import { DeleteEntryButton } from "./delete-entry-button";
 import { PdfDownloadButton } from "./pdf-download-button";
 import { PrizeSelector } from "./prize-selector";
 import { ReviewStatusSelector, ReviewBadge } from "./review-status-selector";
+import { EntryComments, type EntryCommentData } from "./entry-comments";
 import { useRole } from "@/lib/role-context";
 
 interface EntryImage {
@@ -49,7 +50,15 @@ interface EntryData {
   images: EntryImage[];
 }
 
-export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
+export function EntryDetail({
+  entry: initialEntry,
+  comments,
+  currentUserId,
+}: {
+  entry: EntryData;
+  comments: EntryCommentData[];
+  currentUserId?: number;
+}) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(initialEntry);
@@ -204,6 +213,10 @@ export function EntryDetail({ entry: initialEntry }: { entry: EntryData }) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <EntryComments entryId={entry.id} comments={comments} currentUserId={currentUserId} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
