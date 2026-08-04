@@ -46,7 +46,7 @@ export function Sidebar({
     { href: "/contacts", label: "見込み客", icon: "📇", show: perms.canSeePrivateInfo },
     { href: "/forms", label: "フォーム", icon: "📝", show: perms.canEdit },
     { href: "/upload", label: "CSVアップロード", icon: "📁", show: perms.canUpload },
-    { href: "/email-logs", label: "配信履歴", icon: "📬", show: perms.canSendEmail },
+    { href: "/email-logs", label: "配信履歴", icon: "📬", show: role === "admin" },
     { href: "/award-settings", label: "年度管理", icon: "📅", show: role === "admin" },
     { href: "/users", label: "ユーザー管理", icon: "👥", show: role === "admin" },
     { href: "/settings", label: "設定", icon: "⚙️", show: role === "admin" },

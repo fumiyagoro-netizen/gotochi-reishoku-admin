@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentRole } from "@/lib/role";
-import { getPermissions } from "@/lib/role-shared";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Prisma, EmailLog } from "@prisma/client";
@@ -179,9 +178,12 @@ interface Props {
 }
 
 export default async function EmailLogsPage({ searchParams }: Props) {
+  // Admin-only, like the audit log / settings / user management screens:
+  // this exposes who was mailed and which addresses bounced across every
+  // send, so it is not gated on canSendEmail (which representatives also
+  // have) but on the role itself.
   const role = await getCurrentRole();
-  const perms = getPermissions(role);
-  if (!perms.canSendEmail) redirect("/");
+  if (role !== "admin") redirect("/");
 
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page || "1"));
