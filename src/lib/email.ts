@@ -46,11 +46,32 @@ interface SendEmailParams {
   to: string | string[];
   subject: string;
   html: string;
+  // Optional acting admin, for callers that have one (e.g. the review-status
+  // change notification in src/app/api/entries/[id]/route.ts). Most callers
+  // of sendEmail() (entry confirmation, admin notification, form auto-reply)
+  // are triggered by a public form submission, not an admin action, so this
+  // is left unset there and the EmailLog row's sentBy stays "".
+  sentBy?: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams) {
+// This is the single low-level sender behind every transactional email flow
+// (entry confirmation, admin notification, review-status-change notices,
+// form builder notifications/auto-replies — see the wrapper functions below,
+// plus the two direct callers in src/app/api/entries/[id]/route.ts and
+// src/app/api/entries/bulk-review/route.ts). It previously sent mail without
+// ever recording an EmailLog row, so none of these sends were visible in the
+// admin UI or trackable for delivery status. Logging here — rather than in
+// each wrapper — covers all of those call sites in one place and captures
+// Resend's message id so /api/webhooks/resend can later attach
+// delivered/bounced/complained status to this exact row.
+export async function sendEmail({ to, subject, html, sentBy }: SendEmailParams) {
+  const toEmail = Array.isArray(to) ? to.join(", ") : to;
+
   if (!process.env.RESEND_API_KEY) {
     console.warn("RESEND_API_KEY not set, skipping email");
+    await prisma.emailLog.create({
+      data: { toEmail, subject, status: "failed", sentBy: sentBy || "" },
+    });
     return null;
   }
 
@@ -66,9 +87,23 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
       // we never send an invalid Reply-To header.
       ...(contactEmail ? { replyTo: contactEmail } : {}),
     });
+
+    await prisma.emailLog.create({
+      data: {
+        toEmail,
+        subject,
+        status: result.error ? "failed" : "sent",
+        sentBy: sentBy || "",
+        messageId: result.data?.id ?? "",
+      },
+    });
+
     return result;
   } catch (error) {
     console.error("Email send error:", error);
+    await prisma.emailLog.create({
+      data: { toEmail, subject, status: "failed", sentBy: sentBy || "" },
+    });
     return null;
   }
 }
@@ -536,6 +571,13 @@ export async function sendMarketingEmail({
         continue;
       }
 
+      // batch.send() resolves data.data in the same order as the `batch`
+      // array we sent, and batchRecipients is sliced from `sendable` using
+      // the same indices used to build `messages`/`batch` above — so
+      // sentIds[idx] is guaranteed to be the id for batchRecipients[idx].
+      // createMany accepts a distinct data object per row, so each row can
+      // carry its own messageId without any extra round-trip or per-row
+      // insert (still a single bulk INSERT for the whole batch).
       const sentIds = data?.data ?? [];
       await prisma.emailLog.createMany({
         data: batchRecipients.map((r, idx) => ({
@@ -543,6 +585,7 @@ export async function sendMarketingEmail({
           subject,
           status: sentIds[idx] ? "sent" : "failed",
           sentBy: sentBy || "",
+          messageId: sentIds[idx]?.id ?? "",
         })),
       });
       result.sent += sentIds.length;
@@ -656,6 +699,7 @@ export async function sendTestEmail({
         subject: testSubject,
         status: "test",
         sentBy: sentBy || "",
+        messageId: result.data?.id ?? "",
       },
     });
     return { success: !!result };

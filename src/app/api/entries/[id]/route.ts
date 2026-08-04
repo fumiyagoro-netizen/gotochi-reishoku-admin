@@ -134,6 +134,7 @@ export async function PATCH(
           await sendEmail({
             to: adminEmails,
             subject: `【審査状況変更】${entry.productName}（${entry.companyName}）`,
+            sentBy: user?.email || "",
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h2 style="color: #4338ca; border-bottom: 2px solid #4338ca; padding-bottom: 10px;">

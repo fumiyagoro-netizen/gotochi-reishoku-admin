@@ -144,12 +144,34 @@ model Suppression {
 }
 
 model EmailLog {
-  id        Int      @id @default(autoincrement())
-  toEmail   String
-  subject   String
-  status    String   // "sent" | "failed" | "skipped" | "test"
-  sentBy    String   @default("")
-  createdAt DateTime @default(now())
+  id           Int       @id @default(autoincrement())
+  toEmail      String
+  subject      String
+  status       String    // "sent" | "failed" | "skipped" | "test"
+  sentBy       String    @default("")
+  createdAt    DateTime  @default(now())
+  // Resend's message id for this send. Used to match incoming
+  // /api/webhooks/resend delivery events back to the row that created them
+  // (see src/app/api/webhooks/resend/route.ts). Empty for rows created
+  // before this column existed, and for rows where the send never reached
+  // Resend (e.g. missing RESEND_API_KEY, or skipped due to suppression).
+  messageId    String    @default("")
+  deliveredAt  DateTime?
+  bouncedAt    DateTime?
+  complainedAt DateTime?
+  // Bounce detail from Resend's payload (bounce.type / bounce.subType /
+  // bounce.message), e.g. "Permanent / Suppressed: The recipient's email
+  // address is on the suppression list...". Empty unless bouncedAt is set.
+  bounceReason String    @default("")
+
+  // Webhook lookups are always `WHERE messageId = ?`, so this index is
+  // required for that query to be a lookup rather than a full table scan.
+  @@index([messageId])
+  // The delivery-history admin screen (src/app/email-logs/page.tsx) always
+  // orders by createdAt desc with skip/take pagination; without this index
+  // that query degrades to a full-table sort as EmailLog grows past the
+  // current ~300 rows.
+  @@index([createdAt])
 }
 
 model Setting {

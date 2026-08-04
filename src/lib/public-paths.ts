@@ -26,6 +26,14 @@ export const PUBLIC_PATHS = [
   "/api/unsubscribe",
   "/api/diag",
   "/api/ping",
+  // Resend delivery-event webhook (src/app/api/webhooks/resend). It has no
+  // session cookie to check — Resend calls it directly, unauthenticated by
+  // this app's session system — so it must bypass the auth_token check here.
+  // It is NOT unauthenticated overall: the route itself verifies every
+  // request's Svix signature (svix-id/svix-timestamp/svix-signature against
+  // RESEND_WEBHOOK_SECRET) before touching the database, and refuses with a
+  // 500 if that secret isn't configured.
+  "/api/webhooks",
 ];
 
 /** Public form page: /f/<slug> */
