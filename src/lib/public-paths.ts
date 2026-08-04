@@ -24,8 +24,6 @@ export const PUBLIC_PATHS = [
   "/favicon.ico",
   "/unsubscribe",
   "/api/unsubscribe",
-  "/api/diag",
-  "/api/ping",
   // Resend delivery-event webhook (src/app/api/webhooks/resend). It has no
   // session cookie to check — Resend calls it directly, unauthenticated by
   // this app's session system — so it must bypass the auth_token check here.
