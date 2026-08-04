@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useRole } from "@/lib/role-context";
@@ -177,6 +178,13 @@ function UploadForm() {
 export default function UploadPage() {
   return (
     <div className="p-8">
+      {/* Reached from the entries list rather than the sidebar, so it needs its
+          own way back — same pattern as the contact lists screen. */}
+      <div className="mb-6">
+        <Link href="/entries" className="text-sm text-gray-500 hover:text-gray-700">
+          ← エントリー一覧
+        </Link>
+      </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-8">
         CSVアップロード
       </h2>
