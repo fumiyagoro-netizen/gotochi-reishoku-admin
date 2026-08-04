@@ -19,6 +19,24 @@ function getResend(): Resend {
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@gotouchireisyoku.com";
 const FROM_NAME = "ご当地冷凍食品大賞 事務局";
 
+// Reply-To for all outgoing mail is the admin-configured contact address
+// (Settings > contact_email), not a hardcoded value: this lets recipients
+// actually reach the office by hitting "reply", without changing From (which
+// would risk the domain's SPF/DKIM authentication). Several senders below
+// (e.g. sendEntryConfirmation + sendAdminNotification) fire concurrently for
+// a single request, so concurrent getEmailFooterSettings() calls are
+// coalesced into one query here; the in-flight promise is cleared once it
+// settles, so later calls still read fresh data (no stale caching).
+let footerSettingsInFlight: Promise<Awaited<ReturnType<typeof getEmailFooterSettings>>> | null = null;
+function getFooterSettingsShared() {
+  if (!footerSettingsInFlight) {
+    footerSettingsInFlight = getEmailFooterSettings().finally(() => {
+      footerSettingsInFlight = null;
+    });
+  }
+  return footerSettingsInFlight;
+}
+
 // Marketing (Contact list) email sender - same domain as transactional email
 const MARKETING_FROM_EMAIL = process.env.MARKETING_FROM_EMAIL || "noreply@gotouchireisyoku.com";
 const MARKETING_FROM_NAME = process.env.MARKETING_FROM_NAME || "ご当地冷凍食品大賞 事務局";
@@ -37,11 +55,16 @@ export async function sendEmail({ to, subject, html }: SendEmailParams) {
   }
 
   try {
+    const { contactEmail } = await getFooterSettingsShared();
+
     const result = await getResend().emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
+      // Omit entirely (rather than sending an empty string) when unset, so
+      // we never send an invalid Reply-To header.
+      ...(contactEmail ? { replyTo: contactEmail } : {}),
     });
     return result;
   } catch (error) {
@@ -463,7 +486,7 @@ export async function sendMarketingEmail({
     return result;
   }
 
-  const footer = await getEmailFooterSettings();
+  const footer = await getFooterSettingsShared();
   const footerHtml = buildFooterHtml(footer);
 
   const messages = sendable.map((r) => {
@@ -486,6 +509,9 @@ export async function sendMarketingEmail({
       to: [r.email],
       subject: rendered.subject,
       html: fullHtml,
+      // Each batch element needs its own Reply-To; batch.send() does not
+      // inherit a top-level value. See comment on getFooterSettingsShared.
+      ...(footer.contactEmail ? { replyTo: footer.contactEmail } : {}),
     };
   });
 
@@ -605,7 +631,7 @@ export async function sendTestEmail({
     return { success: false };
   }
 
-  const footer = await getEmailFooterSettings();
+  const footer = await getFooterSettingsShared();
   const footerHtml = buildFooterHtml(footer);
   const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
   const fullHtml = `
@@ -622,6 +648,7 @@ export async function sendTestEmail({
       to: [to],
       subject: testSubject,
       html: fullHtml,
+      ...(footer.contactEmail ? { replyTo: footer.contactEmail } : {}),
     });
     await prisma.emailLog.create({
       data: {
