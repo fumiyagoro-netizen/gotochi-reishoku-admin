@@ -114,7 +114,11 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
               {submissions.map((submission) => (
                 <tr key={submission.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                    {new Date(submission.createdAt).toLocaleString("ja-JP")}
+                    {/* Pinned to Asia/Tokyo so it matches the Excel export and
+                        doesn't shift between server render and hydration. */}
+                    {new Date(submission.createdAt).toLocaleString("ja-JP", {
+                      timeZone: "Asia/Tokyo",
+                    })}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
                     {submission.contact ? (

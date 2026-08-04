@@ -70,7 +70,11 @@ export async function GET(
       const contact = submission.contactId != null ? contactMap.get(submission.contactId) : null;
 
       const row: Record<string, string> = {
-        createdAt: new Date(submission.createdAt).toLocaleString("ja-JP"),
+        // Formatted on the server, which runs in UTC — pin Asia/Tokyo so the
+        // exported spreadsheet shows the Japan time the answer came in.
+        createdAt: new Date(submission.createdAt).toLocaleString("ja-JP", {
+          timeZone: "Asia/Tokyo",
+        }),
         contact: contact ? `${contact.email}${contact.name ? ` (${contact.name})` : ""}` : "",
       };
 

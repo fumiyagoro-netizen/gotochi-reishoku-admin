@@ -95,12 +95,16 @@ export default async function LogsPage({ searchParams }: Props) {
               return (
                 <tr key={log.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                    {/* Rendered on the server, which runs in UTC — without an
+                        explicit timeZone this shows every log 9 hours behind
+                        the Japan time the operator actually acted at. */}
                     {new Date(log.createdAt).toLocaleString("ja-JP", {
                       year: "numeric",
                       month: "2-digit",
                       day: "2-digit",
                       hour: "2-digit",
                       minute: "2-digit",
+                      timeZone: "Asia/Tokyo",
                     })}
                   </td>
                   <td className="px-4 py-3">

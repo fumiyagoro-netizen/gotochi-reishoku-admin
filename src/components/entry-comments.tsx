@@ -11,6 +11,10 @@ export interface EntryCommentData {
   createdAt: string; // ISO string
 }
 
+// Pinned to Asia/Tokyo rather than left to the viewer's clock: this component
+// is server-rendered before it hydrates, so an unpinned format would render in
+// the server's UTC and then shift on hydration — and a reviewer reading from
+// another timezone would see a different time than their colleagues.
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("ja-JP", {
     year: "numeric",
@@ -18,6 +22,7 @@ function formatDateTime(iso: string): string {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Tokyo",
   });
 }
 
