@@ -115,6 +115,15 @@ function ProspectsPageInner() {
 
   const hasFilter = q || contactStatus || prefecture;
 
+  // Mirrors the params fetchProspects sends to GET /api/prospects (minus
+  // `page`, since the export always includes every matching row) so the
+  // downloaded file reflects exactly what's filtered on screen.
+  const exportParams = new URLSearchParams();
+  if (year) exportParams.set("year", year);
+  if (q) exportParams.set("q", q);
+  if (contactStatus) exportParams.set("contactStatus", contactStatus);
+  if (prefecture) exportParams.set("prefecture", prefecture);
+
   // 追客リスト is a standalone feature gated by canManageProspects alone
   // (admin/representative/editor). See the comment above PERMISSIONS in
   // src/lib/role-shared.ts.
@@ -143,6 +152,15 @@ function ProspectsPageInner() {
           </span>
         </h2>
         <div className="flex items-center gap-2">
+          {permissions.canDownload && (
+            <a
+              href={`/api/prospects/export?${exportParams.toString()}`}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
+                hover:bg-gray-50 transition-colors"
+            >
+              📥 Excelダウンロード
+            </a>
+          )}
           {permissions.canUpload && (
             <Link
               href="/prospects/import"
