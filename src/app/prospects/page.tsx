@@ -256,14 +256,19 @@ function ProspectsPageInner() {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full table-fixed">
+              {/* The URL column only holds a fixed-width button now, so the
+                  three text columns that were widest can give space back and
+                  the whole table fits without scrolling on most screens.
+                  Values that still overrun truncate with the full text on
+                  hover, as before. */}
               <colgroup>
-                <col className="w-[200px]" />
-                <col className="w-[80px]" />
-                <col className="w-[220px]" />
-                <col className="w-[130px]" />
-                <col className="w-[110px]" />
-                <col className="w-[220px]" />
-                <col className="w-[200px]" />
+                <col className="w-[150px]" />
+                <col className="w-[70px]" />
+                <col className="w-[170px]" />
+                <col className="w-[120px]" />
+                <col className="w-[100px]" />
+                <col className="w-[180px]" />
+                <col className="w-[140px]" />
               </colgroup>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -316,17 +321,22 @@ function ProspectsPageInner() {
                     <td className="px-4 py-3 text-sm text-gray-700 truncate" title={p.email}>
                       {p.email || "-"}
                     </td>
-                    <td className="px-4 py-3 text-sm truncate">
+                    {/* No truncate here, unlike the text cells: it would clip
+                        the button rather than shorten a long value. */}
+                    <td className="px-4 py-3 text-sm">
                       {p.url ? (
                         <a
                           href={p.url}
                           target="_blank"
                           rel="noopener noreferrer"
+                          // The row itself opens the edit modal, so the link
+                          // has to stop the click from reaching it.
                           onClick={(e) => e.stopPropagation()}
                           title={p.url}
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg
+                            text-xs text-gray-700 whitespace-nowrap hover:bg-gray-50 transition-colors"
                         >
-                          {p.url}
+                          サイトを見る
                         </a>
                       ) : (
                         <span className="text-gray-400">-</span>
