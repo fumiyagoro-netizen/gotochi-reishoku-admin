@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { resolveAwardId } from "@/lib/award";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
@@ -33,10 +34,12 @@ export async function GET(request: NextRequest) {
   const confidence = params.get("confidence") || "";
   const assignee = params.get("assignee") || "";
   const page = Math.max(1, parseInt(params.get("page") || "1", 10) || 1);
+  const awardId = await resolveAwardId(params.get("year") || undefined);
 
   try {
     const where = {
       AND: [
+        awardId ? { awardId } : {},
         q
           ? {
               OR: [
@@ -53,7 +56,9 @@ export async function GET(request: NextRequest) {
     };
 
     // 県名・担当者はフリーテキスト由来の値なので、絞り込みセレクトの選択肢は
-    // 実データから動的に作る（現在の絞り込み条件には影響されず、常に全件から集計）。
+    // 実データから動的に作る（現在の絞り込み条件には影響されないが、年度は
+    // またぐと意味がない組み合わせになるため、表示中の年度でのみ集計する。
+    // entries/page.tsx のカテゴリ集計と同じ考え方）。
     const [prospects, total, prefectureRows, assigneeRows] = await Promise.all([
       prisma.prospect.findMany({
         where,
@@ -63,13 +68,13 @@ export async function GET(request: NextRequest) {
       }),
       prisma.prospect.count({ where }),
       prisma.prospect.findMany({
-        where: { prefecture: { not: "" } },
+        where: { awardId: awardId ?? undefined, prefecture: { not: "" } },
         distinct: ["prefecture"],
         select: { prefecture: true },
         orderBy: { prefecture: "asc" },
       }),
       prisma.prospect.findMany({
-        where: { assignee: { not: "" } },
+        where: { awardId: awardId ?? undefined, assignee: { not: "" } },
         distinct: ["assignee"],
         select: { assignee: true },
         orderBy: { assignee: "asc" },
@@ -118,6 +123,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 新規追加は「今サイドバーで選択中の年度」に紐付ける — 一覧画面が
+    // /api/prospects?...&year=... を叩く際、POST 側にも同じ year を渡す
+    // (src/app/prospects/page.tsx)。
+    const awardId = await resolveAwardId(request.nextUrl.searchParams.get("year") || undefined);
+    if (!awardId) {
+      return NextResponse.json(
+        { success: false, message: "対象の年度が見つかりません" },
+        { status: 400 }
+      );
+    }
+
     if (body.contactStatus !== undefined && !isProspectContactStatus(body.contactStatus)) {
       return NextResponse.json(
         { success: false, message: "コンタクト状況の値が不正です" },
@@ -137,6 +153,7 @@ export async function POST(request: NextRequest) {
 
     const prospect = await prisma.prospect.create({
       data: {
+        awardId,
         makerName,
         prefecture: String(body.prefecture ?? ""),
         productName: String(body.productName ?? ""),

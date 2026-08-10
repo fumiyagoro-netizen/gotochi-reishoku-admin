@@ -29,6 +29,7 @@ model Award {
   notifyEmails    String    @default("") // comma-separated email addresses for admin notifications
   createdAt       DateTime  @default(now())
   entries         Entry[]
+  prospects       Prospect[]
 }
 
 model Entry {
@@ -213,23 +214,40 @@ model FormSubmission {
 // Standalone "追客リスト" (prospecting list) of candidate manufacturers to
 // reach out to for future award entries. Deliberately has NO relation to
 // Contact/ContactList/Entry — it's a separate sales-outreach concern, gated
-// by its own canManageProspects flag (see src/lib/role-shared.ts).
+// by its own canManageProspects flag (see src/lib/role-shared.ts). The ONLY
+// relation is Award, and only for year-scoping (see awardId below) — it
+// still has nothing to do with Entry/Contact.
 //
 // makerName/prefecture/productName/tempZone/confidence/supplement/url come
-// from a one-time (and repeatable) Excel import — see
+// from a one-time-per-year (and repeatable) Excel import — see
 // importProspectsFromExcel in src/lib/prospect.ts. A re-import skips any row
-// whose makerName+productName pair already exists, so the four operational
-// columns below (hand-maintained through the app, not the spreadsheet) are
-// never clobbered by a re-upload of the source list.
+// whose makerName+productName pair already exists WITHIN THE SAME awardId,
+// so the four operational columns below (hand-maintained through the app,
+// not the spreadsheet) are never clobbered by a re-upload of the source
+// list, while the same maker can still be re-added the following year.
 //
-// No extra @@index: the source list is ~277 manufacturers and grows only via
-// occasional manual Excel imports, so every filter (contactStatus/
-// prefecture/confidence/assignee) and the makerName/productName keyword
-// search stay full-table-scan-fast at this size — same reasoning already
-// applied to Entry/Contact, which don't index their filterable columns
-// either. Revisit if this list ever grows into the thousands.
+// @@index([awardId]): unlike Entry/Contact this table is NOT capped at one
+// award's worth of rows — every yearly re-import adds another ~277 rows on
+// top of prior years, and awardId is the one filter that's on every single
+// query (list, filter-option aggregation, import dedupe), so it's worth
+// indexing now rather than waiting for it to become a scan of an
+// ever-growing multi-year table. contactStatus/prefecture/confidence/
+// assignee/keyword search stay unindexed, same reasoning as before: each
+// year's slice is still only ~hundreds of rows.
 model Prospect {
   id            Int      @id @default(autoincrement())
+  // Year-scoped through Award rather than a raw `year Int`: award years get
+  // renumbered (2025→2026, 2026→2027 in Aug 2026), and a stored number would
+  // have been left behind. Deliberately the only relation on this model —
+  // whether a maker entered is answered on the entries screen, so there is
+  // nothing to join to Contact or Entry here.
+  //
+  // No default: every create path (POST /api/prospects, the Excel import)
+  // passes awardId explicitly, and a default would quietly file anything
+  // that forgot to under whichever award it named. The column was introduced
+  // with a temporary @default so Postgres could backfill the 277 rows that
+  // predated it; that default has since been dropped.
+  awardId       Int
   makerName     String                        // メーカー名
   prefecture    String   @default("")         // 県名
   productName   String   @default("")         // 商品名
@@ -244,4 +262,10 @@ model Prospect {
   memo          String   @default("")         // 備考・メモ欄
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  // No onDelete override — same default (Restrict) as Entry.award below, so
+  // an award can't be deleted out from under prospects that still belong to
+  // it.
+  award         Award    @relation(fields: [awardId], references: [id])
+
+  @@index([awardId])
 }

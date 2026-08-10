@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useRole } from "@/lib/role-context";
 import {
   PROSPECT_CONTACT_STATUSES,
@@ -37,8 +38,14 @@ const CONTACT_STATUS_COLORS: Record<string, string> = {
   [PROSPECT_STATUS_DROPPED]: "bg-gray-200 text-gray-500",
 };
 
-export default function ProspectsPage() {
+// Reads ?year= from the URL — sidebar always appends it once at least one
+// Award exists (src/components/sidebar.tsx hrefWithYear) — so this stays
+// wrapped in Suspense per Next.js's useSearchParams requirement (see the
+// default export below).
+function ProspectsPageInner() {
   const { permissions } = useRole();
+  const searchParams = useSearchParams();
+  const year = searchParams.get("year");
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     prefectures: [],
@@ -65,6 +72,7 @@ export default function ProspectsPage() {
     setErrorMsg("");
     try {
       const params = new URLSearchParams();
+      if (year) params.set("year", year);
       if (q) params.set("q", q);
       if (contactStatus) params.set("contactStatus", contactStatus);
       if (prefecture) params.set("prefecture", prefecture);
@@ -86,11 +94,17 @@ export default function ProspectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [q, contactStatus, prefecture, confidence, assignee, page]);
+  }, [year, q, contactStatus, prefecture, confidence, assignee, page]);
 
   useEffect(() => {
     fetchProspects();
   }, [fetchProspects]);
+
+  // 年度を切り替えたら1ページ目に戻す（他の絞り込み条件の変更時と同じ扱い）。
+  // 切替前のページ番号のままだと、年度によっては件数が少なく空振りしうる。
+  useEffect(() => {
+    setPage(1);
+  }, [year]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -128,6 +142,11 @@ export default function ProspectsPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
           追客リスト
+          {year && (
+            <span className="text-base font-normal text-gray-500 ml-3">
+              {year}年度
+            </span>
+          )}
           <span className="text-base font-normal text-gray-500 ml-3">
             {total}件
           </span>
@@ -356,6 +375,10 @@ export default function ProspectsPage() {
       {showForm && (
         <ProspectFormModal
           prospect={editingProspect}
+          // 新規追加時、今表示中の年度に紐付ける（src/app/api/prospects
+          // POST が ?year= を見て awardId を解決する）。編集時は既存行の
+          // awardId を変えないので使わない。
+          year={year}
           // Anyone who can manage the list can remove a row from it — see the
           // matching gate in api/prospects/[id] DELETE. Not permissions.canDelete,
           // which representative and editor lack.
@@ -368,13 +391,25 @@ export default function ProspectsPage() {
   );
 }
 
+export default function ProspectsPage() {
+  return (
+    <Suspense>
+      <ProspectsPageInner />
+    </Suspense>
+  );
+}
+
 function ProspectFormModal({
   prospect,
+  year,
   canDelete,
   onClose,
   onSaved,
 }: {
   prospect: Prospect | null;
+  // 表示中の年度。新規追加(POST)の紐付け先としてのみ使う — 編集(PATCH)は
+  // 対象行の awardId を変更しない。
+  year: string | null;
   canDelete: boolean;
   onClose: () => void;
   onSaved: () => void;
@@ -406,7 +441,9 @@ function ProspectFormModal({
 
     try {
       const res = await fetch(
-        isEdit ? `/api/prospects/${prospect!.id}` : "/api/prospects",
+        isEdit
+          ? `/api/prospects/${prospect!.id}`
+          : `/api/prospects${year ? `?year=${year}` : ""}`,
         {
           method: isEdit ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
