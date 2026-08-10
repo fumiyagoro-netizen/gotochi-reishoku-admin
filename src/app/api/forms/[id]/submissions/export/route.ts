@@ -11,7 +11,9 @@ export async function GET(
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canDownload) {
+    // canDownload alone previously let editor export form submissions —
+    // canManageForms gates the forms feature itself first.
+    if (!perms.canManageForms || !perms.canDownload) {
       return NextResponse.json(
         { success: false, message: "ダウンロード権限がありません" },
         { status: 403 }

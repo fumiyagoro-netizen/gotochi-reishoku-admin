@@ -7,11 +7,13 @@ import { upsertContact, addToList } from "@/lib/contact";
 
 // GET: list contacts with optional search and list filter
 export async function GET(request: NextRequest) {
-  // Contacts are personal data (name/email/phone), so viewers — who are
-  // defined as "閲覧のみ（個人情報は非表示）" — must not read them, via the
-  // UI or by calling this route directly.
+  // Contacts are personal data (name/email/phone). canManageContacts gates
+  // access to the contacts feature itself (editor must not reach it at
+  // all); canSeePrivateInfo is kept as the existing operation-level check
+  // (viewers — "閲覧のみ（個人情報は非表示）" — must not read private data).
   const role = await getRoleFromRequest(request);
-  if (!getPermissions(role).canSeePrivateInfo) {
+  const perms = getPermissions(role);
+  if (!perms.canManageContacts || !perms.canSeePrivateInfo) {
     return NextResponse.json(
       { success: false, message: "閲覧権限がありません" },
       { status: 403 }
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canEdit) {
+    if (!perms.canManageContacts || !perms.canEdit) {
       return NextResponse.json(
         { success: false, message: "編集権限がありません" },
         { status: 403 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import type { FormField, FormAnswers } from "@/lib/form";
+import { useRole } from "@/lib/role-context";
 
 interface FormInfo {
   id: number;
@@ -24,6 +25,7 @@ function isFileUrl(value: unknown): value is string {
 
 export default function FormSubmissionsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { permissions } = useRole();
   const [form, setForm] = useState<FormInfo | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,19 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
     }
 
     return Array.isArray(value) ? value.join(", ") : value;
+  }
+
+  // Part of the forms feature — gated the same way as /forms. The API
+  // enforces this too; this only keeps the page from rendering an empty
+  // shell (or a "回答がありません" message) for roles that must not reach it.
+  if (!permissions.canManageForms) {
+    return (
+      <div className="p-8">
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-gray-500">閲覧権限がありません</p>
+        </div>
+      </div>
+    );
   }
 
   return (

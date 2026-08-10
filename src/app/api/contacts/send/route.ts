@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canSendEmail) {
+    // editor already fails canSendEmail today, but canManageContacts is
+    // checked too so this route stays blocked for anyone outside the
+    // contacts feature even if canSendEmail is ever granted more broadly.
+    if (!perms.canManageContacts || !perms.canSendEmail) {
       return NextResponse.json(
         { success: false, message: "メール配信は管理者のみ実行できます" },
         { status: 403 }

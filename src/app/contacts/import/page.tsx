@@ -26,7 +26,10 @@ function ImportForm() {
       });
   }, []);
 
-  if (!permissions.canUpload) {
+  // Part of the contacts feature (canManageContacts) — an editor still has
+  // canUpload=true (used for the unrelated entries CSV upload), so checking
+  // canUpload alone would let editor reach this page. Both must hold.
+  if (!permissions.canManageContacts || !permissions.canUpload) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
         <p className="text-gray-500">インポート権限がありません</p>

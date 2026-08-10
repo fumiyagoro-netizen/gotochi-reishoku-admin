@@ -13,11 +13,30 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "すべての操作が可能",
   representative: "設定・ユーザー管理・操作ログ・エントリー削除・年度管理を除く操作が可能",
-  editor: "削除・受賞設定以外の操作が可能",
+  editor: "削除・受賞設定・見込み客・フォーム以外の操作が可能",
   viewer: "閲覧のみ（個人情報は非表示）",
   judge: "審査コメントの投稿のみ可能（その他は閲覧のみ・個人情報は非表示）",
 };
 
+// canManageContacts / canManageForms gate the "見込み客" (contacts) and
+// "フォーム" (forms) features as a whole (list/detail pages, create, edit,
+// delete, CSV/entry import, submission export, etc).
+//
+// These are intentionally separate from canSeePrivateInfo and canEdit rather
+// than reusing them, because those two flags are shared with unrelated
+// entry-side behavior:
+//   - canSeePrivateInfo also controls whether an entry's applicant contact
+//     info (name/email/phone) is masked — see src/lib/entry-privacy.ts and
+//     src/app/entries/page.tsx / src/app/entries/[id]/page.tsx. editor must
+//     keep canSeePrivateInfo=true so entry personal info stays visible, even
+//     though editor must NOT see the separate contacts feature.
+//   - canEdit also controls entry editing. editor must keep canEdit=true for
+//     entries while losing the ability to edit forms.
+// Endpoints/pages for contacts and forms should check canManageContacts /
+// canManageForms first (feature access), then the existing operation-level
+// flag (canEdit/canDelete/canUpload/canDownload/canSendEmail) same as before
+// — this file's other flags are unchanged and still enforce the *kind* of
+// operation once feature access is granted.
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -35,6 +54,8 @@ export const PERMISSIONS = {
     // comment) handled directly in that API route — this flag only gates
     // who may create one.
     canReviewComment: true,
+    canManageContacts: true,
+    canManageForms: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -50,6 +71,8 @@ export const PERMISSIONS = {
     canSeePrivateInfo: true,
     canSendEmail: true,
     canReviewComment: true,
+    canManageContacts: true,
+    canManageForms: true,
   },
   editor: {
     canDelete: false,
@@ -60,6 +83,10 @@ export const PERMISSIONS = {
     canSeePrivateInfo: true,
     canSendEmail: false,
     canReviewComment: false,
+    // editor may not access the 見込み客 (contacts) or フォーム (forms)
+    // features at all — see the comment above PERMISSIONS.
+    canManageContacts: false,
+    canManageForms: false,
   },
   viewer: {
     canDelete: false,
@@ -70,6 +97,8 @@ export const PERMISSIONS = {
     canSeePrivateInfo: false,
     canSendEmail: false,
     canReviewComment: false,
+    canManageContacts: false,
+    canManageForms: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -83,6 +112,8 @@ export const PERMISSIONS = {
     canSeePrivateInfo: false,
     canSendEmail: false,
     canReviewComment: true,
+    canManageContacts: false,
+    canManageForms: false,
   },
 } as const;
 

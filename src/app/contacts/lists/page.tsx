@@ -31,7 +31,7 @@ export default function ContactListsPage() {
   }, [fetchLists]);
 
   // Part of the contacts feature — gated the same way as /contacts.
-  if (!permissions.canSeePrivateInfo) {
+  if (!permissions.canManageContacts) {
     return (
       <div className="p-8">
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">

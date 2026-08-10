@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const role = await getRoleFromRequest(request);
   const perms = getPermissions(role);
-  if (!perms.canEdit) {
+  if (!perms.canManageForms || !perms.canEdit) {
     return NextResponse.json(
       { success: false, message: "閲覧権限がありません" },
       { status: 403 }

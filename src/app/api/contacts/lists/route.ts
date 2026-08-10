@@ -7,9 +7,11 @@ import { writeAuditLog } from "@/lib/audit";
 // GET: list all contact lists (with contact counts)
 export async function GET(request: NextRequest) {
   // Part of the contacts feature, gated the same way as the contacts
-  // themselves so viewers get nothing from it.
+  // themselves (canManageContacts for feature access, canSeePrivateInfo so
+  // viewers still get nothing from it).
   const role = await getRoleFromRequest(request);
-  if (!getPermissions(role).canSeePrivateInfo) {
+  const perms = getPermissions(role);
+  if (!perms.canManageContacts || !perms.canSeePrivateInfo) {
     return NextResponse.json(
       { success: false, message: "閲覧権限がありません" },
       { status: 403 }
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canEdit) {
+    if (!perms.canManageContacts || !perms.canEdit) {
       return NextResponse.json(
         { success: false, message: "編集権限がありません" },
         { status: 403 }

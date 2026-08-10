@@ -91,9 +91,11 @@ export default function ContactsPage() {
     fetchContacts();
   }
 
-  // Contacts are personal data, which viewers must not see. The API enforces
-  // this too; this only keeps the page from rendering an empty shell.
-  if (!permissions.canSeePrivateInfo) {
+  // Contacts (見込み客) is gated by canManageContacts, not canSeePrivateInfo:
+  // editor keeps canSeePrivateInfo=true for entries but must not reach the
+  // contacts feature at all. The API enforces this too; this only keeps the
+  // page from rendering an empty shell.
+  if (!permissions.canManageContacts) {
     return (
       <div className="p-8">
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">

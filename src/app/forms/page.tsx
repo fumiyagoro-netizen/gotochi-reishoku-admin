@@ -43,6 +43,20 @@ export default function FormsPage() {
     fetchForms();
   }, [fetchForms]);
 
+  // Forms (フォーム) is gated by canManageForms, not canEdit: editor keeps
+  // canEdit=true for entries but must not reach the forms feature at all.
+  // The API enforces this too; this only keeps the page from rendering an
+  // empty shell.
+  if (!permissions.canManageForms) {
+    return (
+      <div className="p-8">
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-gray-500">閲覧権限がありません</p>
+        </div>
+      </div>
+    );
+  }
+
   async function handleDelete(form: FormRow) {
     if (!confirm(`「${form.title}」を削除しますか？回答データもすべて削除されます。`)) return;
     const res = await fetch(`/api/forms/${form.id}`, { method: "DELETE" });

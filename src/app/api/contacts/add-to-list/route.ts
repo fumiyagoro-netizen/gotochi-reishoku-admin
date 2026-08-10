@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canEdit) {
+    if (!perms.canManageContacts || !perms.canEdit) {
       return NextResponse.json(
         { success: false, message: "編集権限がありません" },
         { status: 403 }

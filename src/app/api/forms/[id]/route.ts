@@ -25,7 +25,7 @@ export async function GET(
 ) {
   const role = await getRoleFromRequest(request);
   const perms = getPermissions(role);
-  if (!perms.canEdit) {
+  if (!perms.canManageForms || !perms.canEdit) {
     return NextResponse.json(
       { success: false, message: "閲覧権限がありません" },
       { status: 403 }
@@ -51,7 +51,7 @@ export async function PATCH(
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canEdit) {
+    if (!perms.canManageForms || !perms.canEdit) {
       return NextResponse.json(
         { success: false, message: "編集権限がありません" },
         { status: 403 }
@@ -125,7 +125,7 @@ export async function DELETE(
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canDelete) {
+    if (!perms.canManageForms || !perms.canDelete) {
       return NextResponse.json(
         { success: false, message: "削除権限がありません" },
         { status: 403 }

@@ -9,7 +9,7 @@ import { generateSlug } from "@/lib/form";
 export async function GET(request: NextRequest) {
   const role = await getRoleFromRequest(request);
   const perms = getPermissions(role);
-  if (!perms.canEdit) {
+  if (!perms.canManageForms || !perms.canEdit) {
     return NextResponse.json(
       { success: false, message: "閲覧権限がありません" },
       { status: 403 }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canEdit) {
+    if (!perms.canManageForms || !perms.canEdit) {
       return NextResponse.json(
         { success: false, message: "編集権限がありません" },
         { status: 403 }

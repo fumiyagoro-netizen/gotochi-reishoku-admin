@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const role = await getRoleFromRequest(request);
     const perms = getPermissions(role);
-    if (!perms.canUpload) {
+    if (!perms.canManageContacts || !perms.canUpload) {
       return NextResponse.json(
         { success: false, message: "インポート権限がありません" },
         { status: 403 }
