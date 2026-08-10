@@ -43,7 +43,7 @@ export function Sidebar({
     { href: "/entries", label: "エントリー一覧", icon: "📋", show: true },
     { href: "/awards", label: "受賞一覧", icon: "🏆", show: true },
     { href: "/reviews", label: "審査状況", icon: "✅", show: true },
-    { href: "/contacts", label: "見込み客", icon: "📇", show: perms.canManageContacts },
+    { href: "/contacts", label: "メール配信リスト", icon: "📇", show: perms.canManageContacts },
     { href: "/forms", label: "フォーム", icon: "📝", show: perms.canManageForms },
     { href: "/email-logs", label: "配信履歴", icon: "📬", show: role === "admin" },
     { href: "/award-settings", label: "年度管理", icon: "📅", show: role === "admin" },
