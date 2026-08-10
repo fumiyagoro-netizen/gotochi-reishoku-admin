@@ -13,7 +13,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "すべての操作が可能",
   representative: "設定・ユーザー管理・操作ログ・エントリー削除・年度管理を除く操作が可能",
-  editor: "削除・受賞設定・見込み客・フォーム以外の操作が可能",
+  editor: "削除・受賞設定・見込み客・フォーム以外の操作が可能（追客リストは利用可）",
   viewer: "閲覧のみ（個人情報は非表示）",
   judge: "審査コメントの投稿のみ可能（その他は閲覧のみ・個人情報は非表示）",
 };
@@ -37,6 +37,17 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // flag (canEdit/canDelete/canUpload/canDownload/canSendEmail) same as before
 // — this file's other flags are unchanged and still enforce the *kind* of
 // operation once feature access is granted.
+//
+// canManageProspects gates the "追客リスト" (prospects) feature as a whole
+// (list page, create, edit, Excel import). Unlike canManageContacts /
+// canManageForms it is NOT paired with canEdit/canSeePrivateInfo for
+// read/write access — Prospect has no personal-data-masking concern (it's
+// prospective business contacts, not applicant PII) and every role that can
+// reach the feature at all (admin/representative/editor) may edit every
+// field, so a single flag covers both "can see the page" and "can edit".
+// DELETE is the one exception: it additionally requires canDelete, same as
+// contacts/forms deletion — which in practice keeps prospect deletion
+// admin-only, since representative/editor both have canDelete=false today.
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -56,6 +67,7 @@ export const PERMISSIONS = {
     canReviewComment: true,
     canManageContacts: true,
     canManageForms: true,
+    canManageProspects: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -73,6 +85,7 @@ export const PERMISSIONS = {
     canReviewComment: true,
     canManageContacts: true,
     canManageForms: true,
+    canManageProspects: true,
   },
   editor: {
     canDelete: false,
@@ -84,9 +97,12 @@ export const PERMISSIONS = {
     canSendEmail: false,
     canReviewComment: false,
     // editor may not access the 見込み客 (contacts) or フォーム (forms)
-    // features at all — see the comment above PERMISSIONS.
+    // features at all — see the comment above PERMISSIONS. It DOES get
+    // canManageProspects: true — 追客リスト is a separate feature editor is
+    // meant to use day-to-day (unlike contacts/forms).
     canManageContacts: false,
     canManageForms: false,
+    canManageProspects: true,
   },
   viewer: {
     canDelete: false,
@@ -99,6 +115,7 @@ export const PERMISSIONS = {
     canReviewComment: false,
     canManageContacts: false,
     canManageForms: false,
+    canManageProspects: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -114,6 +131,7 @@ export const PERMISSIONS = {
     canReviewComment: true,
     canManageContacts: false,
     canManageForms: false,
+    canManageProspects: false,
   },
 } as const;
 
