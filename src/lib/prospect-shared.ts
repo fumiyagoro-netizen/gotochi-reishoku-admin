@@ -26,16 +26,3 @@ export function isProspectContactStatus(value: unknown): value is ProspectContac
   );
 }
 
-// Fixed choice list for Prospect.confidence. Unlike contactStatus this may
-// also be "" (unset) — the source Excel always has one of these three, but a
-// manually-added prospect can be left unrated.
-export const PROSPECT_CONFIDENCE_LEVELS = ["高", "中", "低"] as const;
-
-export type ProspectConfidenceLevel = (typeof PROSPECT_CONFIDENCE_LEVELS)[number];
-
-export function isProspectConfidenceLevel(value: unknown): value is ProspectConfidenceLevel {
-  return (
-    typeof value === "string" &&
-    (PROSPECT_CONFIDENCE_LEVELS as readonly string[]).includes(value)
-  );
-}

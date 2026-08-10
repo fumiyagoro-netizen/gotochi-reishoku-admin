@@ -3,19 +3,19 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
-import { isProspectContactStatus, isProspectConfidenceLevel } from "@/lib/prospect-shared";
+import { isProspectContactStatus } from "@/lib/prospect-shared";
 
 const EDITABLE_FIELDS = [
   "makerName",
   "prefecture",
   "productName",
   "tempZone",
-  "confidence",
   "supplement",
   "url",
   "contactStatus",
   "assignee",
   "email",
+  "phone",
   "memo",
 ] as const;
 
@@ -54,16 +54,6 @@ export async function PATCH(
     if ("contactStatus" in body && !isProspectContactStatus(body.contactStatus)) {
       return NextResponse.json(
         { success: false, message: "コンタクト状況の値が不正です" },
-        { status: 400 }
-      );
-    }
-    if (
-      "confidence" in body &&
-      body.confidence !== "" &&
-      !isProspectConfidenceLevel(body.confidence)
-    ) {
-      return NextResponse.json(
-        { success: false, message: "確度の値が不正です" },
         { status: 400 }
       );
     }

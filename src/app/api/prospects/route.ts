@@ -7,7 +7,6 @@ import { writeAuditLog } from "@/lib/audit";
 import {
   PROSPECT_CONTACT_STATUSES,
   isProspectContactStatus,
-  isProspectConfidenceLevel,
 } from "@/lib/prospect-shared";
 
 const PAGE_SIZE = 50;
@@ -31,8 +30,6 @@ export async function GET(request: NextRequest) {
   const q = params.get("q") || "";
   const contactStatus = params.get("contactStatus") || "";
   const prefecture = params.get("prefecture") || "";
-  const confidence = params.get("confidence") || "";
-  const assignee = params.get("assignee") || "";
   const page = Math.max(1, parseInt(params.get("page") || "1", 10) || 1);
   const awardId = await resolveAwardId(params.get("year") || undefined);
 
@@ -50,16 +47,14 @@ export async function GET(request: NextRequest) {
           : {},
         contactStatus ? { contactStatus } : {},
         prefecture ? { prefecture } : {},
-        confidence ? { confidence } : {},
-        assignee ? { assignee } : {},
       ],
     };
 
-    // 県名・担当者はフリーテキスト由来の値なので、絞り込みセレクトの選択肢は
-    // 実データから動的に作る（現在の絞り込み条件には影響されないが、年度は
-    // またぐと意味がない組み合わせになるため、表示中の年度でのみ集計する。
+    // 県名はフリーテキスト由来の値なので、絞り込みセレクトの選択肢は実データ
+    // から動的に作る（現在の絞り込み条件には影響されないが、年度をまたぐと
+    // 意味がない組み合わせになるため、表示中の年度でのみ集計する。
     // entries/page.tsx のカテゴリ集計と同じ考え方）。
-    const [prospects, total, prefectureRows, assigneeRows] = await Promise.all([
+    const [prospects, total, prefectureRows] = await Promise.all([
       prisma.prospect.findMany({
         where,
         orderBy: { id: "asc" },
@@ -73,12 +68,6 @@ export async function GET(request: NextRequest) {
         select: { prefecture: true },
         orderBy: { prefecture: "asc" },
       }),
-      prisma.prospect.findMany({
-        where: { awardId: awardId ?? undefined, assignee: { not: "" } },
-        distinct: ["assignee"],
-        select: { assignee: true },
-        orderBy: { assignee: "asc" },
-      }),
     ]);
 
     return NextResponse.json({
@@ -90,7 +79,6 @@ export async function GET(request: NextRequest) {
       totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
       filterOptions: {
         prefectures: prefectureRows.map((r) => r.prefecture),
-        assignees: assigneeRows.map((r) => r.assignee),
       },
     });
   } catch (error) {
@@ -140,16 +128,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (
-      body.confidence !== undefined &&
-      body.confidence !== "" &&
-      !isProspectConfidenceLevel(body.confidence)
-    ) {
-      return NextResponse.json(
-        { success: false, message: "確度の値が不正です" },
-        { status: 400 }
-      );
-    }
 
     const prospect = await prisma.prospect.create({
       data: {
@@ -158,12 +136,12 @@ export async function POST(request: NextRequest) {
         prefecture: String(body.prefecture ?? ""),
         productName: String(body.productName ?? ""),
         tempZone: String(body.tempZone ?? ""),
-        confidence: String(body.confidence ?? ""),
         supplement: String(body.supplement ?? ""),
         url: String(body.url ?? ""),
         contactStatus: body.contactStatus || PROSPECT_CONTACT_STATUSES[0],
         assignee: String(body.assignee ?? ""),
         email: String(body.email ?? ""),
+        phone: String(body.phone ?? ""),
         memo: String(body.memo ?? ""),
       },
     });

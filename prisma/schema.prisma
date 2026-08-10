@@ -218,7 +218,7 @@ model FormSubmission {
 // relation is Award, and only for year-scoping (see awardId below) — it
 // still has nothing to do with Entry/Contact.
 //
-// makerName/prefecture/productName/tempZone/confidence/supplement/url come
+// makerName/prefecture/productName/tempZone/supplement/url come
 // from a one-time-per-year (and repeatable) Excel import — see
 // importProspectsFromExcel in src/lib/prospect.ts. A re-import skips any row
 // whose makerName+productName pair already exists WITHIN THE SAME awardId,
@@ -231,7 +231,7 @@ model FormSubmission {
 // top of prior years, and awardId is the one filter that's on every single
 // query (list, filter-option aggregation, import dedupe), so it's worth
 // indexing now rather than waiting for it to become a scan of an
-// ever-growing multi-year table. contactStatus/prefecture/confidence/
+// ever-growing multi-year table. contactStatus/prefecture/
 // assignee/keyword search stay unindexed, same reasoning as before: each
 // year's slice is still only ~hundreds of rows.
 model Prospect {
@@ -252,13 +252,13 @@ model Prospect {
   prefecture    String   @default("")         // 県名
   productName   String   @default("")         // 商品名
   tempZone      String   @default("")         // サイトで確認できる温度帯
-  confidence    String   @default("")         // 確度（高/中/低）
   supplement    String   @default("")         // 補足
   url           String   @default("")         // URL
   // 運用項目（アプリ上で手入力・編集する）。Excelインポートでは触らない。
   contactStatus String   @default("未着手")   // コンタクト状況: 未着手/連絡済/資料送付済/エントリー意向
   assignee      String   @default("")         // 担当者
   email         String   @default("")         // 連絡先（メールアドレス）
+  phone         String   @default("")         // 連絡先（電話番号）
   memo          String   @default("")         // 備考・メモ欄
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

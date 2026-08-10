@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { useRole } from "@/lib/role-context";
 import {
   PROSPECT_CONTACT_STATUSES,
-  PROSPECT_CONFIDENCE_LEVELS,
   PROSPECT_STATUS_DROPPED,
 } from "@/lib/prospect-shared";
 
@@ -16,18 +15,17 @@ interface Prospect {
   prefecture: string;
   productName: string;
   tempZone: string;
-  confidence: string;
   supplement: string;
   url: string;
   contactStatus: string;
   assignee: string;
   email: string;
+  phone: string;
   memo: string;
 }
 
 interface FilterOptions {
   prefectures: string[];
-  assignees: string[];
 }
 
 const CONTACT_STATUS_COLORS: Record<string, string> = {
@@ -49,7 +47,6 @@ function ProspectsPageInner() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     prefectures: [],
-    assignees: [],
   });
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -61,8 +58,6 @@ function ProspectsPageInner() {
   const [q, setQ] = useState("");
   const [contactStatus, setContactStatus] = useState("");
   const [prefecture, setPrefecture] = useState("");
-  const [confidence, setConfidence] = useState("");
-  const [assignee, setAssignee] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
@@ -76,8 +71,6 @@ function ProspectsPageInner() {
       if (q) params.set("q", q);
       if (contactStatus) params.set("contactStatus", contactStatus);
       if (prefecture) params.set("prefecture", prefecture);
-      if (confidence) params.set("confidence", confidence);
-      if (assignee) params.set("assignee", assignee);
       params.set("page", String(page));
       const res = await fetch(`/api/prospects?${params.toString()}`);
       const data = await res.json();
@@ -94,7 +87,7 @@ function ProspectsPageInner() {
     } finally {
       setLoading(false);
     }
-  }, [year, q, contactStatus, prefecture, confidence, assignee, page]);
+  }, [year, q, contactStatus, prefecture, page]);
 
   useEffect(() => {
     fetchProspects();
@@ -117,12 +110,10 @@ function ProspectsPageInner() {
     setQ("");
     setContactStatus("");
     setPrefecture("");
-    setConfidence("");
-    setAssignee("");
     setPage(1);
   }
 
-  const hasFilter = q || contactStatus || prefecture || confidence || assignee;
+  const hasFilter = q || contactStatus || prefecture;
 
   // 追客リスト is a standalone feature gated by canManageProspects alone
   // (admin/representative/editor). See the comment above PERMISSIONS in
@@ -207,28 +198,6 @@ function ProspectsPageInner() {
           <option value="">県名（すべて）</option>
           {filterOptions.prefectures.map((pref) => (
             <option key={pref} value={pref}>{pref}</option>
-          ))}
-        </select>
-        <select
-          value={confidence}
-          onChange={(e) => { setConfidence(e.target.value); setPage(1); }}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">確度（すべて）</option>
-          {PROSPECT_CONFIDENCE_LEVELS.map((level) => (
-            <option key={level} value={level}>{level}</option>
-          ))}
-        </select>
-        <select
-          value={assignee}
-          onChange={(e) => { setAssignee(e.target.value); setPage(1); }}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">担当者（すべて）</option>
-          {filterOptions.assignees.map((a) => (
-            <option key={a} value={a}>{a}</option>
           ))}
         </select>
         <button
@@ -429,7 +398,6 @@ function ProspectFormModal({
   const [prefecture, setPrefecture] = useState(prospect?.prefecture || "");
   const [productName, setProductName] = useState(prospect?.productName || "");
   const [tempZone, setTempZone] = useState(prospect?.tempZone || "");
-  const [confidence, setConfidence] = useState(prospect?.confidence || "");
   const [supplement, setSupplement] = useState(prospect?.supplement || "");
   const [url, setUrl] = useState(prospect?.url || "");
   const [contactStatus, setContactStatus] = useState(
@@ -437,6 +405,7 @@ function ProspectFormModal({
   );
   const [assignee, setAssignee] = useState(prospect?.assignee || "");
   const [email, setEmail] = useState(prospect?.email || "");
+  const [phone, setPhone] = useState(prospect?.phone || "");
   const [memo, setMemo] = useState(prospect?.memo || "");
 
   const [saving, setSaving] = useState(false);
@@ -462,12 +431,12 @@ function ProspectFormModal({
             prefecture,
             productName,
             tempZone,
-            confidence,
             supplement,
             url,
             contactStatus,
             assignee,
             email,
+            phone,
             memo,
           }),
         }
@@ -508,7 +477,13 @@ function ProspectFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
+    // Clicking the backdrop closes the modal. The check is on the click's
+    // target being the backdrop itself, so a click that starts inside the
+    // panel — or lands on it — doesn't bubble up and close the form.
+    <div
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           {isEdit ? "追客先編集" : "追客先追加"}
@@ -567,35 +542,19 @@ function ProspectFormModal({
             />
           </label>
 
-          <div className="grid grid-cols-2 gap-4">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">確度</span>
-              <select
-                value={confidence}
-                onChange={(e) => setConfidence(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">未設定</option>
-                {PROSPECT_CONFIDENCE_LEVELS.map((level) => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">コンタクト状況</span>
-              <select
-                value={contactStatus}
-                onChange={(e) => setContactStatus(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {PROSPECT_CONTACT_STATUSES.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">コンタクト状況</span>
+            <select
+              value={contactStatus}
+              onChange={(e) => setContactStatus(e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
+                focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {PROSPECT_CONTACT_STATUSES.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </label>
 
           <label className="block">
             <span className="text-sm font-medium text-gray-700">補足</span>
@@ -637,6 +596,16 @@ function ProspectFormModal({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">連絡先（電話番号）</span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

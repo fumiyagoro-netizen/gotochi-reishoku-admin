@@ -18,7 +18,6 @@ const IMPORT_FIELD_HEADERS = {
   prefecture: "県名",
   productName: "商品名",
   tempZone: "サイトで確認できる温度帯",
-  confidence: "確度",
   supplement: "補足",
   url: "URL",
 } as const;
@@ -127,7 +126,6 @@ export async function importProspectsFromExcel(
     prefecture: string;
     productName: string;
     tempZone: string;
-    confidence: string;
     supplement: string;
     url: string;
   }[] = [];
@@ -163,7 +161,6 @@ export async function importProspectsFromExcel(
       prefecture: getField(row, "prefecture"),
       productName,
       tempZone: getField(row, "tempZone"),
-      confidence: getField(row, "confidence"),
       supplement: getField(row, "supplement"),
       url: getField(row, "url"),
     });
