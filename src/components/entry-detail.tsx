@@ -7,6 +7,7 @@ import { DeleteEntryButton } from "./delete-entry-button";
 import { PdfDownloadButton } from "./pdf-download-button";
 import { PrizeSelector } from "./prize-selector";
 import { ReviewStatusSelector, ReviewBadge } from "./review-status-selector";
+import { ItemArrivalSelector, ItemArrivalBadge } from "./item-arrival-selector";
 import { EntryComments, type EntryCommentData } from "./entry-comments";
 import { useRole } from "@/lib/role-context";
 
@@ -47,6 +48,7 @@ interface EntryData {
   remarks: string;
   prizeLevel: string;
   reviewStatus: string;
+  itemArrivalStatus: string;
   images: EntryImage[];
 }
 
@@ -81,10 +83,18 @@ export function EntryDetail({
   async function saveEdit() {
     setSaving(true);
     try {
+      // The edit form never touches prizeLevel / reviewStatus /
+      // itemArrivalStatus — each has its own selector — but draft is a copy of
+      // the whole entry, so sending it wholesale included them anyway. The API
+      // rejects a body containing reviewStatus or prizeLevel unless the caller
+      // has canSetPrize, which editors do not, so saving any ordinary edit
+      // failed for them with 「審査状況設定の権限がありません」. Send only what
+      // the form can actually change.
+      const { prizeLevel: _p, reviewStatus: _r, itemArrivalStatus: _a, images: _i, ...editable } = draft;
       const res = await fetch(`/api/entries/${entry.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(editable),
       });
       const data = await res.json();
       if (data.success) {
@@ -209,6 +219,13 @@ export function EntryDetail({
                 <ReviewStatusSelector entryId={entry.id} currentStatus={entry.reviewStatus} />
               ) : entry.reviewStatus ? (
                 <ReviewBadge status={entry.reviewStatus} />
+              ) : null}
+            </div>
+            <div>
+              {permissions.canSetItemArrival ? (
+                <ItemArrivalSelector entryId={entry.id} currentStatus={entry.itemArrivalStatus} />
+              ) : entry.itemArrivalStatus ? (
+                <ItemArrivalBadge status={entry.itemArrivalStatus} />
               ) : null}
             </div>
           </div>

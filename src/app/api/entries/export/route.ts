@@ -5,6 +5,7 @@ import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import ExcelJS from "exceljs";
 import path from "path";
 import fs from "fs";
+import { ITEM_ARRIVAL_LABELS } from "@/lib/item-arrival-shared";
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,6 +62,7 @@ export async function GET(request: NextRequest) {
       { header: "食品衛生責任者", key: "hygieneManager", width: 20 },
       { header: "備考", key: "remarks", width: 30 },
       { header: "審査状況", key: "reviewStatus", width: 20 },
+      { header: "商品到着", key: "itemArrivalStatus", width: 20 },
       { header: "受賞結果", key: "prizeLevel", width: 15 },
     ];
     sheet.columns = columns;
@@ -119,6 +121,13 @@ export async function GET(request: NextRequest) {
               .map((s: string) =>
                 s === "rejected" ? "選外" : s === "first_passed" ? "1次審査通過" : s === "second_passed" ? "2次審査通過" : s
               )
+              .join("、")
+          : "",
+        itemArrivalStatus: entry.itemArrivalStatus
+          ? entry.itemArrivalStatus
+              .split(",")
+              .filter(Boolean)
+              .map((s: string) => ITEM_ARRIVAL_LABELS[s as keyof typeof ITEM_ARRIVAL_LABELS] || s)
               .join("、")
           : "",
         prizeLevel: entry.prizeLevel || "",

@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
 import Link from "next/link";
+import { ItemArrivalBadge } from "@/components/item-arrival-selector";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
   searchParams: Promise<{
     status?: string;
+    arrival?: string;
     page?: string;
     year?: string;
   }>;
@@ -24,11 +26,28 @@ const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }
   second_passed: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-300" },
 };
 
+// 商品到着の絞り込み値。second_arrived / final_arrived は Entry.itemArrivalStatus
+// の値そのもの（contains 一致）。not_arrived だけはこのページ固有の合成値で、
+// 「どちらのラベルも付いていない（itemArrivalStatus === ""）」に対応する —
+// まだ商品が届いていない企業を洗い出す用途のための絞り込み。
+const ARRIVAL_FILTERS = [
+  { value: "second_arrived", label: "2次審査商品到着", icon: "📦" },
+  { value: "final_arrived", label: "最終審査商品到着", icon: "📦" },
+  { value: "not_arrived", label: "未到着", icon: "📭" },
+];
+
+const ARRIVAL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  second_arrived: { bg: "bg-sky-50", text: "text-sky-700", border: "border-sky-300" },
+  final_arrived: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-300" },
+  not_arrived: { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-300" },
+};
+
 const PAGE_SIZE = 20;
 
 export default async function ReviewsPage({ searchParams }: Props) {
   const params = await searchParams;
   const statusFilter = params.status || "first_passed";
+  const arrivalFilter = params.arrival || "";
   const page = Math.max(1, parseInt(params.page || "1"));
   const awardId = await resolveAwardId(params.year);
   const year = await resolveAwardYear(params.year);
@@ -41,11 +60,27 @@ export default async function ReviewsPage({ searchParams }: Props) {
       statusFilter
         ? { reviewStatus: { contains: statusFilter } }
         : { reviewStatus: { not: "" } },
+      arrivalFilter === "second_arrived"
+        ? { itemArrivalStatus: { contains: "second_arrived" } }
+        : arrivalFilter === "final_arrived"
+          ? { itemArrivalStatus: { contains: "final_arrived" } }
+          : arrivalFilter === "not_arrived"
+            ? { itemArrivalStatus: "" }
+            : {},
     ],
   };
 
   const awardWhere = awardId ? { awardId } : {};
-  const [entries, total, rejectedCount, firstCount, secondCount] = await Promise.all([
+  const [
+    entries,
+    total,
+    rejectedCount,
+    firstCount,
+    secondCount,
+    secondArrivedCount,
+    finalArrivedCount,
+    notArrivedCount,
+  ] = await Promise.all([
     prisma.entry.findMany({
       where,
       skip: (page - 1) * PAGE_SIZE,
@@ -68,6 +103,15 @@ export default async function ReviewsPage({ searchParams }: Props) {
     prisma.entry.count({
       where: { ...awardWhere, reviewStatus: { contains: "second_passed" } },
     }),
+    prisma.entry.count({
+      where: { ...awardWhere, itemArrivalStatus: { contains: "second_arrived" } },
+    }),
+    prisma.entry.count({
+      where: { ...awardWhere, itemArrivalStatus: { contains: "final_arrived" } },
+    }),
+    prisma.entry.count({
+      where: { ...awardWhere, itemArrivalStatus: "" },
+    }),
   ]);
 
   const statusCountMap: Record<string, number> = {
@@ -75,6 +119,20 @@ export default async function ReviewsPage({ searchParams }: Props) {
     first_passed: firstCount,
     second_passed: secondCount,
   };
+
+  // Same award-wide scope as statusCountMap above (not narrowed by the
+  // currently selected statusFilter/arrivalFilter) — these are the totals
+  // shown on the cards, while the table below applies both filters together.
+  const arrivalCountMap: Record<string, number> = {
+    second_arrived: secondArrivedCount,
+    final_arrived: finalArrivedCount,
+    not_arrived: notArrivedCount,
+  };
+
+  function arrivalHref(value: string) {
+    const active = arrivalFilter === value;
+    return `/reviews?status=${encodeURIComponent(statusFilter)}${active ? "" : `&arrival=${value}`}${yearParam}`;
+  }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -112,6 +170,35 @@ export default async function ReviewsPage({ searchParams }: Props) {
         })}
       </div>
 
+      {/* Item Arrival Summary Cards — independent filter axis from review
+          status above (see the `where.AND` combination), so a company can be
+          isolated by e.g. "1次審査通過" AND "未到着" to chase up samples
+          that still haven't arrived. */}
+      <div className="mb-2">
+        <p className="text-xs font-medium text-gray-500">商品到着状況で絞り込み</p>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {ARRIVAL_FILTERS.map((af) => {
+          const count = arrivalCountMap[af.value] || 0;
+          const colors = ARRIVAL_COLORS[af.value];
+          const isActive = arrivalFilter === af.value;
+          return (
+            <Link
+              key={af.value}
+              href={arrivalHref(af.value)}
+              className={`px-4 py-3 rounded-xl border text-center transition-colors ${
+                isActive
+                  ? `${colors.bg} ${colors.border} ${colors.text}`
+                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <p className="text-2xl font-bold">{count}</p>
+              <p className="text-xs mt-0.5">{af.icon} {af.label}</p>
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full">
@@ -122,6 +209,9 @@ export default async function ReviewsPage({ searchParams }: Props) {
               </th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                 審査状況
+              </th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
+                商品到着
               </th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
                 商品名
@@ -178,6 +268,9 @@ export default async function ReviewsPage({ searchParams }: Props) {
                     </div>
                   </td>
                   <td className="px-4 py-3">
+                    <ItemArrivalBadge status={entry.itemArrivalStatus} />
+                  </td>
+                  <td className="px-4 py-3">
                     <Link
                       href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
                       className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
@@ -205,7 +298,7 @@ export default async function ReviewsPage({ searchParams }: Props) {
             })}
             {entries.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   審査通過エントリーがありません
                 </td>
               </tr>
@@ -219,7 +312,7 @@ export default async function ReviewsPage({ searchParams }: Props) {
         <div className="flex items-center justify-center gap-2 mt-6">
           {page > 1 && (
             <Link
-              href={`/reviews?status=${encodeURIComponent(statusFilter)}&page=${page - 1}${yearParam}`}
+              href={`/reviews?status=${encodeURIComponent(statusFilter)}&page=${page - 1}${arrivalFilter ? `&arrival=${arrivalFilter}` : ""}${yearParam}`}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               前へ
@@ -230,7 +323,7 @@ export default async function ReviewsPage({ searchParams }: Props) {
           </span>
           {page < totalPages && (
             <Link
-              href={`/reviews?status=${encodeURIComponent(statusFilter)}&page=${page + 1}${yearParam}`}
+              href={`/reviews?status=${encodeURIComponent(statusFilter)}&page=${page + 1}${arrivalFilter ? `&arrival=${arrivalFilter}` : ""}${yearParam}`}
               className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               次へ

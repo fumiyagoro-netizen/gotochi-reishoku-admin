@@ -4,12 +4,19 @@ import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { sendEmail } from "@/lib/email";
+import { ITEM_ARRIVAL_LABELS, parseItemArrivalStatuses } from "@/lib/item-arrival-shared";
 
 const REVIEW_LABELS: Record<string, string> = {
   rejected: "選外",
   first_passed: "1次審査通過",
   second_passed: "2次審査通過",
 };
+
+function formatItemArrivalStatuses(raw: string): string {
+  const tags = parseItemArrivalStatuses(raw);
+  if (tags.length === 0) return "なし";
+  return tags.map((s) => ITEM_ARRIVAL_LABELS[s as keyof typeof ITEM_ARRIVAL_LABELS] || s).join("、");
+}
 
 const EDITABLE_FIELDS = [
   "companyName",
@@ -38,6 +45,7 @@ const EDITABLE_FIELDS = [
   "remarks",
   "prizeLevel",
   "reviewStatus",
+  "itemArrivalStatus",
 ];
 
 export async function PATCH(
@@ -70,6 +78,19 @@ export async function PATCH(
       );
     }
 
+    // Deliberately a separate check from reviewStatus/prizeLevel above (both
+    // gated by canSetPrize) — itemArrivalStatus is gated by canSetItemArrival
+    // instead, which editor has and canSetPrize does not. Do not fold this
+    // into the canSetPrize checks: doing so would either lock editor out of
+    // recording item arrival, or (worse) accidentally grant editor
+    // reviewStatus/prizeLevel access.
+    if ("itemArrivalStatus" in body && !perms.canSetItemArrival) {
+      return NextResponse.json(
+        { success: false, message: "商品到着設定の権限がありません" },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const entryId = parseInt(id);
 
@@ -88,7 +109,18 @@ export async function PATCH(
         const oldVal = String((entry as Record<string, unknown>)[key] || "");
         const newVal = String(body[key]);
         if (oldVal !== newVal) {
-          changes.push(`${key}: "${oldVal}" → "${newVal}"`);
+          // itemArrivalStatus is recorded in the audit log using its
+          // Japanese labels (matching how REVIEW_LABELS is used for the
+          // reviewStatus admin-notification email below), instead of the
+          // raw "second_arrived,final_arrived" tag string every other
+          // EDITABLE_FIELDS entry logs as-is.
+          if (key === "itemArrivalStatus") {
+            changes.push(
+              `商品到着: "${formatItemArrivalStatuses(oldVal)}" → "${formatItemArrivalStatuses(newVal)}"`
+            );
+          } else {
+            changes.push(`${key}: "${oldVal}" → "${newVal}"`);
+          }
         }
         data[key] = newVal;
       }
@@ -104,10 +136,11 @@ export async function PATCH(
     if (changes.length > 0) {
       const isPrize = "prizeLevel" in body && Object.keys(body).length === 1;
       const isReview = "reviewStatus" in body && Object.keys(body).length === 1;
+      const isItemArrival = "itemArrivalStatus" in body && Object.keys(body).length === 1;
       await writeAuditLog({
         userId: user?.userId,
         userEmail: user?.email,
-        action: isPrize ? "prize" : isReview ? "review" : "update",
+        action: isPrize ? "prize" : isReview ? "review" : isItemArrival ? "item_arrival" : "update",
         target: "entry",
         targetId: String(entryId),
         detail: `${entry.productName}（${entry.companyName}）: ${changes.join(", ")}`,

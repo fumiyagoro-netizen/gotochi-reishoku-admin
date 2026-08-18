@@ -48,6 +48,17 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // DELETE is the one exception: it additionally requires canDelete, same as
 // contacts/forms deletion — which in practice keeps prospect deletion
 // admin-only, since representative/editor both have canDelete=false today.
+//
+// canSetItemArrival gates toggling Entry.itemArrivalStatus (審査用商品が
+// 事務局に届いたかの記録 — see src/lib/item-arrival-shared.ts). It is
+// deliberately its own flag rather than reuse of canSetPrize: canSetPrize
+// also guards Entry.reviewStatus (the judging outcome), and editor must
+// NOT be able to change reviewStatus. Item arrival is an unrelated
+// logistics fact (did the sample physically arrive) that editor legitimately
+// needs to record day-to-day, so editor gets canSetItemArrival: true while
+// keeping canSetPrize: false — the two flags must never be merged into one
+// check in the API routes, or editor would gain reviewStatus/prizeLevel
+// access as a side effect.
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -68,6 +79,7 @@ export const PERMISSIONS = {
     canManageContacts: true,
     canManageForms: true,
     canManageProspects: true,
+    canSetItemArrival: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -86,6 +98,7 @@ export const PERMISSIONS = {
     canManageContacts: true,
     canManageForms: true,
     canManageProspects: true,
+    canSetItemArrival: true,
   },
   editor: {
     canDelete: false,
@@ -102,7 +115,10 @@ export const PERMISSIONS = {
     // meant to use day-to-day (unlike contacts/forms).
     canManageContacts: false,
     canManageForms: false,
+    // editor keeps canSetItemArrival: true even though canSetPrize/
+    // canReviewComment are false above — see the comment above PERMISSIONS.
     canManageProspects: true,
+    canSetItemArrival: true,
   },
   viewer: {
     canDelete: false,
@@ -116,6 +132,7 @@ export const PERMISSIONS = {
     canManageContacts: false,
     canManageForms: false,
     canManageProspects: false,
+    canSetItemArrival: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -132,6 +149,7 @@ export const PERMISSIONS = {
     canManageContacts: false,
     canManageForms: false,
     canManageProspects: false,
+    canSetItemArrival: false,
   },
 } as const;
 

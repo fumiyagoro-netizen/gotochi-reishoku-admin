@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PrizeBadge } from "./prize-selector";
 import { ReviewBadge } from "./review-status-selector";
+import { ItemArrivalBadge } from "./item-arrival-selector";
+import { ITEM_ARRIVAL_STATUSES } from "@/lib/item-arrival-shared";
 import { useRole } from "@/lib/role-context";
 
 interface EntryRow {
@@ -18,6 +20,7 @@ interface EntryRow {
   answeredAt: string;
   prizeLevel: string;
   reviewStatus: string;
+  itemArrivalStatus: string;
   images: { id: number; imageUrl: string }[];
 }
 
@@ -36,9 +39,15 @@ export function EntryTable({
 }) {
   const { permissions } = useRole();
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState<"" | "prize" | "review">("");
+  const [bulkAction, setBulkAction] = useState<"" | "prize" | "review" | "arrival">("");
   const [applying, setApplying] = useState(false);
   const router = useRouter();
+  // Both flags gate the checkbox column / bulk bar: editor has
+  // canSetItemArrival but not canSetPrize (see src/lib/role-shared.ts), and
+  // still needs to bulk-toggle item arrival, so the row/column visibility
+  // can't be keyed on canSetPrize alone anymore. Each individual bulk
+  // action button below stays gated on its own specific flag.
+  const canBulkSelect = permissions.canSetPrize || permissions.canSetItemArrival;
 
   function toggleAll() {
     if (selected.size === entries.length) {
@@ -101,30 +110,66 @@ export function EntryTable({
     }
   }
 
+  async function applyArrival(itemArrivalStatus: string, action: "add" | "remove" | "clear") {
+    setApplying(true);
+    try {
+      const res = await fetch("/api/entries/bulk-item-arrival", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryIds: Array.from(selected), itemArrivalStatus, action }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelected(new Set());
+        setBulkAction("");
+        router.refresh();
+      } else {
+        alert(data.message);
+      }
+    } catch {
+      alert("一括設定に失敗しました");
+    } finally {
+      setApplying(false);
+    }
+  }
+
   return (
     <>
       {/* Bulk Action Bar */}
-      {permissions.canSetPrize && selected.size > 0 && (
+      {canBulkSelect && selected.size > 0 && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 flex-wrap">
           <span className="text-sm font-medium text-blue-700">
             {selected.size}件選択中
           </span>
           {bulkAction === "" && (
             <>
-              <button
-                onClick={() => setBulkAction("prize")}
-                className="px-3 py-1.5 bg-amber-500 text-white text-sm rounded-lg font-medium
-                  hover:bg-amber-600 transition-colors"
-              >
-                🏆 受賞を一括設定
-              </button>
-              <button
-                onClick={() => setBulkAction("review")}
-                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium
-                  hover:bg-green-700 transition-colors"
-              >
-                ✅ 審査状況を一括設定
-              </button>
+              {permissions.canSetPrize && (
+                <button
+                  onClick={() => setBulkAction("prize")}
+                  className="px-3 py-1.5 bg-amber-500 text-white text-sm rounded-lg font-medium
+                    hover:bg-amber-600 transition-colors"
+                >
+                  🏆 受賞を一括設定
+                </button>
+              )}
+              {permissions.canSetPrize && (
+                <button
+                  onClick={() => setBulkAction("review")}
+                  className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium
+                    hover:bg-green-700 transition-colors"
+                >
+                  ✅ 審査状況を一括設定
+                </button>
+              )}
+              {permissions.canSetItemArrival && (
+                <button
+                  onClick={() => setBulkAction("arrival")}
+                  className="px-3 py-1.5 bg-sky-600 text-white text-sm rounded-lg font-medium
+                    hover:bg-sky-700 transition-colors"
+                >
+                  📦 商品到着を一括設定
+                </button>
+              )}
             </>
           )}
           {bulkAction === "prize" && (
@@ -198,6 +243,48 @@ export function EntryTable({
               </button>
             </div>
           )}
+          {bulkAction === "arrival" && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {ITEM_ARRIVAL_STATUSES.map((rs) => (
+                <button
+                  key={rs.value}
+                  onClick={() => applyArrival(rs.value, "add")}
+                  disabled={applying}
+                  className="px-3 py-1.5 border border-sky-300 bg-white text-sm rounded-lg font-medium
+                    text-sky-700 hover:bg-sky-50 disabled:opacity-50 transition-colors"
+                >
+                  + {rs.label}
+                </button>
+              ))}
+              <span className="text-gray-300">|</span>
+              {ITEM_ARRIVAL_STATUSES.map((rs) => (
+                <button
+                  key={`rm-${rs.value}`}
+                  onClick={() => applyArrival(rs.value, "remove")}
+                  disabled={applying}
+                  className="px-3 py-1.5 border border-orange-300 bg-white text-sm rounded-lg font-medium
+                    text-orange-600 hover:bg-orange-50 disabled:opacity-50 transition-colors"
+                >
+                  - {rs.label}
+                </button>
+              ))}
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => applyArrival("", "clear")}
+                disabled={applying}
+                className="px-3 py-1.5 border border-red-300 bg-white text-sm rounded-lg
+                  text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+              >
+                すべて取り消す
+              </button>
+              <button
+                onClick={() => setBulkAction("")}
+                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
+              >
+                キャンセル
+              </button>
+            </div>
+          )}
           <button
             onClick={() => { setSelected(new Set()); setBulkAction(""); }}
             className="ml-auto text-sm text-gray-500 hover:text-gray-700"
@@ -212,7 +299,7 @@ export function EntryTable({
         <table className="w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              {permissions.canSetPrize && (
+              {canBulkSelect && (
                 <th className="px-3 py-3 w-10">
                   <input
                     type="checkbox"
@@ -230,6 +317,7 @@ export function EntryTable({
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">担当者</th>
               )}
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">審査状況</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">商品到着</th>
               <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">回答日</th>
             </tr>
           </thead>
@@ -241,7 +329,7 @@ export function EntryTable({
                   selected.has(entry.id) ? "bg-blue-50/50" : ""
                 }`}
               >
-                {permissions.canSetPrize && (
+                {canBulkSelect && (
                   <td className="px-3 py-3">
                     <input
                       type="checkbox"
@@ -291,6 +379,9 @@ export function EntryTable({
                 <td className="px-4 py-3">
                   <ReviewBadge status={entry.reviewStatus} />
                 </td>
+                <td className="px-4 py-3">
+                  <ItemArrivalBadge status={entry.itemArrivalStatus} />
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
                   {entry.answeredAt.split(" ")[0]}
                 </td>
@@ -298,7 +389,7 @@ export function EntryTable({
             ))}
             {entries.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
                   エントリーデータがありません
                 </td>
               </tr>

@@ -66,6 +66,17 @@ model Entry {
   remarks              String       @default("")
   prizeLevel           String       @default("")
   reviewStatus         String       @default("")
+  // 商品到着ラベル（"second_arrived" / "final_arrived" のカンマ区切り、複数可）。
+  // reviewStatus と同じ「カンマ区切り複数タグ」の形で持つが、審査結果とは無関係の
+  // 別軸の記録なので意図的に別カラムにしている。editor も付け外しできる
+  // canSetItemArrival で保護されており、reviewStatus を守る canSetPrize とは
+  // 混ぜない（src/lib/role-shared.ts 参照）。
+  //
+  // No @@index: /reviews が `contains` で絞り込むのは reviewStatus と同じ使い方だが、
+  // reviewStatus 自体も索引されておらず（現状 Entry は125件程度で年度ごとにしか
+  // 増えない）、この規模でフルスキャンのコストは無視できる。reviewStatus と対称に
+  // しておき、将来 reviewStatus に索引を張るならこちらも同時に検討する。
+  itemArrivalStatus    String       @default("")
   createdAt            DateTime     @default(now())
   award                Award        @relation(fields: [awardId], references: [id])
   images               EntryImage[]
@@ -76,7 +87,7 @@ model AuditLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
   userEmail String   @default("")
-  action    String   // "create" | "update" | "delete" | "prize" | "upload" | "login" | "bulk_prize"
+  action    String   // "create" | "update" | "delete" | "prize" | "upload" | "login" | "bulk_prize" | "item_arrival" | "bulk_item_arrival"
   target    String   // "entry" | "user" | "session"
   targetId  String   @default("")
   detail    String   @default("")
