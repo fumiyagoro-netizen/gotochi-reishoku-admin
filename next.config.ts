@@ -13,7 +13,10 @@ const nextConfig: NextConfig = {
   // trace to avoid a silent ENOENT in the deployed function if detection
   // ever misses it.
   outputFileTracingIncludes: {
-    "/api/invoices/[id]/pdf": ["./assets/fonts/NotoSansJP-Regular.ttf"],
+    "/api/invoices/[id]/pdf": [
+      "./assets/fonts/NotoSansJP-Regular.ttf",
+      "./assets/images/fta-logo.png",
+    ],
   },
   async headers() {
     return [

@@ -100,6 +100,20 @@ function loadFontBytes(): Buffer {
   return cachedFontBytes;
 }
 
+let cachedLogoBytes: Buffer | null = null;
+function loadLogoBytes(): Buffer | null {
+  if (cachedLogoBytes) return cachedLogoBytes;
+  try {
+    const logoPath = path.join(process.cwd(), "assets", "images", "fta-logo.png");
+    cachedLogoBytes = fs.readFileSync(logoPath);
+    return cachedLogoBytes;
+  } catch {
+    // The invoice is still valid without the mark, so a missing or unreadable
+    // file must not stop it being issued.
+    return null;
+  }
+}
+
 interface DrawCtx {
   page: PDFPage;
   font: PDFFont;
@@ -184,6 +198,24 @@ export async function generateInvoicePdf(data: InvoicePdfData): Promise<Uint8Arr
   y -= 16;
   drawText(ctx, `書類番号：${data.invoiceNo}`, contentRight, y, 10, { align: "right", color: GRAY });
   y -= 20;
+
+  // --- ロゴ（発行者名の直上、右寄せ） ---
+  // Sits with the issuer block rather than beside the 請求書 heading so the
+  // mark reads as part of who issued this, and the existing right-hand
+  // column keeps its order.
+  const logoBytes = loadLogoBytes();
+  if (logoBytes) {
+    const logo = await doc.embedPng(logoBytes);
+    const logoWidth = 110;
+    const logoHeight = (logo.height / logo.width) * logoWidth;
+    page.drawImage(logo, {
+      x: contentRight - logoWidth,
+      y: y - logoHeight + 4,
+      width: logoWidth,
+      height: logoHeight,
+    });
+    y -= logoHeight + 10;
+  }
 
   // --- 発行者ブロック（右上、日付/書類番号の下） ---
   const issuerLines = [
