@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { InvoiceForm, type InvoiceData } from "@/components/invoice-form";
 import { useRole } from "@/lib/role-context";
@@ -69,7 +70,11 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
       ) : error ? (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
       ) : invoice ? (
-        <InvoiceForm initial={invoice} />
+        // InvoiceForm reads ?year= via useSearchParams, which Next.js requires
+        // a Suspense boundary for.
+        <Suspense>
+          <InvoiceForm initial={invoice} />
+        </Suspense>
       ) : null}
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   DEFAULT_UNIT,
   DEFAULT_INVOICE_NOTES,
@@ -14,6 +14,7 @@ interface EntrySummary {
   id: number;
   answerNo: string;
   companyName: string;
+  productName: string;
   contactLastName: string;
   contactFirstName: string;
   email: string;
@@ -27,12 +28,22 @@ interface InvoiceItemMaster {
   isActive: boolean;
 }
 
+// A numeric field being edited can legitimately hold text that isn't a number
+// yet — "" while the field is being cleared, or a lone "-" before the digits.
+// Coercing on every keystroke forced those back to 0, which left a 0 that
+// couldn't be deleted and made negative amounts impossible to enter. The
+// inputs keep what was typed; this resolves it where a number is needed.
+function toNum(v: number | string): number {
+  const n = typeof v === "number" ? v : parseInt(v, 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export interface InvoiceLineData {
   date: string; // "YYYY-MM-DD"
   name: string;
-  quantity: number;
+  quantity: number | string;
   unit: string;
-  unitPrice: number;
+  unitPrice: number | string;
 }
 
 export interface InvoiceData {
@@ -56,6 +67,12 @@ function newBlankLine(dateStr: string): InvoiceLineData {
 
 export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
   const router = useRouter();
+  // The entry search must stay inside the year selected in the sidebar.
+  // Without it the API falls back to the newest award, so picking 2026年度
+  // still searched 2027 entries — no 2026 company could be found, and any
+  // invoice created from that search belonged to the wrong year.
+  const searchParams = useSearchParams();
+  const year = searchParams.get("year");
   const isEdit = !!initial;
 
   const [entry, setEntry] = useState<EntrySummary | null>(initial?.entry ?? null);
@@ -106,6 +123,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
     setSearchingEntry(true);
     try {
       const params = new URLSearchParams();
+      if (year) params.set("year", year);
       if (entryQuery) params.set("q", entryQuery);
       const res = await fetch(`/api/invoices/entries?${params.toString()}`);
       const data = await res.json();
@@ -113,7 +131,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
     } finally {
       setSearchingEntry(false);
     }
-  }, [entryQuery]);
+  }, [entryQuery, year]);
 
   function selectEntry(e: EntrySummary) {
     setEntry(e);
@@ -157,7 +175,11 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
     });
   }
 
-  const totals = calcInvoiceTotals(lines.map((l) => ({ quantity: l.quantity, unitPrice: l.unitPrice })));
+  // quantity/unitPrice are held as typed text while editing (see the inputs
+  // below), so coerce here rather than trusting them to be numbers.
+  const totals = calcInvoiceTotals(
+    lines.map((l) => ({ quantity: toNum(l.quantity), unitPrice: toNum(l.unitPrice) }))
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -174,7 +196,11 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
         issueDate,
         dueDate,
         notes,
-        lines,
+        lines: lines.map((l) => ({
+          ...l,
+          quantity: toNum(l.quantity),
+          unitPrice: toNum(l.unitPrice),
+        })),
       };
       if (!isEdit) {
         payload.entryId = entry.id;
@@ -271,7 +297,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                     searchEntries();
                   }
                 }}
-                placeholder="企業名・担当者名・メールアドレスで検索"
+                placeholder="企業名・商品名・担当者名・メールアドレスで検索"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -295,6 +321,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                       className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors"
                     >
                       <div className="text-sm font-medium text-gray-900">{r.companyName}</div>
+                      <div className="text-xs text-gray-700">{r.productName}</div>
                       <div className="text-xs text-gray-500">
                         {r.contactLastName}
                         {r.contactFirstName} / {r.email} / {r.award.year}年度
@@ -441,7 +468,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                     <input
                       type="number"
                       value={line.quantity}
-                      onChange={(e) => updateLine(i, { quantity: parseInt(e.target.value, 10) || 0 })}
+                      onChange={(e) => updateLine(i, { quantity: e.target.value })}
                       min={1}
                       required
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
@@ -459,13 +486,13 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                     <input
                       type="number"
                       value={line.unitPrice}
-                      onChange={(e) => updateLine(i, { unitPrice: parseInt(e.target.value, 10) || 0 })}
+                      onChange={(e) => updateLine(i, { unitPrice: e.target.value })}
                       required
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs text-right"
                     />
                   </td>
                   <td className="px-2 py-2 text-right text-xs text-gray-700 whitespace-nowrap">
-                    {formatYen(line.quantity * line.unitPrice)}
+                    {formatYen(toNum(line.quantity) * toNum(line.unitPrice))}
                   </td>
                   <td className="px-2 py-2">
                     <div className="flex items-center justify-end gap-1">

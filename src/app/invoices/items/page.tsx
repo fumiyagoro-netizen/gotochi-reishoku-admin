@@ -191,7 +191,12 @@ function InvoiceItemFormModal({
 }) {
   const isEdit = !!item;
   const [name, setName] = useState(item?.name || "");
-  const [unitPrice, setUnitPrice] = useState(item?.unitPrice ?? 0);
+  // Held as the raw string so an in-progress value the parser can't read yet
+  // — "" while clearing the field, or a lone "-" before the digits — stays on
+  // screen. Coercing to a number on every keystroke snapped those back to 0,
+  // which left a 0 that could not be deleted and made negative amounts
+  // impossible to type. Parsed once on submit instead.
+  const [unitPrice, setUnitPrice] = useState(String(item?.unitPrice ?? 0));
   const [isActive, setIsActive] = useState(item?.isActive ?? true);
 
   const [saving, setSaving] = useState(false);
@@ -207,7 +212,7 @@ function InvoiceItemFormModal({
       const res = await fetch(isEdit ? `/api/invoice-items/${item!.id}` : "/api/invoice-items", {
         method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, unitPrice, isActive }),
+        body: JSON.stringify({ name, unitPrice: parseInt(unitPrice, 10) || 0, isActive }),
       });
       const data = await res.json();
       if (data.success) {
@@ -279,7 +284,7 @@ function InvoiceItemFormModal({
             <input
               type="number"
               value={unitPrice}
-              onChange={(e) => setUnitPrice(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) => setUnitPrice(e.target.value)}
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
                 focus:outline-none focus:ring-2 focus:ring-blue-500"

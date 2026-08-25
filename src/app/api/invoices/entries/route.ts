@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
             ? {
                 OR: [
                   { companyName: { contains: q } },
+                  { productName: { contains: q } },
                   { contactLastName: { contains: q } },
                   { contactFirstName: { contains: q } },
                   { email: { contains: q } },
@@ -50,6 +51,7 @@ export async function GET(request: NextRequest) {
         id: true,
         answerNo: true,
         companyName: true,
+        productName: true,
         contactLastName: true,
         contactFirstName: true,
         email: true,

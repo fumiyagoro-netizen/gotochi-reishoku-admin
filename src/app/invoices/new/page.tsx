@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { InvoiceForm } from "@/components/invoice-form";
 import { useRole } from "@/lib/role-context";
@@ -28,7 +29,11 @@ export default function NewInvoicePage() {
         </Link>
       </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">請求書作成</h2>
-      <InvoiceForm />
+      {/* InvoiceForm reads ?year= via useSearchParams, which Next.js
+          requires a Suspense boundary for. */}
+      <Suspense>
+        <InvoiceForm />
+      </Suspense>
     </div>
   );
 }
