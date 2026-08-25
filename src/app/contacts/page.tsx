@@ -267,7 +267,7 @@ export default function ContactsPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">購読状態</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">登録元</th>
                 {permissions.canEdit && (
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">操作</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase w-32">操作</th>
                 )}
               </tr>
             </thead>
@@ -316,24 +316,29 @@ export default function ContactsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{contact.source || "-"}</td>
+                  {/* 「配信を再開」は幅を取るうえ、配信停止の行にしか出ない。
+                      横に並べると列幅が行ごとに変わって表が揃わないので、
+                      固定幅の列に縦積みし、各リンクは折り返さない。 */}
                   {permissions.canEdit && (
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => { setEditingContact(contact); setShowForm(true); }}
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                      >
-                        編集
-                      </button>
-                      {/* 配信を再開できるのは管理者のみ（API側でも role === "admin"
-                          で弾いている）。代表者・編集者には出さない。 */}
-                      {role === "admin" && !contact.subscribed && (
+                    <td className="px-4 py-3 align-top">
+                      <div className="flex flex-col items-start gap-1">
                         <button
-                          onClick={() => setResubscribingContact(contact)}
-                          className="ml-3 text-sm text-emerald-600 hover:text-emerald-800 hover:underline"
+                          onClick={() => { setEditingContact(contact); setShowForm(true); }}
+                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline whitespace-nowrap"
                         >
-                          配信を再開
+                          編集
                         </button>
-                      )}
+                        {/* 配信を再開できるのは管理者のみ（API側でも role === "admin"
+                            で弾いている）。代表者・編集者には出さない。 */}
+                        {role === "admin" && !contact.subscribed && (
+                          <button
+                            onClick={() => setResubscribingContact(contact)}
+                            className="text-sm text-emerald-600 hover:text-emerald-800 hover:underline whitespace-nowrap"
+                          >
+                            配信を再開
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
