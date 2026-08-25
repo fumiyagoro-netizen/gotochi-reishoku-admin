@@ -13,6 +13,8 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
   prize: { label: "受賞設定", color: "bg-amber-100 text-amber-800" },
   bulk_prize: { label: "一括受賞", color: "bg-amber-100 text-amber-800" },
   upload: { label: "アップロード", color: "bg-purple-100 text-purple-700" },
+  unsubscribe: { label: "配信停止", color: "bg-gray-200 text-gray-700" },
+  resubscribe: { label: "配信再開", color: "bg-emerald-100 text-emerald-700" },
 };
 
 interface Props {

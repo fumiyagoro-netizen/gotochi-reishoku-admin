@@ -22,7 +22,7 @@ interface Contact {
 }
 
 export default function ContactsPage() {
-  const { permissions } = useRole();
+  const { role, permissions } = useRole();
   // 行選択（チェックボックス）は一斉送信・リスト一括追加のどちらかが使える人に表示
   const canSelect = permissions.canSendEmail || permissions.canEdit;
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -36,6 +36,10 @@ export default function ContactsPage() {
   const [showForm, setShowForm] = useState(false);
   const [showAddToList, setShowAddToList] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  // 配信停止中の連絡先を購読中に戻すモーダル（管理者のみ）。既存の編集モーダル
+  // とは別立てにしている — 通常編集とは違い理由入力・確認・監査ログが必須の
+  // 別操作のため（src/app/api/contacts/[id]/resubscribe/route.ts 参照）。
+  const [resubscribingContact, setResubscribingContact] = useState<Contact | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
 
@@ -320,6 +324,16 @@ export default function ContactsPage() {
                       >
                         編集
                       </button>
+                      {/* 配信を再開できるのは管理者のみ（API側でも role === "admin"
+                          で弾いている）。代表者・編集者には出さない。 */}
+                      {role === "admin" && !contact.subscribed && (
+                        <button
+                          onClick={() => setResubscribingContact(contact)}
+                          className="ml-3 text-sm text-emerald-600 hover:text-emerald-800 hover:underline"
+                        >
+                          配信を再開
+                        </button>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -376,6 +390,18 @@ export default function ContactsPage() {
           onAdded={(message) => {
             setFeedbackMsg(message);
             setSelected(new Set());
+            fetchContacts();
+          }}
+        />
+      )}
+
+      {resubscribingContact && (
+        <ResubscribeModal
+          contact={resubscribingContact}
+          onClose={() => setResubscribingContact(null)}
+          onDone={(message) => {
+            setFeedbackMsg(message);
+            setResubscribingContact(null);
             fetchContacts();
           }}
         />
@@ -1085,6 +1111,133 @@ function AddToListModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// 配信停止中の連絡先を「購読中」に戻すモーダル。
+//
+// 特定電子メール法上、配信停止済みの相手には本人からの再開希望がない限り
+// 再送してはいけない（事務局判断で勝手に戻さない）。理由の入力を必須にし、
+// 実行前にもう一段確認を挟むことで、誰が・いつ・なぜ戻したかを後から
+// 示せるようにしている（実際の記録は監査ログ側 — API 側の writeAuditLog）。
+function ResubscribeModal({
+  contact,
+  onClose,
+  onDone,
+}: {
+  contact: Contact;
+  onClose: () => void;
+  onDone: (message: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const canSubmit = reason.trim().length > 0;
+
+  async function handleConfirm() {
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/contacts/${contact.id}/resubscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onDone(`${contact.email} の配信を再開しました`);
+      } else {
+        setError(data.message || "配信再開に失敗しました");
+        setConfirming(false);
+      }
+    } catch {
+      setError("配信再開に失敗しました");
+      setConfirming(false);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">配信を再開</h3>
+        <p className="text-sm text-gray-500 mb-4">{contact.email} を「購読中」に戻します</p>
+
+        <p className="text-xs text-gray-400 mb-4">
+          特定電子メール法上、配信停止済みの相手には本人からの再開希望がない限り再送できません。
+          誰が・いつ・なぜ戻したかを後から示せるよう、理由の入力が必須です。
+        </p>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <label className="block mb-4">
+          <span className="text-sm font-medium text-gray-700">再開理由</span>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            placeholder="例: 本人より再開希望のメールを受領 2026/8/25"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+              focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </label>
+
+        {confirming ? (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+            <p className="text-sm text-amber-800">
+              {contact.email} 宛への配信を再開します。よろしいですか？
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                disabled={submitting}
+                className="px-3 py-1.5 border border-gray-300 text-sm text-gray-600 rounded-lg
+                  hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={submitting}
+                className="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg font-medium
+                  hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? "実行中..." : "実行する"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg
+                hover:bg-gray-50 transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              disabled={!canSubmit}
+              className="px-4 py-2 text-sm text-white bg-emerald-600 rounded-lg font-medium
+                hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+            >
+              配信を再開
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
