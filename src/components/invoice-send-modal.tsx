@@ -111,6 +111,10 @@ export function InvoiceSendModal({
   const bodyEditedRef = useRef(false);
 
   const [confirmingSend, setConfirmingSend] = useState(false);
+  // Shown before sending because the CC is visible to the customer and the
+  // send is irreversible — who else receives it should be on screen, not
+  // implied. Test sends copy nobody, so this is only about the real send.
+  const [ccRecipients, setCcRecipients] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
@@ -139,6 +143,18 @@ export function InvoiceSendModal({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/invoices/cc-recipients")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setCcRecipients(data.ccRecipients);
+      })
+      .catch(() => {
+        // Non-fatal: the send still copies them server-side. Only the
+        // on-screen preview of the CC list is lost.
+      });
   }, []);
 
   const toValid = to.trim().includes("@");
@@ -235,6 +251,16 @@ export function InvoiceSendModal({
             </span>
           </label>
 
+          {ccRecipients.length > 0 && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">CC（代表者）</span>
+              <p className="mt-1 text-gray-700">{ccRecipients.join("、")}</p>
+              <span className="mt-1 text-xs text-gray-400 block">
+                送付先にも表示されます。ユーザー管理で代表者を変更すると、ここも変わります。テスト送信では送られません。
+              </span>
+            </div>
+          )}
+
           <label className="block">
             <span className="text-sm font-medium text-gray-700">件名</span>
             <input
@@ -303,7 +329,9 @@ export function InvoiceSendModal({
             {confirmingSend ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-blue-900">
-                  {recipientName} 様（{to}）に{sentAt ? "再送" : "送信"}します。よろしいですか？
+                  {recipientName} 様（{to}）
+                  {ccRecipients.length > 0 ? `／CC: ${ccRecipients.join("、")}` : ""}
+                  に{sentAt ? "再送" : "送信"}します。よろしいですか？
                 </span>
                 <button
                   type="button"

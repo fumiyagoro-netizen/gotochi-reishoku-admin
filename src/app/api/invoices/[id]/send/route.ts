@@ -160,11 +160,27 @@ export async function POST(
 
     const wasAlreadySent = !!invoice.sentAt;
 
+    // Copy the representatives on the real send so the office has the invoice
+    // as it went out. Visible CC rather than BCC, so the customer can see who
+    // else is across it and a reply-all reaches them — the office asked for it
+    // that way. Read from the users table rather than a configured address, so
+    // adding or removing a representative in ユーザー管理 is all it takes.
+    // Deactivated accounts are excluded; the test branch above deliberately
+    // doesn't copy anyone, since a test is for the sender alone.
+    const representatives = await prisma.user.findMany({
+      where: { role: "representative", isActive: true },
+      select: { email: true },
+    });
+    const ccList = representatives
+      .map((r) => r.email)
+      .filter((email) => email && email.toLowerCase() !== toStr.toLowerCase());
+
     const result = await sendEmail({
       to: toStr,
       subject: subjectStr,
       html: htmlBody,
       attachments,
+      cc: ccList,
       sentBy: user?.email || "",
     });
 
@@ -187,7 +203,9 @@ export async function POST(
       action: "send_invoice_email",
       target: "invoice",
       targetId: String(invoiceId),
-      detail: `${wasAlreadySent ? "請求書再送" : "請求書送信"}: ${invoice.invoiceNo} 宛先: ${toStr} 件名「${subjectStr}」`,
+      detail: `${wasAlreadySent ? "請求書再送" : "請求書送信"}: ${invoice.invoiceNo} 宛先: ${toStr}${
+        ccList.length > 0 ? ` CC: ${ccList.join(", ")}` : ""
+      } 件名「${subjectStr}」`,
     });
 
     return NextResponse.json({

@@ -68,6 +68,11 @@ interface SendEmailParams {
   // so their sends are byte-for-byte unchanged (see the conditional spread
   // below, which mirrors how replyTo is only included when non-empty).
   attachments?: EmailAttachment[];
+  // Optional visible copy recipients (currently only the invoice sender, which
+  // copies the representatives). Omitted by every other caller — same
+  // conditional spread as replyTo/attachments below, so their sends are
+  // unchanged.
+  cc?: string[];
 }
 
 // This is the single low-level sender behind every transactional email flow
@@ -80,7 +85,7 @@ interface SendEmailParams {
 // each wrapper — covers all of those call sites in one place and captures
 // Resend's message id so /api/webhooks/resend can later attach
 // delivered/bounced/complained status to this exact row.
-export async function sendEmail({ to, subject, html, sentBy, attachments }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, sentBy, attachments, cc }: SendEmailParams) {
   const toEmail = Array.isArray(to) ? to.join(", ") : to;
 
   if (!process.env.RESEND_API_KEY) {
@@ -106,6 +111,7 @@ export async function sendEmail({ to, subject, html, sentBy, attachments }: Send
       // besides the invoice sender leaves this unset, so `attachments` is
       // never sent as `undefined`/`[]` for them.
       ...(attachments && attachments.length > 0 ? { attachments } : {}),
+      ...(cc && cc.length > 0 ? { cc } : {}),
     });
 
     await prisma.emailLog.create({
