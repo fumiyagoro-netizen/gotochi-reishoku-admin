@@ -46,6 +46,7 @@ export function Sidebar({
     { href: "/contacts", label: "メール配信リスト", icon: "📇", show: perms.canManageContacts },
     { href: "/prospects", label: "追客リスト", icon: "🎯", show: perms.canManageProspects },
     { href: "/forms", label: "フォーム", icon: "📝", show: perms.canManageForms },
+    { href: "/invoices", label: "請求書", icon: "🧾", show: perms.canManageInvoices },
     { href: "/email-logs", label: "配信履歴", icon: "📬", show: role === "admin" },
     { href: "/award-settings", label: "年度管理", icon: "📅", show: role === "admin" },
     { href: "/users", label: "ユーザー管理", icon: "👥", show: role === "admin" },

@@ -11,6 +11,21 @@ interface FooterSettings {
   contactTel: string;
 }
 
+// 請求書PDFに印字する発行者情報。上の FooterSettings（メール配信フッター）
+// とはキーも用途も別 — src/lib/settings.ts の getInvoiceIssuerSettings /
+// invoice_* キー参照。この画面自体は canManageInvoices ではなく role==="admin"
+// でガードしている — representative は canManageInvoices: true で請求書
+// そのものは作成・編集できるが、ROLE_DESCRIPTIONS（src/lib/role-shared.ts）
+// が明示的に「設定」を除外しているため、発行者情報の変更は管理者専用のまま
+// にしている。
+interface InvoiceIssuerSettings {
+  issuerName: string;
+  postalAddress: string;
+  email: string;
+  registrationNumber: string;
+  bankInfo: string;
+}
+
 export default function SettingsPage() {
   const { role } = useRole();
   const [settings, setSettings] = useState<FooterSettings | null>(null);
@@ -18,11 +33,21 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
+  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceIssuerSettings | null>(null);
+  const [invoiceSaving, setInvoiceSaving] = useState(false);
+  const [invoiceError, setInvoiceError] = useState("");
+  const [invoiceSaved, setInvoiceSaved] = useState(false);
+
   useEffect(() => {
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setSettings(data.settings);
+      });
+    fetch("/api/settings/invoice")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setInvoiceSettings(data.settings);
       });
   }, []);
 
@@ -60,6 +85,33 @@ export default function SettingsPage() {
       setError("保存に失敗しました");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleInvoiceSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!invoiceSettings) return;
+    setInvoiceSaving(true);
+    setInvoiceError("");
+    setInvoiceSaved(false);
+
+    try {
+      const res = await fetch("/api/settings/invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(invoiceSettings),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInvoiceSettings(data.settings);
+        setInvoiceSaved(true);
+      } else {
+        setInvoiceError(data.message);
+      }
+    } catch {
+      setInvoiceError("保存に失敗しました");
+    } finally {
+      setInvoiceSaving(false);
     }
   }
 
@@ -154,6 +206,93 @@ export default function SettingsPage() {
                 hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               {saving ? "保存中..." : "保存する"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {!invoiceSettings ? null : (
+        <div className="max-w-xl mt-12">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">請求書 発行者情報</h3>
+          <p className="text-xs text-gray-400 mb-4">
+            請求書PDFに印字される発行者情報・振込先です。
+          </p>
+
+          {invoiceError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+              {invoiceError}
+            </div>
+          )}
+          {invoiceSaved && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
+              保存しました
+            </div>
+          )}
+
+          <form onSubmit={handleInvoiceSubmit} className="space-y-6">
+            <div className="bg-white rounded-xl border border-gray-200 p-8 space-y-4">
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">発行者名（法人名）</span>
+                <input
+                  type="text"
+                  value={invoiceSettings.issuerName}
+                  onChange={(e) => setInvoiceSettings({ ...invoiceSettings, issuerName: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">住所</span>
+                <input
+                  type="text"
+                  value={invoiceSettings.postalAddress}
+                  onChange={(e) => setInvoiceSettings({ ...invoiceSettings, postalAddress: e.target.value })}
+                  placeholder="例: 〒000-0000 東京都〇〇区〇〇1-2-3"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">E-mail</span>
+                <input
+                  type="email"
+                  value={invoiceSettings.email}
+                  onChange={(e) => setInvoiceSettings({ ...invoiceSettings, email: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">登録番号（インボイス）</span>
+                <input
+                  type="text"
+                  value={invoiceSettings.registrationNumber}
+                  onChange={(e) => setInvoiceSettings({ ...invoiceSettings, registrationNumber: e.target.value })}
+                  placeholder="T0000000000000"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-gray-700">振込先</span>
+                <textarea
+                  value={invoiceSettings.bankInfo}
+                  onChange={(e) => setInvoiceSettings({ ...invoiceSettings, bankInfo: e.target.value })}
+                  rows={2}
+                  placeholder="例: ◯◯銀行 ◯◯支店 普通 0000000 ◯◯◯◯"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={invoiceSaving}
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium
+                hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {invoiceSaving ? "保存中..." : "保存する"}
             </button>
           </form>
         </div>

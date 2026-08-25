@@ -13,7 +13,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "すべての操作が可能",
   representative: "設定・ユーザー管理・操作ログ・エントリー削除・年度管理を除く操作が可能",
-  editor: "削除・受賞設定・見込み客・フォーム以外の操作が可能（追客リストは利用可）",
+  editor: "削除・受賞設定・見込み客・フォーム・請求書以外の操作が可能（追客リストは利用可）",
   viewer: "閲覧のみ（個人情報は非表示）",
   judge: "審査コメントの投稿のみ可能（その他は閲覧のみ・個人情報は非表示）",
 };
@@ -59,6 +59,17 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // keeping canSetPrize: false — the two flags must never be merged into one
 // check in the API routes, or editor would gain reviewStatus/prizeLevel
 // access as a side effect.
+//
+// canManageInvoices gates the "請求書" (invoices) feature as a whole
+// (invoice list/create/edit, the 請求項目マスタ, and PDF generation — see
+// src/lib/invoice.ts). Unlike canManageProspects it is NOT given to editor:
+// invoices are a real money document sent to entrant companies, and unlike
+// item-arrival logistics there's no day-to-day operational need for editor
+// to touch them, so this stays conservative (admin/representative only)
+// rather than defaulting to open the way canManageProspects did. There is
+// no explicit user instruction either way for editor here — this is a
+// deliberate conservative default that should be revisited if editor turns
+// out to need it.
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -80,6 +91,7 @@ export const PERMISSIONS = {
     canManageForms: true,
     canManageProspects: true,
     canSetItemArrival: true,
+    canManageInvoices: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -99,6 +111,7 @@ export const PERMISSIONS = {
     canManageForms: true,
     canManageProspects: true,
     canSetItemArrival: true,
+    canManageInvoices: true,
   },
   editor: {
     canDelete: false,
@@ -119,6 +132,9 @@ export const PERMISSIONS = {
     // canReviewComment are false above — see the comment above PERMISSIONS.
     canManageProspects: true,
     canSetItemArrival: true,
+    // Unlike canManageProspects, editor does NOT get canManageInvoices —
+    // see the comment above PERMISSIONS.
+    canManageInvoices: false,
   },
   viewer: {
     canDelete: false,
@@ -133,6 +149,7 @@ export const PERMISSIONS = {
     canManageForms: false,
     canManageProspects: false,
     canSetItemArrival: false,
+    canManageInvoices: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -150,6 +167,7 @@ export const PERMISSIONS = {
     canManageForms: false,
     canManageProspects: false,
     canSetItemArrival: false,
+    canManageInvoices: false,
   },
 } as const;
 

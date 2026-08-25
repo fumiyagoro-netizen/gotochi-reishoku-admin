@@ -81,6 +81,7 @@ model Entry {
   award                Award        @relation(fields: [awardId], references: [id])
   images               EntryImage[]
   comments             EntryComment[]
+  invoices             Invoice[]
 }
 
 model AuditLog {
@@ -279,4 +280,93 @@ model Prospect {
   award         Award    @relation(fields: [awardId], references: [id])
 
   @@index([awardId])
+}
+
+// 請求項目マスタ（"エントリー費用" "早期割引" 等）。請求書作成時にここから選んで
+// InvoiceLine に金額をコピーする（下記 InvoiceLine 参照）。unitPrice はマイナス
+// 可 — 早期割引のような値引き行もこのマスタの1レコードとして表現するため
+// （割引専用のフラグやテーブルを別に持たない）。年度に紐付かない横断のマスタ:
+// 項目自体（エントリー費用・早割など）は年度をまたいで使い回すため、Prospect/
+// Entry と違って awardId を持たない。
+model InvoiceItem {
+  id        Int      @id @default(autoincrement())
+  name      String                // 品名（例:「エントリー費用」）
+  unitPrice Int                   // 単価・税別（円）。マイナス可（早期割引など）
+  sortOrder Int      @default(0)  // マスタ管理画面での表示順（手動並び替え）
+  // 「請求書に項目を追加」ピッカーに出すかどうかのフラグ（例: 早割の受付期間が
+  // 終わったので一時的に選べなくしたいが、まだ削除はしたくない、というケース向け）。
+  // 物理削除（管理画面からの「削除」操作、src/app/api/invoice-items/[id]/route.ts
+  // DELETE）とは別の概念 — InvoiceLine は InvoiceItem への外部キーを持たず金額等の
+  // 値をコピーして保持する（下記 InvoiceLine 参照）ため、マスタの行を物理削除しても
+  // 既存の請求書内容には一切影響しない。isActive はあくまで「今後の請求書作成時に
+  // ピッカーへ出すか」だけを制御する表示上のフラグ。
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// エントリー企業向けの請求書。1件の Entry に対して複数の Invoice を作れる
+// （再発行・別件の請求など）ため Entry 側は 1:多。Entry を削除しようとしても
+// 発行済みの請求書がある限り消せないよう、他の年度スコープ系リレーション
+// （Entry.award など）と同じくデフォルト（Restrict）のまま onDelete を
+// 上書きしていない — 実在する金銭書類の参照整合性を、値引きの都合等で
+// 安易に失わせないため。
+model Invoice {
+  id            Int      @id @default(autoincrement())
+  // "IN" + 発行年月(YYYYMM) + "-" + 月内連番4桁（例: IN202608-0001）。
+  // src/lib/invoice.ts の generateInvoiceNo が発行日ベースで自動採番するが、
+  // このカラム自体は自動生成後に手動編集も許可している（既存の請求書実物に
+  // "IN202512-0021-2" のような、連番の後ろにさらに枝番が付く例があり、生成
+  // ロジック側でそのすべての運用パターンを予測しきれないため）。一意制約で
+  // 重複だけは常に防ぐ。
+  invoiceNo     String   @unique
+  entryId       Int
+  // 宛名（例:「株式会社◯◯」— PDF/画面側で末尾に「様」を付与する）。作成時に
+  // entry.companyName を初期値として複製するが、請求書ごとに変更できる必要が
+  // ある（法人名の言い回し変更や請求書上だけの表記調整など）ため Entry への
+  // 参照ではなく独立したカラムに持たせている。
+  recipientName String
+  issueDate     DateTime               // 発行日（JST 日付。src/lib/award-dates.ts の
+                                        // jstDateStringToStartOfDayUtc で変換して保存）
+  dueDate       DateTime               // 支払期限（JST 日付。初期値は「発行月の翌月末」—
+                                        // src/lib/invoice-shared.ts の defaultDueDateFromIssueDate
+                                        // — だが編集可能。jstDateStringToEndOfDayUtc で保存）
+  notes         String   @default("") // 備考欄。デフォルト文言は
+                                        // src/lib/invoice-shared.ts の DEFAULT_INVOICE_NOTES
+                                        // をUI側の初期値としてセットするのみで、DBのデフォルト
+                                        // 自体は空文字（過去の請求書のデフォルト文言を後から
+                                        // 変えても、すでに作成済みの請求書の備考は変わらない
+                                        // ようにするため — InvoiceLine が単価をコピーで持つ
+                                        // のと同じ考え方）。
+  // 以下3つはサーバー側で明細行から都度計算する値（税抜合計・消費税・税込合計）。
+  // クライアントから送られた値は信用せず、src/lib/invoice-shared.ts の calcInvoiceTotals
+  // で毎回サーバー側が計算し直す。消費税は円未満切り捨て（一般的な処理として採用
+  // — 既存請求書実物からは端数処理の判断材料が取れなかったため）。
+  subtotal      Int
+  taxAmount     Int
+  totalAmount   Int
+  createdByUserId Int?               // 作成者。ユーザー削除後も履歴を残すため null 許容
+  createdByName   String @default("") // 作成者名のスナップショット（EntryComment.authorName と同じ考え方）
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  entry         Entry    @relation(fields: [entryId], references: [id])
+  lines         InvoiceLine[]
+}
+
+// 請求書の明細行（既存請求書の「日付 / 品名 / 数量 / 単価 / 金額」に対応）。
+// name/unitPrice は InvoiceItem マスタからコピーして持つ — マスタの金額を
+// 後から変えても、発行済み請求書の内容が変わってはいけないため（マスタへの
+// リレーションは持たせず、値そのものを複製する。EntryImage 等の1:多と違い、
+// 意図的に「参照ではなく複製」にしている）。
+model InvoiceLine {
+  id        Int      @id @default(autoincrement())
+  invoiceId Int
+  sortOrder Int      @default(0)
+  date      DateTime               // 明細行の日付（JST 日付。既定値は請求書の発行日だが行ごとに変更可）
+  name      String                 // 品名（マスタからコピー、行ごとに編集可）
+  quantity  Int      @default(1)   // 数量
+  unit      String   @default("式") // 単位。既定は「式」
+  unitPrice Int                    // 単価・税別（円）。マイナス可（マスタからコピー、編集可）
+  amount    Int                    // 金額 = quantity * unitPrice（サーバー側で計算し直す）
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
