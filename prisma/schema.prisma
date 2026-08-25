@@ -347,6 +347,25 @@ model Invoice {
   totalAmount   Int
   createdByUserId Int?               // 作成者。ユーザー削除後も履歴を残すため null 許容
   createdByName   String @default("") // 作成者名のスナップショット（EntryComment.authorName と同じ考え方）
+  // 送付状況（src/app/api/invoices/[id]/send/route.ts）。複数回送信・再送しても
+  // 「最後に送った送信」だけが分かればよいので3カラムを都度上書きする作りにしている
+  // — 送信ごとの履歴が必要なら EmailLog（messageId 経由で Resend の配信結果まで追える）
+  // 側にすでに残っているので、ここに履歴テーブルを別途持たせていない。sentAt が null の
+  // 間は「未送信」— 一覧画面（src/app/invoices/page.tsx）の送信状況列や、編集画面
+  // （src/components/invoice-form.tsx）の「送信済み」表示はこの null 判定だけで出し分ける。
+  sentAt        DateTime?            // 最後に送信した日時（UTC instant。表示は必ず
+                                        // timeZone: "Asia/Tokyo" で変換する）
+  sentTo        String   @default("") // 最後に送信した宛先メールアドレス。既定は
+                                        // entry.email だが送信時に変更できるため、
+                                        // Entry.email をそのまま参照せずスナップショットで持つ
+                                        // （InvoiceLine が InvoiceItem の値をコピーで持つのと
+                                        // 同じ考え方）。
+  sentBy        String   @default("") // 最後に送信した管理ユーザーのメールアドレス
+                                        // （EntryComment.authorName 等と同じ「行為者の
+                                        // スナップショット」パターン）。フォーム送信起点の
+                                        // 送信は存在しない（canManageInvoices は
+                                        // admin/representative専用）ため、必ずログイン
+                                        // ユーザーが埋まる想定だが、念のため空文字許容にしている。
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   entry         Entry    @relation(fields: [entryId], references: [id])

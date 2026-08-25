@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getInvoiceIssuerSettings } from "@/lib/settings";
 import { generateInvoicePdf } from "@/lib/invoice-pdf";
+import { toInvoicePdfData } from "@/lib/invoice";
 
 // GET /api/invoices/[id]/pdf — renders the invoice as a real (text, not
 // screenshot) Japanese PDF. See src/lib/invoice-pdf.ts for how the font is
@@ -33,25 +34,7 @@ export async function GET(
 
     const issuer = await getInvoiceIssuerSettings();
 
-    const pdfBytes = await generateInvoicePdf({
-      invoiceNo: invoice.invoiceNo,
-      recipientName: invoice.recipientName,
-      issueDate: invoice.issueDate,
-      dueDate: invoice.dueDate,
-      notes: invoice.notes,
-      subtotal: invoice.subtotal,
-      taxAmount: invoice.taxAmount,
-      totalAmount: invoice.totalAmount,
-      lines: invoice.lines.map((l) => ({
-        date: l.date,
-        name: l.name,
-        quantity: l.quantity,
-        unit: l.unit,
-        unitPrice: l.unitPrice,
-        amount: l.amount,
-      })),
-      issuer,
-    });
+    const pdfBytes = await generateInvoicePdf(toInvoicePdfData(invoice, issuer));
 
     const download = request.nextUrl.searchParams.get("download");
     const disposition = download ? "attachment" : "inline";

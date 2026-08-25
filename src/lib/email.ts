@@ -42,6 +42,17 @@ const MARKETING_FROM_EMAIL = process.env.MARKETING_FROM_EMAIL || "noreply@gotouc
 const MARKETING_FROM_NAME = process.env.MARKETING_FROM_NAME || "ご当地冷凍食品大賞 事務局";
 const APP_URL = process.env.APP_URL || "https://dashboard.gotouchireisyoku.com";
 
+// Attachment shape accepted by sendEmail(). Kept intentionally narrow (just
+// what the invoice-send feature needs — see src/app/api/invoices/[id]/send/
+// route.ts) rather than re-exporting Resend's own Attachment type: `content`
+// is always a Buffer here (the PDF is generated in-process, never read from
+// a path/URL), so the wider `content?: string | Buffer; path?: string`
+// shape Resend allows would just be unused surface area.
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+}
+
 interface SendEmailParams {
   to: string | string[];
   subject: string;
@@ -52,6 +63,11 @@ interface SendEmailParams {
   // are triggered by a public form submission, not an admin action, so this
   // is left unset there and the EmailLog row's sentBy stays "".
   sentBy?: string;
+  // Optional file attachments (currently only the invoice PDF — see
+  // src/app/api/invoices/[id]/send/route.ts). Omitted by every other caller,
+  // so their sends are byte-for-byte unchanged (see the conditional spread
+  // below, which mirrors how replyTo is only included when non-empty).
+  attachments?: EmailAttachment[];
 }
 
 // This is the single low-level sender behind every transactional email flow
@@ -64,7 +80,7 @@ interface SendEmailParams {
 // each wrapper — covers all of those call sites in one place and captures
 // Resend's message id so /api/webhooks/resend can later attach
 // delivered/bounced/complained status to this exact row.
-export async function sendEmail({ to, subject, html, sentBy }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, sentBy, attachments }: SendEmailParams) {
   const toEmail = Array.isArray(to) ? to.join(", ") : to;
 
   if (!process.env.RESEND_API_KEY) {
@@ -86,6 +102,10 @@ export async function sendEmail({ to, subject, html, sentBy }: SendEmailParams) 
       // Omit entirely (rather than sending an empty string) when unset, so
       // we never send an invalid Reply-To header.
       ...(contactEmail ? { replyTo: contactEmail } : {}),
+      // Same omit-when-absent treatment as replyTo above: every caller
+      // besides the invoice sender leaves this unset, so `attachments` is
+      // never sent as `undefined`/`[]` for them.
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
     });
 
     await prisma.emailLog.create({

@@ -5,6 +5,9 @@
  */
 import { prisma } from "./prisma";
 import { Prisma } from "@prisma/client";
+import type { Invoice, InvoiceLine } from "@prisma/client";
+import type { InvoicePdfData } from "./invoice-pdf";
+import type { InvoiceIssuerSettings } from "./settings";
 
 const INVOICE_NO_SEQ_DIGITS = 4;
 
@@ -56,4 +59,41 @@ export function isUniqueConstraintError(error: unknown): boolean {
   return (
     error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"
   );
+}
+
+/**
+ * Maps a DB Invoice (+ its lines) and the current issuer settings into the
+ * shape src/lib/invoice-pdf.ts#generateInvoicePdf expects. Shared by every
+ * caller that needs to render the PDF from a stored invoice — originally
+ * only src/app/api/invoices/[id]/pdf/route.ts, now also
+ * src/app/api/invoices/[id]/send/route.ts (attaches the same PDF to the
+ * outgoing email) — so the two call sites can never drift on which fields
+ * get passed through. Always reads amounts straight off the `invoice`
+ * argument, which callers must have just loaded from Prisma — never from
+ * anything client-supplied — so the PDF a recipient gets always matches
+ * what's actually stored.
+ */
+export function toInvoicePdfData(
+  invoice: Invoice & { lines: InvoiceLine[] },
+  issuer: InvoiceIssuerSettings
+): InvoicePdfData {
+  return {
+    invoiceNo: invoice.invoiceNo,
+    recipientName: invoice.recipientName,
+    issueDate: invoice.issueDate,
+    dueDate: invoice.dueDate,
+    notes: invoice.notes,
+    subtotal: invoice.subtotal,
+    taxAmount: invoice.taxAmount,
+    totalAmount: invoice.totalAmount,
+    lines: invoice.lines.map((l) => ({
+      date: l.date,
+      name: l.name,
+      quantity: l.quantity,
+      unit: l.unit,
+      unitPrice: l.unitPrice,
+      amount: l.amount,
+    })),
+    issuer,
+  };
 }

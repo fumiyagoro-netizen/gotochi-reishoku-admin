@@ -35,6 +35,9 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
               unitPrice: l.unitPrice,
             })),
             entry: inv.entry,
+            sentAt: inv.sentAt,
+            sentTo: inv.sentTo,
+            sentBy: inv.sentBy,
           });
         } else {
           setError(data.message);

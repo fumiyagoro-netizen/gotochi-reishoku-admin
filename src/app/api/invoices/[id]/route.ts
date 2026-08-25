@@ -220,8 +220,11 @@ export async function PATCH(
 // both roles that carry canManageInvoices (admin/representative) are
 // already trusted with every other invoice operation, and representative's
 // canDelete is false, which would otherwise leave them unable to remove an
-// invoice created by mistake before it's ever sent (no send/email feature
-// exists yet in this phase).
+// invoice created by mistake before it's ever sent. This intentionally
+// still allows deleting an invoice that HAS already been emailed (see
+// src/app/api/invoices/[id]/send/route.ts) — the recipient already has the
+// PDF/EmailLog record of that send regardless, and blocking deletion here
+// wouldn't undo it, so there's no safety benefit to adding that restriction.
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

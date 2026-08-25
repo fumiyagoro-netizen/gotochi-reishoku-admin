@@ -14,10 +14,26 @@ interface InvoiceRow {
   dueDate: string;
   totalAmount: number;
   entry: { companyName: string; award: { year: number } };
+  // GET /api/invoices doesn't select individual Invoice columns (see that
+  // route), so these come through automatically once added to the schema —
+  // no server-side change was needed to expose them here.
+  sentAt: string | null;
+  sentTo: string;
 }
 
 function formatJstDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+}
+
+function formatJstDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 // Reads ?year= from the URL — sidebar always appends it once at least one
@@ -165,6 +181,7 @@ function InvoicesPageInner() {
                 <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">金額（税込）</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">発行日</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">支払期限</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">送信状況</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -181,11 +198,27 @@ function InvoicesPageInner() {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{formatJstDate(inv.issueDate)}</td>
                   <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{formatJstDate(inv.dueDate)}</td>
+                  <td className="px-4 py-3 text-sm whitespace-nowrap">
+                    <Link href={`/invoices/${inv.id}/edit`} className="hover:underline">
+                      {inv.sentAt ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                            送信済み
+                          </span>
+                          <span className="text-xs text-gray-400">{formatJstDateTime(inv.sentAt)}</span>
+                        </span>
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                          未送信
+                        </span>
+                      )}
+                    </Link>
+                  </td>
                 </tr>
               ))}
               {invoices.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
                     請求書がありません
                   </td>
                 </tr>

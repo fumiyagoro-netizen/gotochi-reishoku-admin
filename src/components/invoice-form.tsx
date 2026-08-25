@@ -9,6 +9,7 @@ import {
   calcInvoiceTotals,
   formatYen,
 } from "@/lib/invoice-shared";
+import { InvoiceSendModal } from "@/components/invoice-send-modal";
 
 interface EntrySummary {
   id: number;
@@ -55,6 +56,27 @@ export interface InvoiceData {
   notes: string;
   lines: InvoiceLineData[];
   entry: EntrySummary;
+  // 送付状況（prisma/schema.prisma の Invoice.sentAt 等参照）。新規作成フォーム
+  // （initial 未指定）では常に未送信なので、これらは編集画面からの初期値
+  // 読み込み時のみ渡される。
+  sentAt?: string | null;
+  sentTo?: string;
+  sentBy?: string;
+}
+
+// src/app/email-logs/page.tsx や src/app/logs/page.tsx と同じ「サーバーは
+// UTC で動くため timeZone を明示しないと9時間ずれる」注意点に対する対応。
+// 各ファイルでこの小さなフォーマッタを個別に持つのは、このコードベース既存の
+// やり方（共通ヘルパーに寄せていない）に合わせている。
+function formatJstDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function todayJst(): string {
@@ -63,6 +85,36 @@ function todayJst(): string {
 
 function newBlankLine(dateStr: string): InvoiceLineData {
   return { date: dateStr, name: "", quantity: 1, unit: DEFAULT_UNIT, unitPrice: 0 };
+}
+
+// メール送信APIは金額・明細をDBから読み直して都度PDFを作り直す（クライアント
+// からの値は信用しない — src/app/api/invoices/[id]/send/route.ts 参照）。つまり
+// 「保存」せずに明細を編集した状態で送信すると、送信モーダルに見えている金額と
+// 実際に添付されるPDFの金額がずれてしまう。このフィンガープリントは「今の
+// フォームの内容」と「最後に保存した内容」を比較するためだけに使い、両者が
+// 一致しているとき（＝保存済み）だけ送信ボタンを有効にする。
+function invoiceFingerprint(data: {
+  recipientName: string;
+  issueDate: string;
+  dueDate: string;
+  notes: string;
+  invoiceNo: string;
+  lines: InvoiceLineData[];
+}): string {
+  return JSON.stringify({
+    recipientName: data.recipientName,
+    issueDate: data.issueDate,
+    dueDate: data.dueDate,
+    notes: data.notes,
+    invoiceNo: data.invoiceNo,
+    lines: data.lines.map((l) => ({
+      date: l.date,
+      name: l.name,
+      quantity: toNum(l.quantity),
+      unit: l.unit,
+      unitPrice: toNum(l.unitPrice),
+    })),
+  });
 }
 
 export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
@@ -98,6 +150,32 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
 
   const [masterItems, setMasterItems] = useState<InvoiceItemMaster[]>([]);
   const [selectedMasterId, setSelectedMasterId] = useState<string>("");
+
+  // 送付状況。保存フォームの他のフィールドと違い送信APIが直接更新するので
+  // （src/app/api/invoices/[id]/send/route.ts）、保存(handleSubmit)の対象には
+  // 含めない — 「保存する」を押しても送付状況が変わらないのはこの通り正しい
+  // 挙動で、意図的に外している。
+  const [sentAt, setSentAt] = useState<string | null>(initial?.sentAt ?? null);
+  const [sentTo, setSentTo] = useState(initial?.sentTo ?? "");
+  const [showSendModal, setShowSendModal] = useState(false);
+
+  // 最後に保存した内容のフィンガープリント。「保存する」成功時に handleSubmit
+  // が更新する（invoiceFingerprint のコメント参照）。
+  const [savedFingerprint, setSavedFingerprint] = useState(() =>
+    initial
+      ? invoiceFingerprint({
+          recipientName: initial.recipientName,
+          issueDate: initial.issueDate,
+          dueDate: initial.dueDate,
+          notes: initial.notes,
+          invoiceNo: initial.invoiceNo,
+          lines: initial.lines,
+        })
+      : ""
+  );
+  const hasUnsavedChanges =
+    isEdit &&
+    invoiceFingerprint({ recipientName, issueDate, dueDate, notes, invoiceNo, lines }) !== savedFingerprint;
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -216,6 +294,9 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
       });
       const data = await res.json();
       if (data.success) {
+        setSavedFingerprint(
+          invoiceFingerprint({ recipientName, issueDate, dueDate, notes, invoiceNo, lines })
+        );
         router.push(`/invoices/${data.invoice.id}/edit`);
         router.refresh();
       } else {
@@ -252,6 +333,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
     "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
@@ -549,6 +631,25 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
         </div>
       </div>
 
+      {/* 送付状況 — 保存前の新規作成フォームには表示しない（isEdit のときのみ送信可能） */}
+      {isEdit && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">送付状況</h3>
+          {sentAt ? (
+            <p className="text-sm text-gray-700">
+              送信済み：{formatJstDateTime(sentAt)} → {sentTo}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-400">未送信</p>
+          )}
+          {hasUnsavedChanges && (
+            <p className="text-xs text-amber-600 mt-1">
+              未保存の変更があります。保存すると送信できるようになります（送信メールには保存済みの内容が添付されます）。
+            </p>
+          )}
+        </div>
+      )}
+
       {/* 備考 */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <label className="block">
@@ -614,6 +715,16 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
               >
                 📥 PDFダウンロード
               </a>
+              <button
+                type="button"
+                onClick={() => setShowSendModal(true)}
+                disabled={hasUnsavedChanges}
+                title={hasUnsavedChanges ? "未保存の変更があります。先に保存してください" : undefined}
+                className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg text-sm
+                  hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {sentAt ? "請求書を再送" : "請求書を送信"}
+              </button>
             </>
           )}
           <button
@@ -627,5 +738,24 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
         </div>
       </div>
     </form>
+
+    {isEdit && showSendModal && (
+      <InvoiceSendModal
+        invoiceId={initial!.id}
+        invoiceNo={initial!.invoiceNo}
+        recipientName={recipientName}
+        totalAmount={totals.totalAmount}
+        dueDate={dueDate}
+        defaultTo={initial!.entry.email}
+        sentAt={sentAt}
+        sentTo={sentTo}
+        onClose={() => setShowSendModal(false)}
+        onSent={(info) => {
+          setSentAt(info.sentAt);
+          setSentTo(info.sentTo);
+        }}
+      />
+    )}
+    </>
   );
 }
