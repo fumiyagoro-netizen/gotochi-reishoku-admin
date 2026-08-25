@@ -242,6 +242,31 @@ export async function DELETE(
       );
     }
 
+    // 請求書はエントリーを参照しており、Invoice.entry には onDelete が無い
+    // ため、紐づく請求書があると delete は外部キー制約で落ちる。そのままだと
+    // 「削除中にエラーが発生しました」としか出ず理由が分からないので、先に
+    // 確認して何が起きているかと次にどうすればよいかを返す。
+    //
+    // 請求書ごと消す（Cascade）にはしていない: 取引先に送付済みの税務書類で、
+    // エントリー削除の巻き添えで控えを失ってよいものではない。消す必要がある
+    // ときは請求書を先に削除してもらう＝意図的な操作にする。
+    const invoices = await prisma.invoice.findMany({
+      where: { entryId },
+      select: { invoiceNo: true },
+      orderBy: { id: "asc" },
+    });
+    if (invoices.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `請求書（${invoices
+            .map((i) => i.invoiceNo)
+            .join("、")}）が発行されているため削除できません。削除する場合は先に請求書を削除してください。`,
+        },
+        { status: 409 }
+      );
+    }
+
     await prisma.entry.delete({ where: { id: entryId } });
 
     // Audit log
