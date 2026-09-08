@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
           manufacturingLicense: withOther(body.manufacturingLicense, body.manufacturingLicenseOther),
           entryProductLicense: withOther(body.entryProductLicense, body.entryProductLicenseOther),
           hygieneManager: withOther(body.hygieneManager, body.hygieneManagerOther),
+          referralSource: withOther(body.referralSource, body.referralSourceOther),
           remarks: body.remarks || "",
         },
       });

@@ -37,6 +37,7 @@ const COLUMN_MAP: Record<string, string> = {
   "営業許可証（製造販売）": "manufacturingLicense",
   "営業許可証（商品）": "entryProductLicense",
   "食品衛生責任者": "hygieneManager",
+  "大賞を知ったきっかけ": "referralSource",
   "備考・メッセージ": "remarks",
   "審査状況": "reviewStatus",
   "受賞": "prizeLevel",

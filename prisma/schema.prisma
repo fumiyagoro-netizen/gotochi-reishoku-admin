@@ -63,6 +63,11 @@ model Entry {
   manufacturingLicense String       @default("")
   entryProductLicense  String       @default("")
   hygieneManager       String       @default("")
+  // 「大賞をどこで知ったか」。選択肢は src/components/entry-form.tsx の
+  // REFERRAL_SOURCE_OPTIONS。他の選択式項目（bacteriaInspection 等）と同じく
+  // 「その他」を選ぶと "その他: 自由入力" の形で 1 カラムに畳んで保存する。
+  // 2026年8月に追加した設問なので、それ以前のエントリーは空文字になる。
+  referralSource       String       @default("")
   remarks              String       @default("")
   prizeLevel           String       @default("")
   reviewStatus         String       @default("")

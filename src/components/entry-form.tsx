@@ -44,6 +44,8 @@ interface FormData {
   entryProductLicenseOther: string;
   hygieneManager: string;
   hygieneManagerOther: string;
+  referralSource: string;
+  referralSourceOther: string;
   remarks: string;
   agreePrivacy: boolean;
 }
@@ -82,6 +84,8 @@ const INITIAL_FORM: FormData = {
   entryProductLicenseOther: "",
   hygieneManager: "",
   hygieneManagerOther: "",
+  referralSource: "",
+  referralSourceOther: "",
   remarks: "",
   agreePrivacy: false,
 };
@@ -126,6 +130,16 @@ const PRODUCT_LICENSE_OPTIONS = [
   "取得済み（証明書無）",
   "未取得",
   "不要",
+  "その他",
+];
+const REFERRAL_SOURCE_OPTIONS = [
+  "参加メーカーからの紹介",
+  "その他企業からの紹介",
+  "テレビ報道",
+  "メディア記事",
+  "プレスリリース",
+  "インターネット検索",
+  "SNS",
   "その他",
 ];
 const HYGIENE_OPTIONS = [
@@ -416,6 +430,8 @@ export function EntryForm({
         </ConfirmSection>
 
         <ConfirmSection title="その他">
+          <ConfirmRow label="ご当地冷凍食品大賞をどこでお知りになりましたか"
+            value={form.referralSource === "その他" ? `その他: ${form.referralSourceOther}` : form.referralSource} />
           <ConfirmRow label="備考・メッセージ" value={form.remarks} />
         </ConfirmSection>
 
@@ -647,6 +663,12 @@ export function EntryForm({
 
       {/* Section 7: Remarks */}
       <FormSection title="その他" num={7}>
+        <RadioGroup label="ご当地冷凍食品大賞をどこでお知りになりましたか"
+          options={REFERRAL_SOURCE_OPTIONS}
+          value={form.referralSource}
+          onChange={(v) => updateField("referralSource", v)}
+          otherValue={form.referralSourceOther}
+          onOtherChange={(v) => updateField("referralSourceOther", v)} />
         <TextAreaInput label="備考・メッセージ" value={form.remarks}
           onChange={(v) => updateField("remarks", v)}
           hint="ご相談事項や不明点がございましたらお書きください" />

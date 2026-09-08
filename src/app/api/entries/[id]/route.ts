@@ -42,6 +42,7 @@ const EDITABLE_FIELDS = [
   "manufacturingLicense",
   "entryProductLicense",
   "hygieneManager",
+  "referralSource",
   "remarks",
   "prizeLevel",
   "reviewStatus",

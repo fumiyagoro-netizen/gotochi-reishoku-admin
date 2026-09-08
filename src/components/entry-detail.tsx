@@ -45,6 +45,7 @@ interface EntryData {
   manufacturingLicense: string;
   entryProductLicense: string;
   hygieneManager: string;
+  referralSource: string;
   remarks: string;
   prizeLevel: string;
   reviewStatus: string;
@@ -333,6 +334,19 @@ export function EntryDetail({
                 </div>
               ))}
             </div>
+          </Section>
+        </div>
+      )}
+
+      {/* 2026年8月に追加した設問。それ以前のエントリーは空なので、備考と同じく
+          値があるときか編集中だけ出す。フォームでは選択式だが、保存時に
+          「その他: 自由入力」へ畳んだ 1 本の文字列なので、ここは他の選択式項目
+          （食品細菌検査など）と揃えて自由入力の EditableRow で直す。 */}
+      {(entry.referralSource || editing) && (
+        <div className="mt-6">
+          <Section title="大賞を知ったきっかけ">
+            <EditableRow label="どこで知ったか" field="referralSource"
+              editing={editing} draft={draft} entry={entry} onChange={updateField} />
           </Section>
         </div>
       )}

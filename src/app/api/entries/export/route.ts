@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       { header: "営業許可証（製造販売）", key: "manufacturingLicense", width: 20 },
       { header: "営業許可証（商品）", key: "entryProductLicense", width: 20 },
       { header: "食品衛生責任者", key: "hygieneManager", width: 20 },
+      { header: "大賞を知ったきっかけ", key: "referralSource", width: 24 },
       { header: "備考", key: "remarks", width: 30 },
       { header: "審査状況", key: "reviewStatus", width: 20 },
       { header: "商品到着", key: "itemArrivalStatus", width: 20 },
@@ -113,6 +114,7 @@ export async function GET(request: NextRequest) {
         manufacturingLicense: entry.manufacturingLicense,
         entryProductLicense: entry.entryProductLicense,
         hygieneManager: entry.hygieneManager,
+        referralSource: entry.referralSource,
         remarks: entry.remarks,
         reviewStatus: entry.reviewStatus
           ? entry.reviewStatus
