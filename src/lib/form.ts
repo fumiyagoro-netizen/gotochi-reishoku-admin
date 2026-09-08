@@ -152,7 +152,22 @@ export async function handleFormSubmission(
       });
       contactId = contact.id;
 
-      // Opt-in handling (特定電子メール法対応: 明示同意がない限り配信可にしない)
+      // リスト所属は「このフォームに回答した人」という区分けであって、配信して
+      // よいかどうかとは別の情報。だから同意チェックの有無に関わらず必ず付ける。
+      //
+      // 以前は同意した人だけをリストに入れていたため、リストが回答者名簿として
+      // 成立しておらず（実際 説明会フォームは回答6件に対しリスト1件だった）、
+      // 「このフォームに回答済みの人を除いて配信する」といった使い方ができなかった。
+      //
+      // リストに入れること自体が配信につながることはない: sendMarketingEmail が
+      // 送信直前に subscribed: false の連絡先と Suppression 掲載アドレスを必ず
+      // 除外するため、可否はあくまで下の subscribed が持つ（src/lib/email.ts）。
+      if (form.targetListId) {
+        await addToList(contact.id, form.targetListId);
+      }
+
+      // 配信可否だけは明示同意がある場合に限る（特定電子メール法対応:
+      // 同意がない限り subscribed を立てない）。
       if (form.requireOptIn) {
         const optInRaw = answers["__optin"];
         const optedIn = optInRaw === "true" || (Array.isArray(optInRaw) && optInRaw[0] === "true");
@@ -162,12 +177,9 @@ export async function handleFormSubmission(
             where: { id: contact.id },
             data: { subscribed: true, optInAt: new Date() },
           });
-          if (form.targetListId) {
-            await addToList(contact.id, form.targetListId);
-          }
         }
       }
-      // requireOptIn が false の場合は subscribed / リスト所属を変更しない
+      // requireOptIn が false の場合は subscribed を変更しない
     }
   }
 
