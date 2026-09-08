@@ -20,15 +20,24 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { contactIds, listId, listIds, subject, html, defaultName, testEmail, preview } = body;
+    const { contactIds, listId, listIds, excludeListIds, subject, html, defaultName, testEmail, preview } = body;
 
     // Accept either `listIds` (array, current UI) or the legacy singular
     // `listId` for backward compatibility with any other callers.
-    const listIdList: number[] = (
+    const toIdList = (value: unknown): number[] =>
+      (Array.isArray(value) ? value : [])
+        .map((id: number | string) => parseInt(String(id), 10))
+        .filter((id: number) => !Number.isNaN(id));
+
+    const listIdList: number[] = toIdList(
       Array.isArray(listIds) ? listIds : listId != null ? [listId] : []
-    )
-      .map((id: number | string) => parseInt(String(id), 10))
-      .filter((id: number) => !Number.isNaN(id));
+    );
+
+    // 配信ごとの除外リスト。宛先の指定方法（リスト／個別選択）とは独立に効かせる
+    // ので、下の where では送信先の条件と AND で組み合わせる。除外は常に勝つ:
+    // 同じリストを宛先と除外の両方に指定すれば送信対象は 0 件になる。画面側は
+    // 送信前に実際の件数を出すので、その状態は押す前に分かる。
+    const excludeListIdList: number[] = toIdList(excludeListIds);
 
     if (!subject || !html) {
       return NextResponse.json(
@@ -83,19 +92,41 @@ export async function POST(request: NextRequest) {
     // `some` + `in` matches contacts belonging to any of the selected lists,
     // and Contact.findMany naturally dedupes at the contact level, so a
     // contact in multiple selected lists is still only fetched (and sent to) once.
-    const where =
+    const targetWhere =
       listIdList.length > 0
         ? { memberships: { some: { listId: { in: listIdList } } } }
         : { id: { in: (contactIds as (number | string)[]).map(Number) } };
 
-    const contacts = await prisma.contact.findMany({
-      where,
-      select: { email: true, name: true },
-    });
+    const where =
+      excludeListIdList.length > 0
+        ? {
+            AND: [
+              targetWhere,
+              { NOT: { memberships: { some: { listId: { in: excludeListIdList } } } } },
+            ],
+          }
+        : targetWhere;
+
+    // 除外して何件減ったかを記録・表示するため、除外前の件数も数えておく。
+    const [contacts, targetTotal] = await Promise.all([
+      prisma.contact.findMany({ where, select: { email: true, name: true } }),
+      excludeListIdList.length > 0
+        ? prisma.contact.count({ where: targetWhere })
+        : Promise.resolve(0),
+    ]);
+
+    const excludedCount =
+      excludeListIdList.length > 0 ? targetTotal - contacts.length : 0;
 
     if (contacts.length === 0) {
       return NextResponse.json(
-        { success: false, message: "送信対象の連絡先が見つかりません" },
+        {
+          success: false,
+          message:
+            excludeListIdList.length > 0
+              ? "除外リストを適用した結果、送信対象が0件になりました"
+              : "送信対象の連絡先が見つかりません",
+        },
         { status: 400 }
       );
     }
@@ -120,13 +151,20 @@ export async function POST(request: NextRequest) {
         listIdList.length > 0
           ? `list:${listIdList.join(",")}`
           : (contactIds as (number | string)[]).join(","),
-      detail: `件名「${subject}」: ${result.sent}件送信、${result.failed}件失敗、${result.skipped}件スキップ`,
+      detail:
+        `件名「${subject}」: ${result.sent}件送信、${result.failed}件失敗、${result.skipped}件スキップ` +
+        (excludeListIdList.length > 0
+          ? `、除外リスト(${excludeListIdList.join(",")})で${excludedCount}件除外`
+          : ""),
     });
 
     return NextResponse.json({
       success: true,
-      message: `${result.sent}件送信しました（失敗${result.failed}件、スキップ${result.skipped}件）`,
-      result,
+      message:
+        `${result.sent}件送信しました（失敗${result.failed}件、スキップ${result.skipped}件` +
+        (excludeListIdList.length > 0 ? `、除外${excludedCount}件` : "") +
+        "）",
+      result: { ...result, excluded: excludedCount },
     });
   } catch (error) {
     console.error("Send marketing email error:", error);

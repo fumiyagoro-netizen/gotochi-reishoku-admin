@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useRole } from "@/lib/role-context";
 
 interface ContactList {
@@ -21,15 +22,24 @@ interface Contact {
   memberships: { list: ContactList }[];
 }
 
-export default function ContactsPage() {
+// Reads ?listId= from the URL so that opening a list from リスト管理
+// (src/app/contacts/lists/page.tsx links to /contacts?listId=N) actually
+// filters the table down to that list's members. useSearchParams requires a
+// Suspense boundary in Next.js, hence the wrapper at the default export below
+// — same shape as src/app/prospects/page.tsx.
+function ContactsPageInner() {
   const { role, permissions } = useRole();
+  const searchParams = useSearchParams();
   // 行選択（チェックボックス）は一斉送信・リスト一括追加のどちらかが使える人に表示
   const canSelect = permissions.canSendEmail || permissions.canEdit;
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [lists, setLists] = useState<ContactList[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [listId, setListId] = useState("");
+  // URL の ?listId= を初期値にする。以降は絞り込みセレクトの操作で state 側が
+  // 正になる（リンクから来た直後だけ URL が効けばよく、セレクトを触るたびに
+  // URL を書き換える必要はないため）。
+  const [listId, setListId] = useState(searchParams.get("listId") ?? "");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [showSend, setShowSend] = useState(false);
   const [showBulkSend, setShowBulkSend] = useState(false);
@@ -360,7 +370,7 @@ export default function ContactsPage() {
 
       {showSend && (
         <SendModal
-          contactIds={Array.from(selected)}
+          selectedContacts={contacts.filter((c) => selected.has(c.id))}
           lists={lists}
           onClose={() => setShowSend(false)}
           onSent={() => {
@@ -415,22 +425,33 @@ export default function ContactsPage() {
   );
 }
 
+export default function ContactsPage() {
+  return (
+    <Suspense>
+      <ContactsPageInner />
+    </Suspense>
+  );
+}
+
 function SendModal({
-  contactIds,
+  selectedContacts,
   lists,
   onClose,
   onSent,
 }: {
-  contactIds?: number[];
+  selectedContacts?: Contact[];
   lists: ContactList[];
   onClose: () => void;
   onSent: () => void;
 }) {
-  const hasSelection = !!contactIds && contactIds.length > 0;
+  const hasSelection = !!selectedContacts && selectedContacts.length > 0;
   const [target, setTarget] = useState<"selection" | "list">(hasSelection ? "selection" : "list");
   const [selectedListIds, setSelectedListIds] = useState<string[]>([]);
-  const [listSubscribedCount, setListSubscribedCount] = useState<number | null>(null);
-  const [listTotalCount, setListTotalCount] = useState<number | null>(null);
+  const [excludeListIds, setExcludeListIds] = useState<string[]>([]);
+  // 件数表示は連絡先そのものを持っておいて数える。除外の判定式（除外リストの
+  // どれかに所属しているか）をサーバ側の送信条件とそろえるためで、こうしておく
+  // と「画面に出た件数」と「実際に送られる件数」がずれない。
+  const [listContacts, setListContacts] = useState<Contact[] | null>(null);
 
   const [subject, setSubject] = useState("");
   const [html, setHtml] = useState("");
@@ -463,8 +484,7 @@ function SendModal({
 
   useEffect(() => {
     if (target !== "list" || selectedListIds.length === 0) {
-      setListSubscribedCount(null);
-      setListTotalCount(null);
+      setListContacts(null);
       return;
     }
     const params = new URLSearchParams();
@@ -474,16 +494,32 @@ function SendModal({
     fetch(`/api/contacts?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) {
-          const contactsInLists: { subscribed: boolean }[] = data.contacts;
-          setListTotalCount(contactsInLists.length);
-          setListSubscribedCount(contactsInLists.filter((c) => c.subscribed).length);
-        }
+        if (data.success) setListContacts(data.contacts as Contact[]);
       });
   }, [target, selectedListIds]);
 
-  const targetCount =
-    target === "selection" ? (contactIds?.length ?? 0) : listSubscribedCount;
+  const contactIds = selectedContacts?.map((c) => c.id);
+
+  // 除外の判定はサーバ側 (/api/contacts/send) の
+  // NOT memberships.some(listId in excludeListIds) と同じ条件。所属情報は
+  // API から返ってきたものをそのまま使うので、ここでの件数は実際の送信件数と一致する。
+  const isExcluded = useCallback(
+    (c: Contact) => c.memberships.some((m) => excludeListIds.includes(String(m.list.id))),
+    [excludeListIds]
+  );
+
+  // リスト配信は購読中のみが対象（未購読はもともと送信時にスキップされる）。
+  // 個別選択は選んだ件数がそのまま母数 — 購読状態の絞り込みは従来どおり送信時に行う。
+  const pool: Contact[] | null =
+    target === "selection"
+      ? (selectedContacts ?? [])
+      : listContacts
+        ? listContacts.filter((c) => c.subscribed)
+        : null;
+
+  const excludedCount = pool ? pool.filter(isExcluded).length : null;
+  const listTotalCount = listContacts?.length ?? null;
+  const targetCount = pool ? pool.length - (excludedCount ?? 0) : null;
 
   const canSend =
     (target === "selection" && hasSelection) ||
@@ -493,6 +529,12 @@ function SendModal({
     .filter((list) => selectedListIds.includes(String(list.id)))
     .map((list) => list.name)
     .join("、");
+
+  function toggleExcludeListId(id: string) {
+    setExcludeListIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
 
   function toggleListId(id: string) {
     setSelectedListIds((prev) =>
@@ -574,7 +616,9 @@ function SendModal({
     if (!canSend) return;
 
     const countLabel = targetCount != null ? `${targetCount}件` : "選択した宛先";
-    if (!window.confirm(`${countLabel}に送信します。よろしいですか？`)) return;
+    const excludeLabel =
+      excludedCount && excludedCount > 0 ? `（除外リストで${excludedCount}件を除いています）` : "";
+    if (!window.confirm(`${countLabel}に送信します${excludeLabel}。よろしいですか？`)) return;
 
     setSending(true);
     setError("");
@@ -583,8 +627,8 @@ function SendModal({
     try {
       const body =
         target === "selection"
-          ? { contactIds, subject, html, defaultName }
-          : { listIds: selectedListIds, subject, html, defaultName };
+          ? { contactIds, subject, html, defaultName, excludeListIds }
+          : { listIds: selectedListIds, subject, html, defaultName, excludeListIds };
 
       const res = await fetch("/api/contacts/send", {
         method: "POST",
@@ -615,8 +659,8 @@ function SendModal({
           {target === "selection"
             ? `選択した連絡先（${contactIds?.length ?? 0}件）に送信します`
             : selectedListIds.length > 0
-              ? listSubscribedCount != null
-                ? `配信対象: ${listSubscribedCount}件（購読中のみ、リスト全体${listTotalCount}件） / 対象リスト: ${selectedListNames}`
+              ? targetCount != null
+                ? `配信対象: ${targetCount}件（購読中のみ、リスト全体${listTotalCount}件） / 対象リスト: ${selectedListNames}`
                 : "配信対象を読み込み中..."
               : "配信先のリストを選択してください"}
         </p>
@@ -689,6 +733,53 @@ function SendModal({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* 除外リスト。配信先が「リスト」でも「個別選択」でも同じように効く
+              （サーバ側も宛先条件と AND で組む）ので、配信先ブロックの外に置く。 */}
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+            <span className="text-sm font-medium text-gray-700 block">
+              除外するリスト（任意）
+            </span>
+            <p className="text-xs text-gray-500">
+              ここで選んだリストに入っている人には、今回の配信は届きません。
+            </p>
+            {lists.length === 0 ? (
+              <p className="text-sm text-gray-400 px-1 py-0.5">リストがありません</p>
+            ) : (
+              <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg bg-white p-2 space-y-1">
+                {lists.map((list) => (
+                  <label
+                    key={list.id}
+                    className="flex items-center gap-2 text-sm text-gray-700 px-1 py-0.5 rounded
+                      hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={excludeListIds.includes(String(list.id))}
+                      onChange={() => toggleExcludeListId(String(list.id))}
+                      className="rounded border-gray-300"
+                    />
+                    {list.name}
+                  </label>
+                ))}
+              </div>
+            )}
+            {excludeListIds.length > 0 && (
+              excludedCount != null ? (
+                <p className="text-sm text-gray-700">
+                  除外 <span className="font-medium">{excludedCount}件</span> →{" "}
+                  実際に送るのは <span className="font-medium">{targetCount}件</span>
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500">件数を計算中...</p>
+              )
+            )}
+            {excludeListIds.length > 0 && targetCount === 0 && (
+              <p className="text-sm text-red-600">
+                除外した結果、送信対象が0件です。このままでは送信できません。
+              </p>
+            )}
           </div>
 
           <label className="block">
