@@ -2,7 +2,8 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import type { FormField, FormAnswers } from "@/lib/form";
+import { isDisplayField } from "@/lib/form-shared";
+import type { FormField, FormAnswers } from "@/lib/form-shared";
 import { useRole } from "@/lib/role-context";
 
 interface FormInfo {
@@ -30,6 +31,10 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // 見出し・説明文・画像はフォーム上の飾りで回答を持たないため、列にしない。
+  // Excel出力側 (api/forms/[id]/submissions/export) も同じ条件で外している。
+  const answerFields = (form?.fields || []).filter((f) => !isDisplayField(f));
 
   useEffect(() => {
     fetch(`/api/forms/${id}/submissions`)
@@ -118,7 +123,7 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">受信日時</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">連絡先</th>
-                {(form?.fields || []).map((field) => (
+                {answerFields.map((field) => (
                   <th key={field.id} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
                     {field.label}
                   </th>
@@ -147,7 +152,7 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
                       "-"
                     )}
                   </td>
-                  {(form?.fields || []).map((field) => (
+                  {answerFields.map((field) => (
                     <td key={field.id} className="px-4 py-3 text-sm text-gray-700 max-w-xs">
                       {renderValue(field, submission.answers[field.id])}
                     </td>
@@ -156,7 +161,7 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
               ))}
               {submissions.length === 0 && (
                 <tr>
-                  <td colSpan={2 + (form?.fields.length || 0)} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={2 + answerFields.length} className="px-4 py-12 text-center text-gray-400">
                     回答がありません
                   </td>
                 </tr>

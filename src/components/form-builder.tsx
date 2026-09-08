@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { FieldType, FormField } from "@/lib/form";
+import { isDisplayField } from "@/lib/form-shared";
+import type { FieldType, FormField } from "@/lib/form-shared";
 
 interface ContactList {
   id: number;
@@ -36,6 +37,15 @@ const FIELD_TYPES: { value: FieldType; label: string }[] = [
   { value: "select", label: "プルダウン" },
   { value: "date", label: "日付" },
   { value: "file", label: "ファイル添付" },
+];
+
+// 入力欄ではなく、フォーム上に文章や画像を置くためのブロック。種類セレクトでは
+// optgroup で入力項目と分けて見せる（回答が増えるものと増えないものの区別が
+// 一覧で付かないと、必須設定などを誤って探しにいくため）。
+const DISPLAY_TYPES: { value: FieldType; label: string }[] = [
+  { value: "heading", label: "見出し" },
+  { value: "paragraph", label: "説明文" },
+  { value: "image", label: "画像" },
 ];
 
 const MAP_TO_OPTIONS: { value: FormField["mapTo"] | ""; label: string }[] = [
@@ -452,8 +462,29 @@ function FieldEditor({
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
 }) {
-  const showOptions = HAS_OPTIONS.includes(field.type);
+  const isDisplay = isDisplayField(field);
+  const showOptions = !isDisplay && HAS_OPTIONS.includes(field.type);
   const optionsText = (field.options || []).join("\n");
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState("");
+
+  async function handleImageUpload(file: File | null) {
+    if (!file) return;
+    setImageUploading(true);
+    setImageError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/forms/image", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "アップロードに失敗しました");
+      onChange({ content: data.url });
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "アップロードに失敗しました");
+    } finally {
+      setImageUploading(false);
+    }
+  }
 
   return (
     <div className="border border-gray-200 rounded-lg p-4">
@@ -485,30 +516,108 @@ function FieldEditor({
               <span className="text-xs font-medium text-gray-500">種類</span>
               <select
                 value={field.type}
-                onChange={(e) => onChange({ type: e.target.value as FieldType })}
+                onChange={(e) => {
+                  const type = e.target.value as FieldType;
+                  // 表示専用に切り替えたら、入力項目にしか意味のない設定は落とす。
+                  // 残しておくと画面には出ないのに JSON に必須フラグなどが残り、
+                  // あとで入力項目に戻したときに意図しない状態で復活する。
+                  onChange(
+                    isDisplayField({ type })
+                      ? { type, required: false, mapTo: undefined, options: undefined, hint: undefined }
+                      : { type, content: undefined }
+                  );
+                }}
                 className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm bg-white
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {FIELD_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
+                <optgroup label="入力項目">
+                  {FIELD_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="表示のみ（回答なし）">
+                  {DISPLAY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
 
             <label className="block">
-              <span className="text-xs font-medium text-gray-500">ラベル</span>
+              <span className="text-xs font-medium text-gray-500">
+                {field.type === "heading"
+                  ? "見出しの文言"
+                  : field.type === "paragraph"
+                    ? "見出し（任意）"
+                    : field.type === "image"
+                      ? "代替テキスト（任意）"
+                      : "ラベル"}
+              </span>
               <input
                 type="text"
                 value={field.label}
                 onChange={(e) => onChange({ label: e.target.value })}
-                required
+                required={!isDisplay || field.type === "heading"}
                 className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </label>
           </div>
+
+          {field.type === "paragraph" && (
+            <label className="block">
+              <span className="text-xs font-medium text-gray-500">本文</span>
+              <textarea
+                value={field.content || ""}
+                onChange={(e) => onChange({ content: e.target.value })}
+                rows={4}
+                placeholder="フォーム上に表示する説明文を入力してください（改行はそのまま反映されます）"
+                className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+          )}
+
+          {field.type === "image" && (
+            <div>
+              <span className="text-xs font-medium text-gray-500 block mb-1">画像</span>
+              {field.content && (
+                <img
+                  src={field.content}
+                  alt={field.label || ""}
+                  className="max-h-40 rounded-lg border border-gray-200 mb-2"
+                />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-600 file:mr-3 file:px-3 file:py-1.5 file:rounded-lg
+                  file:border file:border-gray-300 file:bg-white file:text-sm file:cursor-pointer hover:file:bg-gray-50"
+              />
+              {imageUploading && <p className="text-xs text-gray-500 mt-1">アップロード中...</p>}
+              {imageError && <p className="text-xs text-red-600 mt-1">{imageError}</p>}
+              <p className="text-xs text-gray-400 mt-1">PNG / JPEG / GIF / WebP / SVG・5MBまで</p>
+            </div>
+          )}
+
+          {!isDisplay && (
+            <label className="block">
+              <span className="text-xs font-medium text-gray-500">補足文（任意）</span>
+              <input
+                type="text"
+                value={field.hint || ""}
+                onChange={(e) => onChange({ hint: e.target.value })}
+                placeholder="例: 半角英数字でご記入ください"
+                className="mt-1 block w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </label>
+          )}
 
           {showOptions && (
             <label className="block">
@@ -530,6 +639,7 @@ function FieldEditor({
             </label>
           )}
 
+          {!isDisplay && (
           <div className="grid grid-cols-2 gap-3 items-end">
             <label className="block">
               <span className="text-xs font-medium text-gray-500">連絡先へのマッピング</span>
@@ -557,6 +667,7 @@ function FieldEditor({
               <span className="text-sm text-gray-700">必須項目にする</span>
             </label>
           </div>
+          )}
         </div>
 
         <button

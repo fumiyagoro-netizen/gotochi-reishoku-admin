@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { FormField, FormAnswers } from "@/lib/form";
+import { isDisplayField } from "@/lib/form-shared";
+import type { FormField, FormAnswers } from "@/lib/form-shared";
 
 export function PublicForm({
   slug,
@@ -69,6 +70,7 @@ export function PublicForm({
   function validate(): boolean {
     const errs: Record<string, string> = {};
     for (const field of fields) {
+      if (isDisplayField(field)) continue;
       if (!field.required) continue;
       const value = answers[field.id];
       if (field.type === "checkbox") {
@@ -190,11 +192,53 @@ function FieldInput({
   const strValue = typeof value === "string" ? value : "";
   const arrValue = Array.isArray(value) ? value : [];
 
+  // 表示専用ブロックは入力欄ではないので <label> で包まない（包むとクリックが
+  // 直後の入力欄にフォーカスを移してしまい、押せる要素のように見える）。
+  if (field.type === "heading") {
+    return (
+      <h3 className="text-base font-bold text-gray-900 pt-2 border-t border-gray-100 first:border-t-0 first:pt-0">
+        {field.label}
+      </h3>
+    );
+  }
+
+  if (field.type === "paragraph") {
+    return (
+      <div>
+        {field.label && (
+          <p className="text-sm font-medium text-gray-900 mb-1">{field.label}</p>
+        )}
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+          {field.content}
+        </p>
+      </div>
+    );
+  }
+
+  if (field.type === "image") {
+    if (!field.content) return null;
+    return (
+      <figure>
+        <img
+          src={field.content}
+          alt={field.label || ""}
+          className="w-full max-w-lg rounded-lg border border-gray-200"
+        />
+        {field.label && (
+          <figcaption className="text-xs text-gray-500 mt-1">{field.label}</figcaption>
+        )}
+      </figure>
+    );
+  }
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {field.label} {field.required && <span className="text-red-500">*</span>}
       </label>
+      {field.hint && (
+        <p className="text-xs text-gray-500 mb-1.5 whitespace-pre-wrap">{field.hint}</p>
+      )}
 
       {field.type === "textarea" ? (
         <textarea
@@ -244,16 +288,13 @@ function FieldInput({
           ))}
         </div>
       ) : field.type === "file" ? (
-        <div>
-          <input
-            type="file"
-            onChange={(e) => onFileChange(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-gray-600 file:mr-3 file:px-3 file:py-2 file:rounded-lg
-              file:border file:border-gray-300 file:bg-white file:text-sm file:cursor-pointer hover:file:bg-gray-50"
-          />
-          {uploading && <p className="text-xs text-gray-500 mt-1">アップロード中...</p>}
-          {!uploading && strValue && <p className="text-xs text-green-600 mt-1">アップロード済み</p>}
-        </div>
+        <FileDropInput
+          fieldId={field.id}
+          uploading={uploading}
+          uploaded={!!strValue}
+          error={!!error}
+          onFile={onFileChange}
+        />
       ) : (
         <input
           type={field.type === "email" ? "email" : field.type === "tel" ? "tel" : field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
@@ -266,6 +307,82 @@ function FieldInput({
       )}
 
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
+
+/** ファイル添付欄。クリックしてもドラッグ&ドロップでも同じ 1 本の onFile に流す。
+ *  <input type="file"> 自体は残したまま枠だけ被せている — キーボード操作と
+ *  スクリーンリーダーはネイティブの input が引き受け、ドロップは枠が受ける。 */
+function FileDropInput({
+  fieldId,
+  uploading,
+  uploaded,
+  error,
+  onFile,
+}: {
+  fieldId: string;
+  uploading: boolean;
+  uploaded: boolean;
+  error: boolean;
+  onFile: (file: File | null) => void;
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [fileName, setFileName] = useState("");
+
+  function take(file: File | null) {
+    if (!file) return;
+    setFileName(file.name);
+    onFile(file);
+  }
+
+  return (
+    <div>
+      <div
+        onDragOver={(e) => {
+          // preventDefault しないとブラウザがファイルを開いてしまい、
+          // 入力途中のフォームごと離脱することになる。
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          take(e.dataTransfer.files?.[0] || null);
+        }}
+        className={`rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
+          dragging
+            ? "border-blue-400 bg-blue-50"
+            : error
+              ? "border-red-400 bg-red-50"
+              : "border-gray-300 bg-gray-50"
+        }`}
+      >
+        <p className="text-sm text-gray-600 mb-2">
+          ここにファイルをドラッグ&ドロップ
+        </p>
+        <label
+          htmlFor={`file-${fieldId}`}
+          className="inline-block px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-sm
+            text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors"
+        >
+          ファイルを選択
+        </label>
+        <input
+          id={`file-${fieldId}`}
+          type="file"
+          onChange={(e) => take(e.target.files?.[0] || null)}
+          className="sr-only"
+        />
+        <p className="text-xs text-gray-400 mt-2">10MBまで</p>
+      </div>
+      {uploading && <p className="text-xs text-gray-500 mt-1">アップロード中...</p>}
+      {!uploading && uploaded && (
+        <p className="text-xs text-green-600 mt-1">
+          アップロード済み{fileName ? `: ${fileName}` : ""}
+        </p>
+      )}
     </div>
   );
 }

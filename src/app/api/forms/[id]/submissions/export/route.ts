@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
+import { isDisplayField } from "@/lib/form";
 import type { FormField, FormAnswers } from "@/lib/form";
 import ExcelJS from "exceljs";
 
@@ -45,7 +46,10 @@ export async function GET(
       : [];
     const contactMap = new Map(contacts.map((c) => [c.id, c]));
 
-    const fields = (form.fields as unknown as FormField[]) || [];
+    // 見出し・説明文・画像は回答を持たないので列にしない（空列が並ぶだけになる）。
+    const fields = ((form.fields as unknown as FormField[]) || []).filter(
+      (f) => !isDisplayField(f)
+    );
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("回答一覧");

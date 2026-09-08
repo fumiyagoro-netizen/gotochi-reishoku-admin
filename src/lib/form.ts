@@ -2,45 +2,17 @@ import { prisma } from "./prisma";
 import { upsertContact, addToList } from "./contact";
 import { sendFormAutoReply, sendFormAdminNotification } from "./email";
 
-/**
- * FormField definition shape (stored as JSON in Form.fields):
- * {
- *   id: string,
- *   type: "text" | "textarea" | "email" | "tel" | "number" | "radio" | "checkbox" | "select" | "date" | "file",
- *   label: string,
- *   required: boolean,
- *   options?: string[],       // radio / checkbox / select のみ
- *   mapTo?: "email" | "name" | "companyName" | "phone",  // Contactへのマッピング（任意）
- * }
- *
- * FormSubmission.answers shape:
- * { [fieldId: string]: string | string[] }
- * - checkbox / file(複数) は string[]、それ以外は string
- * - オプトイン同意は answers["__optin"] に "true" / "false" として格納
- */
+export type {
+  InputFieldType,
+  DisplayFieldType,
+  FieldType,
+  FormField,
+  FormAnswers,
+} from "./form-shared";
+export { DISPLAY_FIELD_TYPES, isDisplayField } from "./form-shared";
 
-export type FieldType =
-  | "text"
-  | "textarea"
-  | "email"
-  | "tel"
-  | "number"
-  | "radio"
-  | "checkbox"
-  | "select"
-  | "date"
-  | "file";
-
-export interface FormField {
-  id: string;
-  type: FieldType;
-  label: string;
-  required: boolean;
-  options?: string[];
-  mapTo?: "email" | "name" | "companyName" | "phone";
-}
-
-export type FormAnswers = Record<string, string | string[]>;
+import { isDisplayField } from "./form-shared";
+import type { FormField, FormAnswers } from "./form-shared";
 
 const SLUG_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -78,6 +50,9 @@ export interface FormLike {
 /** Validate required fields and normalize answers against the field definitions. */
 function validateAnswers(fields: FormField[], answers: FormAnswers): string | null {
   for (const field of fields) {
+    // 表示専用ブロックは回答を持たない。ビルダー側でも required を立てられない
+    // ようにしているが、古い定義や手編集で立っていても必須扱いにしない。
+    if (isDisplayField(field)) continue;
     if (!field.required) continue;
     const value = answers[field.id];
     if (field.type === "checkbox") {
