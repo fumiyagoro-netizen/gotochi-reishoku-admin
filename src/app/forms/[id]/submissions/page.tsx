@@ -31,6 +31,7 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // 見出し・説明文・画像はフォーム上の飾りで回答を持たないため、列にしない。
   // Excel出力側 (api/forms/[id]/submissions/export) も同じ条件で外している。
@@ -50,6 +51,32 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
       });
   }, [id]);
 
+  async function handleDelete(submissionId: number) {
+    if (
+      !window.confirm(
+        "この回答を削除します。添付ファイルも一緒に削除され、元に戻せません。よろしいですか？"
+      )
+    ) {
+      return;
+    }
+    setDeletingId(submissionId);
+    try {
+      const res = await fetch(`/api/forms/${id}/submissions/${submissionId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubmissions((prev) => prev.filter((s) => s.id !== submissionId));
+      } else {
+        setError(data.message || "削除に失敗しました");
+      }
+    } catch {
+      setError("削除に失敗しました");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   function renderValue(field: FormField, value: string | string[] | undefined) {
     if (value === undefined || value === null || value === "") return "-";
 
@@ -60,7 +87,9 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
           {urls.filter(isFileUrl).map((url, i) => (
             <a
               key={i}
-              href={url}
+              /* blob の URL は private なので直リンクでは開けない。
+                 認証を通す /api/forms/attachment 経由にする。 */
+              href={`/api/forms/attachment?url=${encodeURIComponent(url)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline text-xs"
@@ -128,6 +157,7 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
                     {field.label}
                   </th>
                 ))}
+                {permissions.canDelete && <th className="w-16" />}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -157,11 +187,23 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
                       {renderValue(field, submission.answers[field.id])}
                     </td>
                   ))}
+                  {permissions.canDelete && (
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(submission.id)}
+                        disabled={deletingId === submission.id}
+                        className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50"
+                      >
+                        {deletingId === submission.id ? "削除中..." : "削除"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
               {submissions.length === 0 && (
                 <tr>
-                  <td colSpan={2 + answerFields.length} className="px-4 py-12 text-center text-gray-400">
+                  <td colSpan={2 + answerFields.length + (permissions.canDelete ? 1 : 0)} className="px-4 py-12 text-center text-gray-400">
                     回答がありません
                   </td>
                 </tr>
