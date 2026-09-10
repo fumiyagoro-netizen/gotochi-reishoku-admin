@@ -43,3 +43,6 @@ public/uploads/
 # other project files
 /aelle/
 .env*
+
+# ui parts preview (dev only, not committed)
+src/app/_ui-preview/
