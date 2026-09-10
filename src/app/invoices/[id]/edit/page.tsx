@@ -2,10 +2,13 @@
 
 import { useState, useEffect, use } from "react";
 import { Suspense } from "react";
-import Link from "next/link";
 import { InvoiceForm, type InvoiceData } from "@/components/invoice-form";
 import { useRole } from "@/lib/role-context";
 import { utcToJstDateInputValue } from "@/lib/award-dates";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { NoPermission } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
+import { CardSkeleton } from "@/components/ui/skeleton";
 
 export default function EditInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -51,27 +54,20 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
   // roles that must not reach it.
   if (!permissions.canManageInvoices) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer width="form">
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <Link href="/invoices" className="text-sm text-gray-500 hover:text-gray-700">
-          ← 請求書一覧
-        </Link>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">請求書編集</h2>
+    <PageContainer width="form">
+      <PageHeader title="請求書編集" backHref="/invoices" backLabel="請求書一覧" />
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        <CardSkeleton lines={5} />
       ) : error ? (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
+        <Alert tone="danger">{error}</Alert>
       ) : invoice ? (
         // InvoiceForm reads ?year= via useSearchParams, which Next.js requires
         // a Suspense boundary for.
@@ -79,6 +75,6 @@ export default function EditInvoicePage({ params }: { params: Promise<{ id: stri
           <InvoiceForm initial={invoice} />
         </Suspense>
       ) : null}
-    </div>
+    </PageContainer>
   );
 }

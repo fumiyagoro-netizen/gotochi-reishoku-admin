@@ -2,23 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const REVIEW_STATUSES = [
-  { value: "rejected", label: "選外", icon: "✕" },
-  { value: "first_passed", label: "1次審査通過", icon: "①" },
-  { value: "second_passed", label: "2次審査通過", icon: "②" },
-];
-
-const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  rejected: { bg: "bg-red-50", text: "text-red-700", border: "border-red-300" },
-  first_passed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-300" },
-  second_passed: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-300" },
-};
-
-function parseStatuses(raw: string): string[] {
-  if (!raw) return [];
-  return raw.split(",").filter(Boolean);
-}
+import {
+  REVIEW_STATUSES,
+  REVIEW_PILL_CLASS,
+  parseReviewStatuses,
+} from "@/lib/review-status-shared";
+import { TogglePill } from "@/components/ui/toggle-pill";
 
 export function ReviewStatusSelector({
   entryId,
@@ -27,8 +16,10 @@ export function ReviewStatusSelector({
   entryId: number;
   currentStatus: string;
 }) {
-  const [statuses, setStatuses] = useState<string[]>(parseStatuses(currentStatus));
+  const [statuses, setStatuses] = useState<string[]>(parseReviewStatuses(currentStatus));
   const [saving, setSaving] = useState(false);
+  // 押した1つだけスピナーを出すために覚えておく（送信ロジックには関与しない）
+  const [pendingValue, setPendingValue] = useState<string | null>(null);
   const router = useRouter();
 
   async function toggleStatus(value: string) {
@@ -39,6 +30,7 @@ export function ReviewStatusSelector({
       current.add(value);
     }
     const newStatus = Array.from(current).join(",");
+    setPendingValue(value);
     setSaving(true);
     try {
       const res = await fetch(`/api/entries/${entryId}`, {
@@ -59,48 +51,25 @@ export function ReviewStatusSelector({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {REVIEW_STATUSES.map((rs) => {
         const isActive = statuses.includes(rs.value);
-        const colors = REVIEW_COLORS[rs.value];
         return (
-          <button
+          <TogglePill
             key={rs.value}
-            onClick={() => toggleStatus(rs.value)}
+            pressed={isActive}
+            pending={saving && pendingValue === rs.value}
             disabled={saving}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full border transition-colors disabled:opacity-50 ${
-              isActive
-                ? `${colors.bg} ${colors.text} ${colors.border}`
-                : "border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-600"
-            }`}
+            toneClassName={REVIEW_PILL_CLASS[rs.value]}
+            onClick={() => toggleStatus(rs.value)}
           >
-            {rs.icon} {rs.label}
-            {isActive && <span className="ml-1">✓</span>}
-          </button>
+            {rs.label}
+          </TogglePill>
         );
       })}
     </div>
   );
 }
 
-export function ReviewBadge({ status }: { status: string }) {
-  const active = parseStatuses(status);
-  if (active.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {active.map((s) => {
-        const rs = REVIEW_STATUSES.find((r) => r.value === s);
-        if (!rs) return null;
-        const colors = REVIEW_COLORS[s];
-        return (
-          <span
-            key={s}
-            className={`inline-flex items-center px-2.5 py-0.5 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
-          >
-            {rs.icon} {rs.label}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
+// 本体は ui/badge.tsx に移った。import 先（entry-table / entry-detail）を変えずに済むよう再 export する
+export { ReviewBadge } from "@/components/ui/badge";

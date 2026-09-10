@@ -1,10 +1,21 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import Link from "next/link";
 import { isDisplayField } from "@/lib/form-shared";
 import type { FormField, FormAnswers } from "@/lib/form-shared";
 import { useRole } from "@/lib/role-context";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { NoPermission } from "@/components/ui/card";
+import { ButtonLink } from "@/components/ui/button";
+import { Table, Th, Td, Tr } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { Alert } from "@/components/ui/alert";
+import { Download, Loader2 } from "@/components/ui/icons";
+
+// 表内の「削除」。他の一覧と同じ文字ボタン型にして行高を増やさない（危険色）
+const DANGER_BUTTON_CLASS =
+  "inline-flex items-center gap-1 rounded-sm text-sm text-danger whitespace-nowrap hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 disabled:opacity-50 disabled:cursor-not-allowed";
 
 interface FormInfo {
   id: number;
@@ -92,7 +103,7 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
               href={`/api/forms/attachment?url=${encodeURIComponent(url)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:underline text-xs"
+              className="rounded-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               添付ファイル{urls.length > 1 ? ` ${i + 1}` : ""}
             </a>
@@ -109,109 +120,105 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
   // shell (or a "回答がありません" message) for roles that must not reach it.
   if (!permissions.canManageForms) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer>
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <Link href="/forms" className="text-sm text-gray-500 hover:text-gray-700">
-          ← フォーム一覧
-        </Link>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {form ? `${form.title} の回答` : "回答一覧"}
-          <span className="text-base font-normal text-gray-500 ml-3">{submissions.length}件</span>
-        </h2>
-        {form && (
-          <a
-            href={`/api/forms/${id}/submissions/export`}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-              hover:bg-blue-700 transition-colors"
-          >
-            Excelでダウンロード
-          </a>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={form ? `${form.title} の回答` : "回答一覧"}
+        count={submissions.length}
+        backHref="/forms"
+        backLabel="フォーム一覧"
+        actions={
+          form && (
+            // Excel は API のネイティブ遷移なので <a href>（external）のまま
+            <ButtonLink
+              href={`/api/forms/${id}/submissions/export`}
+              external
+              variant="primary"
+              icon={<Download />}
+            >
+              Excelでダウンロード
+            </ButtonLink>
+          )
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        <TableSkeleton cols={4} />
       ) : error ? (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
+        <Alert tone="danger">{error}</Alert>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">受信日時</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">連絡先</th>
-                {answerFields.map((field) => (
-                  <th key={field.id} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
-                    {field.label}
-                  </th>
-                ))}
-                {permissions.canDelete && <th className="w-16" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {submissions.map((submission) => (
-                <tr key={submission.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                    {/* Pinned to Asia/Tokyo so it matches the Excel export and
-                        doesn't shift between server render and hydration. */}
-                    {new Date(submission.createdAt).toLocaleString("ja-JP", {
-                      timeZone: "Asia/Tokyo",
-                    })}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                    {submission.contact ? (
-                      <div>
-                        <div>{submission.contact.email}</div>
-                        {submission.contact.name && (
-                          <div className="text-xs text-gray-400">{submission.contact.name}</div>
-                        )}
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  {answerFields.map((field) => (
-                    <td key={field.id} className="px-4 py-3 text-sm text-gray-700 max-w-xs">
-                      {renderValue(field, submission.answers[field.id])}
-                    </td>
-                  ))}
-                  {permissions.canDelete && (
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(submission.id)}
-                        disabled={deletingId === submission.id}
-                        className="text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50"
-                      >
-                        {deletingId === submission.id ? "削除中..." : "削除"}
-                      </button>
-                    </td>
-                  )}
-                </tr>
+        <Table>
+          <thead>
+            <tr>
+              <Th>受信日時</Th>
+              <Th>連絡先</Th>
+              {answerFields.map((field) => (
+                <Th key={field.id}>{field.label}</Th>
               ))}
-              {submissions.length === 0 && (
-                <tr>
-                  <td colSpan={2 + answerFields.length + (permissions.canDelete ? 1 : 0)} className="px-4 py-12 text-center text-gray-400">
-                    回答がありません
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              {permissions.canDelete && <Th width="w-16" srLabel="削除" />}
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((submission) => (
+              <Tr key={submission.id}>
+                <Td nowrap>
+                  {/* Pinned to Asia/Tokyo so it matches the Excel export and
+                      doesn't shift between server render and hydration. */}
+                  {new Date(submission.createdAt).toLocaleString("ja-JP", {
+                    timeZone: "Asia/Tokyo",
+                  })}
+                </Td>
+                <Td nowrap>
+                  {submission.contact ? (
+                    <div>
+                      <div className="text-ink">{submission.contact.email}</div>
+                      {submission.contact.name && (
+                        <div className="text-caption text-ink-subtle">{submission.contact.name}</div>
+                      )}
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </Td>
+                {answerFields.map((field) => (
+                  <Td key={field.id} className="max-w-xs">
+                    {renderValue(field, submission.answers[field.id])}
+                  </Td>
+                ))}
+                {permissions.canDelete && (
+                  <Td nowrap className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(submission.id)}
+                      disabled={deletingId === submission.id}
+                      aria-busy={deletingId === submission.id || undefined}
+                      className={DANGER_BUTTON_CLASS}
+                    >
+                      {deletingId === submission.id && (
+                        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                      )}
+                      {deletingId === submission.id ? "削除中..." : "削除"}
+                    </button>
+                  </Td>
+                )}
+              </Tr>
+            ))}
+            {submissions.length === 0 && (
+              <EmptyState
+                colSpan={2 + answerFields.length + (permissions.canDelete ? 1 : 0)}
+                title="回答がありません"
+                description="公開URLから回答が送信されると、ここに表示されます"
+              />
+            )}
+          </tbody>
+        </Table>
       )}
-    </div>
+    </PageContainer>
   );
 }

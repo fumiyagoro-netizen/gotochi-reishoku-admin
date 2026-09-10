@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { useRole } from "@/lib/role-context";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/field-controls";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
 
 export interface EntryCommentData {
   id: number;
@@ -90,86 +96,89 @@ export function EntryComments({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-100">
-        審査コメント
-      </h3>
+    <Card padding="none" as="section">
+      {/* CardHeader は h2 固定なので、商品名 h2 の下位になる h3 を同じ見た目で手で組む */}
+      <div className="border-b border-line px-5 py-3.5">
+        <h3 className="text-sm font-semibold text-ink">審査コメント</h3>
+      </div>
 
-      {canPost && (
-        <div className="mb-5">
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={3}
-            placeholder="審査コメントを入力..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-              focus:outline-none focus:border-blue-400"
-          />
-          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
-          <div className="flex justify-end mt-2">
-            <button
-              onClick={handlePost}
-              disabled={posting || !body.trim()}
-              className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700
-                disabled:opacity-50 transition-colors"
-            >
-              {posting ? "投稿中..." : "投稿"}
-            </button>
+      <div className="p-5">
+        {canPost && (
+          <div className="mb-5">
+            <Textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={3}
+              placeholder="審査コメントを入力..."
+            />
+            {error && (
+              <div className="mt-2">
+                <Alert tone="danger" compact>
+                  {error}
+                </Alert>
+              </div>
+            )}
+            <div className="flex justify-end mt-2">
+              <Button
+                variant="primary"
+                onClick={handlePost}
+                disabled={posting || !body.trim()}
+                loading={posting}
+              >
+                {posting ? "投稿中..." : "投稿"}
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {comments.length === 0 ? (
-        <p className="text-sm text-gray-400">まだコメントはありません</p>
-      ) : (
-        <ul className="space-y-4">
-          {comments.map((comment) => {
-            const canDelete =
-              role === "admin" || (currentUserId != null && comment.userId === currentUserId);
-            return (
-              <li key={comment.id} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-gray-900">
-                      {comment.authorName || "不明なユーザー"}
-                    </span>
-                    <span className="text-xs text-gray-400">{formatDateTime(comment.createdAt)}</span>
+        {comments.length === 0 ? (
+          <EmptyState size="sm" title="まだコメントはありません" />
+        ) : (
+          <ul className="divide-y divide-line">
+            {comments.map((comment) => {
+              const canDelete =
+                role === "admin" || (currentUserId != null && comment.userId === currentUserId);
+              return (
+                <li key={comment.id} className="py-4 first:pt-0 last:pb-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-ink">
+                        {comment.authorName || "不明なユーザー"}
+                      </span>
+                      <span className="text-caption text-ink-subtle">
+                        {formatDateTime(comment.createdAt)}
+                      </span>
+                    </div>
+                    {canDelete &&
+                      (confirmingId === comment.id ? (
+                        <div className="shrink-0">
+                          <InlineConfirm
+                            message="削除しますか？"
+                            // 実行中の文言は旧来の「削除中...」のまま（スピナーは InlineConfirm 側）
+                            confirmLabel={deletingId === comment.id ? "削除中..." : "削除する"}
+                            onConfirm={() => handleDelete(comment.id)}
+                            onCancel={() => setConfirmingId(null)}
+                            loading={deletingId === comment.id}
+                          />
+                        </div>
+                      ) : (
+                        <Button
+                          variant="dangerGhost"
+                          size="sm"
+                          className="shrink-0"
+                          onClick={() => setConfirmingId(comment.id)}
+                        >
+                          削除
+                        </Button>
+                      ))}
                   </div>
-                  {canDelete &&
-                    (confirmingId === comment.id ? (
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-red-600">削除しますか？</span>
-                        <button
-                          onClick={() => handleDelete(comment.id)}
-                          disabled={deletingId === comment.id}
-                          className="px-2 py-1 bg-red-600 text-white text-xs rounded
-                            hover:bg-red-700 disabled:opacity-50 transition-colors"
-                        >
-                          {deletingId === comment.id ? "削除中..." : "削除する"}
-                        </button>
-                        <button
-                          onClick={() => setConfirmingId(null)}
-                          className="px-2 py-1 border border-gray-300 text-xs text-gray-600 rounded
-                            hover:bg-gray-50 transition-colors"
-                        >
-                          キャンセル
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setConfirmingId(comment.id)}
-                        className="text-xs text-red-500 hover:text-red-700 hover:underline shrink-0"
-                      >
-                        削除
-                      </button>
-                    ))}
-                </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap mt-1">{comment.body}</p>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
+                  <p className="text-sm text-ink whitespace-pre-wrap mt-1">{comment.body}</p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </Card>
   );
 }

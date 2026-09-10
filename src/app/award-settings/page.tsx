@@ -3,6 +3,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRole } from "@/lib/role-context";
 import { utcToJstDateInputValue } from "@/lib/award-dates";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { Card, CardHeader, CardFooter, NoPermission } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/field-controls";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton, CardSkeleton } from "@/components/ui/skeleton";
+import {
+  Plus,
+  Settings2,
+  PlayCircle,
+  PauseCircle,
+  Trash2,
+  CalendarDays,
+} from "@/components/ui/icons";
 
 interface Award {
   id: number;
@@ -49,11 +66,9 @@ export default function AwardSettingsPage() {
 
   if (role !== "admin") {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">年度管理の閲覧・編集権限がありません</p>
-        </div>
-      </div>
+      <PageContainer width="form">
+        <NoPermission message="年度管理の閲覧・編集権限がありません" />
+      </PageContainer>
     );
   }
 
@@ -129,144 +144,118 @@ export default function AwardSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-48" />
-          <div className="h-32 bg-gray-200 rounded" />
-        </div>
-      </div>
+      <PageContainer width="form">
+        <Skeleton className="mb-6 h-7 w-32" />
+        <CardSkeleton lines={3} />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">年度管理</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            開催年度の追加・エントリー受付の開始/停止を管理します
-          </p>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          + 新しい年度を追加
-        </button>
-      </div>
+    <PageContainer width="form">
+      <PageHeader
+        title="年度管理"
+        description="開催年度の追加・エントリー受付の開始/停止を管理します"
+        actions={
+          <Button variant="primary" icon={<Plus />} onClick={() => setShowForm(true)}>
+            新しい年度を追加
+          </Button>
+        }
+      />
 
       {/* Create Form */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-blue-200 p-6 mb-6">
-          <h2 className="text-base font-bold text-gray-900 mb-4">新しい年度を追加</h2>
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-              <p className="text-red-700 text-sm">{error}</p>
+        <div className="mb-6">
+          <Card padding="none">
+            <CardHeader title="新しい年度を追加" />
+            <div className="p-5">
+              {error && (
+                <div className="mb-4">
+                  <Alert tone="danger">{error}</Alert>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                <Field label="年度">
+                  <Input
+                    type="number"
+                    value={newYear}
+                    onChange={(e) => setNewYear(parseInt(e.target.value))}
+                  />
+                </Field>
+                <Field label="名称">
+                  <Input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                  />
+                </Field>
+              </div>
             </div>
-          )}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">年度</label>
-              <input
-                type="number"
-                value={newYear}
-                onChange={(e) => setNewYear(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
-              <input
-                type="text"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleCreate}
-              disabled={saving || !newName}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? "作成中..." : "作成"}
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setError(""); }}
-              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50"
-            >
-              キャンセル
-            </button>
-          </div>
+            <CardFooter>
+              <Button variant="ghost" onClick={() => { setShowForm(false); setError(""); }}>
+                キャンセル
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleCreate}
+                disabled={saving || !newName}
+                loading={saving}
+              >
+                {saving ? "作成中..." : "作成"}
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       )}
 
       {/* Awards List */}
       <div className="space-y-4">
         {awards.map((award) => (
-          <div
-            key={award.id}
-            className={`bg-white rounded-xl border p-6 ${
-              award.isActive ? "border-green-300 bg-green-50/30" : "border-gray-200"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-gray-900">{award.year}</p>
-                  <p className="text-xs text-gray-500">年度</p>
+          // 受付中の年度だけ枠を強調する（ボタン色ではなく面で「今の状態」を示す）
+          <Card key={award.id} tone={award.isActive ? "active" : "default"}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="shrink-0 text-center">
+                  <p className="text-2xl font-semibold tabular-nums tracking-tight text-ink">{award.year}</p>
+                  <p className="text-caption text-ink-subtle">年度</p>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{award.name}</h3>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-sm text-gray-600">
-                      エントリー: <span className="font-bold">{award._count.entries}</span>件
+                <div className="min-w-0">
+                  <h3 className="truncate text-base font-semibold text-ink" title={award.name}>{award.name}</h3>
+                  <div className="mt-1 flex flex-wrap items-center gap-3">
+                    <span className="text-sm text-ink-muted">
+                      エントリー: <span className="font-semibold tabular-nums text-ink">{award._count.entries}</span>件
                     </span>
                     {award.isActive ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                        受付中
-                      </span>
+                      <Badge tone="success" dot="pulse">受付中</Badge>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-full">
-                        受付停止
-                      </span>
+                      <Badge tone="outline">受付停止</Badge>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => startEdit(award)}
-                  className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                >
+              <div className="flex shrink-0 items-center gap-2">
+                <Button variant="secondary" size="sm" icon={<Settings2 />} onClick={() => startEdit(award)}>
                   設定
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={award.isActive ? <PauseCircle /> : <PlayCircle />}
                   onClick={() => toggleActive(award)}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    award.isActive
-                      ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
-                      : "bg-green-100 text-green-700 hover:bg-green-200"
-                  }`}
                 >
                   {award.isActive ? "受付停止" : "受付開始"}
-                </button>
+                </Button>
                 {award._count.entries === 0 && (
-                  <button
-                    onClick={() => handleDelete(award)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-                  >
+                  <Button variant="dangerGhost" size="sm" icon={<Trash2 />} onClick={() => handleDelete(award)}>
                     削除
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
 
             {/* Period & notification info */}
-            <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
+            <div className="mt-3 flex flex-wrap gap-4 text-caption text-ink-subtle">
               {award.entryStartDate && (
                 <span>受付開始: {new Date(award.entryStartDate).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}</span>
               )}
@@ -280,75 +269,70 @@ export default function AwardSettingsPage() {
 
             {/* Edit panel */}
             {editingId === award.id && (
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">受付開始日</label>
-                    <input
+              <div className="mt-4 space-y-5 border-t border-line pt-4">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                  <Field label="受付開始日">
+                    <Input
                       type="date"
                       value={editStart}
                       onChange={(e) => setEditStart(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">受付締切日</label>
-                    <input
+                  </Field>
+                  <Field label="受付締切日">
+                    <Input
                       type="date"
                       value={editEnd}
                       onChange={(e) => setEditEnd(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     />
-                  </div>
+                  </Field>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    エントリー通知先メールアドレス
-                  </label>
-                  <input
+                <Field
+                  label="エントリー通知先メールアドレス"
+                  hint="カンマ区切りで複数設定可。エントリー時に通知が届きます。"
+                >
+                  <Input
                     type="text"
                     value={editNotify}
                     onChange={(e) => setEditNotify(e.target.value)}
                     placeholder="例: admin@example.com, staff@example.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                   />
-                  <p className="text-xs text-gray-400 mt-1">カンマ区切りで複数設定可。エントリー時に通知が届きます。</p>
-                </div>
-                <div className="flex gap-3">
-                  <button
+                </Field>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" onClick={() => setEditingId(null)}>
+                    キャンセル
+                  </Button>
+                  <Button
+                    variant="primary"
                     onClick={() => saveEdit(award.id)}
                     disabled={saving}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    loading={saving}
                   >
                     {saving ? "保存中..." : "保存"}
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50"
-                  >
-                    キャンセル
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
             {award.isActive && editingId !== award.id && (
-              <div className="mt-4 pt-4 border-t border-green-200">
-                <p className="text-sm text-green-700">
-                  エントリーフォーム: <code className="bg-green-100 px-2 py-0.5 rounded text-xs">/entry</code> からこの年度にエントリーが受け付けられます
+              <div className="mt-4 border-t border-line pt-4">
+                <p className="text-sm text-ink-muted">
+                  エントリーフォーム: <code className="rounded-sm bg-surface-muted px-1.5 py-0.5 font-mono text-caption text-ink">/entry</code> からこの年度にエントリーが受け付けられます
                 </p>
               </div>
             )}
-          </div>
+          </Card>
         ))}
 
         {awards.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg mb-2">年度が登録されていません</p>
-            <p className="text-sm">「新しい年度を追加」ボタンから作成してください</p>
-          </div>
+          <Card>
+            <EmptyState
+              icon={CalendarDays}
+              title="年度が登録されていません"
+              description="「新しい年度を追加」ボタンから作成してください"
+            />
+          </Card>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

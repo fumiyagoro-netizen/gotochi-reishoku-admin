@@ -7,7 +7,23 @@ import { PrizeBadge } from "./prize-selector";
 import { ReviewBadge } from "./review-status-selector";
 import { ItemArrivalBadge } from "./item-arrival-selector";
 import { ITEM_ARRIVAL_STATUSES } from "@/lib/item-arrival-shared";
+import { PRIZE_LEVELS, PRIZE_DOT_CLASS } from "@/lib/prize-shared";
 import { useRole } from "@/lib/role-context";
+import { cn } from "@/lib/cn";
+import { Table, Th, Td, Tr, Thumb } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/field-controls";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BulkActionBar, BarDivider } from "@/components/ui/bulk-action-bar";
+import {
+  ClipboardCheck,
+  ClipboardList,
+  Minus,
+  Package,
+  Plus,
+  Trophy,
+} from "@/components/ui/icons";
 
 interface EntryRow {
   id: number;
@@ -24,18 +40,25 @@ interface EntryRow {
   images: { id: number; imageUrl: string }[];
 }
 
-const PRIZE_LEVELS = ["最高金賞", "金賞", "銀賞", "銅賞"];
+// 一括設定では「選外」を付けない仕様のため、review-status-shared.ts の配列とは統合しない
 const REVIEW_STATUSES = [
   { value: "first_passed", label: "1次審査通過" },
   { value: "second_passed", label: "2次審査通過" },
 ];
 
+// 表内リンク。Td primary の font-medium を引き継ぎ、色だけアクセントにする
+const LINK_CLASS =
+  "text-accent hover:underline rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
+
 export function EntryTable({
   entries,
   year,
+  filtered = false,
 }: {
   entries: EntryRow[];
   year: number | null;
+  /** 検索・カテゴリで絞り込み中か（空状態の説明文を「未登録」と「該当なし」で分けるためだけに使う） */
+  filtered?: boolean;
 }) {
   const { permissions } = useRole();
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -48,6 +71,9 @@ export function EntryTable({
   // can't be keyed on canSetPrize alone anymore. Each individual bulk
   // action button below stays gated on its own specific flag.
   const canBulkSelect = permissions.canSetPrize || permissions.canSetItemArrival;
+
+  // 空状態の colSpan は列構成（チェック列・担当者列の有無）に連動させる
+  const colCount = 7 + (canBulkSelect ? 1 : 0) + (permissions.canSeePrivateInfo ? 1 : 0);
 
   function toggleAll() {
     if (selected.size === entries.length) {
@@ -137,266 +163,219 @@ export function EntryTable({
     <>
       {/* Bulk Action Bar */}
       {canBulkSelect && selected.size > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-medium text-blue-700">
-            {selected.size}件選択中
-          </span>
+        <BulkActionBar
+          count={selected.size}
+          onClear={() => { setSelected(new Set()); setBulkAction(""); }}
+        >
           {bulkAction === "" && (
             <>
               {permissions.canSetPrize && (
-                <button
-                  onClick={() => setBulkAction("prize")}
-                  className="px-3 py-1.5 bg-amber-500 text-white text-sm rounded-lg font-medium
-                    hover:bg-amber-600 transition-colors"
-                >
-                  🏆 受賞を一括設定
-                </button>
+                <Button size="sm" icon={<Trophy />} onClick={() => setBulkAction("prize")}>
+                  受賞を一括設定
+                </Button>
               )}
               {permissions.canSetPrize && (
-                <button
-                  onClick={() => setBulkAction("review")}
-                  className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg font-medium
-                    hover:bg-green-700 transition-colors"
-                >
-                  ✅ 審査状況を一括設定
-                </button>
+                <Button size="sm" icon={<ClipboardCheck />} onClick={() => setBulkAction("review")}>
+                  審査状況を一括設定
+                </Button>
               )}
               {permissions.canSetItemArrival && (
-                <button
-                  onClick={() => setBulkAction("arrival")}
-                  className="px-3 py-1.5 bg-sky-600 text-white text-sm rounded-lg font-medium
-                    hover:bg-sky-700 transition-colors"
-                >
-                  📦 商品到着を一括設定
-                </button>
+                <Button size="sm" icon={<Package />} onClick={() => setBulkAction("arrival")}>
+                  商品到着を一括設定
+                </Button>
               )}
             </>
           )}
           {bulkAction === "prize" && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <>
               {PRIZE_LEVELS.map((level) => (
-                <button
+                <Button
                   key={level}
+                  size="sm"
+                  icon={<span aria-hidden="true" className={cn("size-2 rounded-full", PRIZE_DOT_CLASS[level])} />}
                   onClick={() => applyPrize(level)}
                   disabled={applying}
-                  className="px-3 py-1.5 border border-amber-300 bg-white text-sm rounded-lg font-medium
-                    text-amber-700 hover:bg-amber-50 disabled:opacity-50 transition-colors"
                 >
                   {level}
-                </button>
+                </Button>
               ))}
-              <button
-                onClick={() => applyPrize("")}
-                disabled={applying}
-                className="px-3 py-1.5 border border-red-300 bg-white text-sm rounded-lg
-                  text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
-              >
+              <Button size="sm" variant="dangerGhost" onClick={() => applyPrize("")} disabled={applying}>
                 取り消す
-              </button>
-              <button
-                onClick={() => setBulkAction("")}
-                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
-              >
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setBulkAction("")}>
                 キャンセル
-              </button>
-            </div>
+              </Button>
+            </>
           )}
           {bulkAction === "review" && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <>
               {REVIEW_STATUSES.map((rs) => (
-                <button
+                <Button
                   key={rs.value}
+                  size="sm"
+                  icon={<Plus />}
                   onClick={() => applyReview(rs.value, "add")}
                   disabled={applying}
-                  className="px-3 py-1.5 border border-green-300 bg-white text-sm rounded-lg font-medium
-                    text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors"
                 >
-                  + {rs.label}
-                </button>
+                  {rs.label}
+                </Button>
               ))}
-              <span className="text-gray-300">|</span>
+              <BarDivider />
               {REVIEW_STATUSES.map((rs) => (
-                <button
+                <Button
                   key={`rm-${rs.value}`}
+                  size="sm"
+                  icon={<Minus />}
+                  aria-label={`${rs.label}を外す`}
                   onClick={() => applyReview(rs.value, "remove")}
                   disabled={applying}
-                  className="px-3 py-1.5 border border-orange-300 bg-white text-sm rounded-lg font-medium
-                    text-orange-600 hover:bg-orange-50 disabled:opacity-50 transition-colors"
                 >
-                  - {rs.label}
-                </button>
+                  {rs.label}
+                </Button>
               ))}
-              <span className="text-gray-300">|</span>
-              <button
+              <BarDivider />
+              <Button
+                size="sm"
+                variant="dangerGhost"
                 onClick={() => applyReview("", "clear")}
                 disabled={applying}
-                className="px-3 py-1.5 border border-red-300 bg-white text-sm rounded-lg
-                  text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
               >
                 すべて取り消す
-              </button>
-              <button
-                onClick={() => setBulkAction("")}
-                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
-              >
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setBulkAction("")}>
                 キャンセル
-              </button>
-            </div>
+              </Button>
+            </>
           )}
           {bulkAction === "arrival" && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <>
               {ITEM_ARRIVAL_STATUSES.map((rs) => (
-                <button
+                <Button
                   key={rs.value}
+                  size="sm"
+                  icon={<Plus />}
                   onClick={() => applyArrival(rs.value, "add")}
                   disabled={applying}
-                  className="px-3 py-1.5 border border-sky-300 bg-white text-sm rounded-lg font-medium
-                    text-sky-700 hover:bg-sky-50 disabled:opacity-50 transition-colors"
                 >
-                  + {rs.label}
-                </button>
+                  {rs.label}
+                </Button>
               ))}
-              <span className="text-gray-300">|</span>
+              <BarDivider />
               {ITEM_ARRIVAL_STATUSES.map((rs) => (
-                <button
+                <Button
                   key={`rm-${rs.value}`}
+                  size="sm"
+                  icon={<Minus />}
+                  aria-label={`${rs.label}を外す`}
                   onClick={() => applyArrival(rs.value, "remove")}
                   disabled={applying}
-                  className="px-3 py-1.5 border border-orange-300 bg-white text-sm rounded-lg font-medium
-                    text-orange-600 hover:bg-orange-50 disabled:opacity-50 transition-colors"
                 >
-                  - {rs.label}
-                </button>
+                  {rs.label}
+                </Button>
               ))}
-              <span className="text-gray-300">|</span>
-              <button
+              <BarDivider />
+              <Button
+                size="sm"
+                variant="dangerGhost"
                 onClick={() => applyArrival("", "clear")}
                 disabled={applying}
-                className="px-3 py-1.5 border border-red-300 bg-white text-sm rounded-lg
-                  text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
               >
                 すべて取り消す
-              </button>
-              <button
-                onClick={() => setBulkAction("")}
-                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
-              >
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setBulkAction("")}>
                 キャンセル
-              </button>
-            </div>
+              </Button>
+            </>
           )}
-          <button
-            onClick={() => { setSelected(new Set()); setBulkAction(""); }}
-            className="ml-auto text-sm text-gray-500 hover:text-gray-700"
-          >
-            選択解除
-          </button>
-        </div>
+        </BulkActionBar>
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              {canBulkSelect && (
-                <th className="px-3 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    checked={entries.length > 0 && selected.size === entries.length}
-                    onChange={toggleAll}
-                    className="rounded border-gray-300"
-                  />
-                </th>
-              )}
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">写真</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">商品名</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">企業名</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">ご当地</th>
-              {permissions.canSeePrivateInfo && (
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">担当者</th>
-              )}
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">審査状況</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">商品到着</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">回答日</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {entries.map((entry) => (
-              <tr
-                key={entry.id}
-                className={`hover:bg-gray-50 transition-colors ${
-                  selected.has(entry.id) ? "bg-blue-50/50" : ""
-                }`}
-              >
-                {canBulkSelect && (
-                  <td className="px-3 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(entry.id)}
-                      onChange={() => toggle(entry.id)}
-                      className="rounded border-gray-300"
-                    />
-                  </td>
-                )}
-                <td className="px-4 py-3">
-                  {entry.images[0] ? (
-                    <img
-                      src={`/api/images/${entry.images[0].id}`}
-                      alt=""
-                      className="w-12 h-12 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
-                      No img
-                    </div>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {entry.productName}
-                    </Link>
-                    <PrizeBadge prizeLevel={entry.prizeLevel} />
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">{entry.companyName}</td>
-                <td className="px-4 py-3">
-                  {entry.prefecture && (
-                    <span className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs rounded-full">
-                      {entry.prefecture}
-                    </span>
-                  )}
-                </td>
-                {permissions.canSeePrivateInfo && (
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {entry.contactLastName} {entry.contactFirstName}
-                  </td>
-                )}
-                <td className="px-4 py-3">
-                  <ReviewBadge status={entry.reviewStatus} />
-                </td>
-                <td className="px-4 py-3">
-                  <ItemArrivalBadge status={entry.itemArrivalStatus} />
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
-                  {entry.answeredAt.split(" ")[0]}
-                </td>
-              </tr>
-            ))}
-            {entries.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
-                  エントリーデータがありません
-                </td>
-              </tr>
+      <Table>
+        <thead>
+          <tr>
+            {canBulkSelect && (
+              <Th width="w-10" srLabel="選択">
+                <Checkbox
+                  checked={entries.length > 0 && selected.size === entries.length}
+                  onChange={toggleAll}
+                  aria-label="このページの全件を選択"
+                />
+              </Th>
             )}
-          </tbody>
-        </table>
-      </div>
+            <Th width="w-16">写真</Th>
+            <Th>商品名</Th>
+            <Th>企業名</Th>
+            <Th width="w-24">ご当地</Th>
+            {permissions.canSeePrivateInfo && <Th>担当者</Th>}
+            <Th>審査状況</Th>
+            <Th>商品到着</Th>
+            <Th>回答日</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => (
+            <Tr key={entry.id} selected={selected.has(entry.id)}>
+              {canBulkSelect && (
+                <Td>
+                  <Checkbox
+                    checked={selected.has(entry.id)}
+                    onChange={() => toggle(entry.id)}
+                    aria-label={`${entry.productName}を選択`}
+                  />
+                </Td>
+              )}
+              <Td>
+                <Thumb
+                  src={entry.images[0] ? `/api/images/${entry.images[0].id}` : undefined}
+                  alt=""
+                />
+              </Td>
+              <Td primary>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
+                    className={LINK_CLASS}
+                  >
+                    {entry.productName}
+                  </Link>
+                  <PrizeBadge prizeLevel={entry.prizeLevel} />
+                </div>
+              </Td>
+              <Td>{entry.companyName}</Td>
+              <Td>
+                {entry.prefecture && <Badge tone="neutral">{entry.prefecture}</Badge>}
+              </Td>
+              {permissions.canSeePrivateInfo && (
+                <Td>
+                  {entry.contactLastName} {entry.contactFirstName}
+                </Td>
+              )}
+              <Td>
+                <ReviewBadge status={entry.reviewStatus} />
+              </Td>
+              <Td>
+                <ItemArrivalBadge status={entry.itemArrivalStatus} />
+              </Td>
+              <Td subtle nowrap>
+                {entry.answeredAt.split(" ")[0]}
+              </Td>
+            </Tr>
+          ))}
+          {entries.length === 0 && (
+            <EmptyState
+              colSpan={colCount}
+              icon={ClipboardList}
+              title="エントリーデータがありません"
+              description={
+                filtered
+                  ? "検索条件に一致するエントリーがありません。条件を変えるかクリアしてください"
+                  : "エントリーが取り込まれると、ここに表示されます"
+              }
+            />
+          )}
+        </tbody>
+      </Table>
     </>
   );
 }

@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import Link from "next/link";
+import { Alert } from "@/components/ui/alert";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
+import { CheckPill } from "@/components/ui/check-pill";
+import { Field } from "@/components/ui/field";
+import { Input, Textarea } from "@/components/ui/field-controls";
+import { Send } from "@/components/ui/icons";
 
 interface Award {
   id: number;
@@ -30,6 +37,9 @@ function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
   else next.add(value);
   return next;
 }
+
+// ピル群の見出し。CheckPill は label 要素なので Field（label で包む）は使えない
+const GROUP_LABEL = "mb-1.5 block text-sm font-medium text-ink";
 
 export function EntryEmailComposer({ awards }: { awards: Award[] }) {
   const [selectedAwardIds, setSelectedAwardIds] = useState<Set<number>>(new Set());
@@ -61,6 +71,10 @@ export function EntryEmailComposer({ awards }: { awards: Award[] }) {
   const subjectRef = useRef<HTMLInputElement>(null);
   const htmlRef = useRef<HTMLTextAreaElement>(null);
   const lastFocusedRef = useRef<"subject" | "html">("html");
+
+  // 差し込みタグのボタンを label の中に置かないため、ラベルと入力欄は id で結ぶ
+  const subjectId = useId();
+  const htmlId = useId();
 
   useEffect(() => {
     fetch("/api/settings")
@@ -233,194 +247,132 @@ export function EntryEmailComposer({ awards }: { awards: Award[] }) {
     }
   }
 
-  return (
-    <div className="max-w-3xl">
-      <div className="mb-4">
-        <Link href="/entries" className="text-sm text-gray-500 hover:text-gray-700">
-          ← エントリー一覧に戻る
-        </Link>
-      </div>
+  const tagButtons = (
+    <div className="mb-1.5 flex gap-1.5">
+      <Button variant="secondary" size="sm" onClick={() => insertTag("name")}>
+        [お名前]
+      </Button>
+      <Button variant="secondary" size="sm" onClick={() => insertTag("company")}>
+        [会社名]
+      </Button>
+    </div>
+  );
 
+  return (
+    <div className="space-y-4">
       {postalAddress === "" && (
-        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg">
+        <Alert tone="warning">
           フッターの住所が未設定です。
-          <Link href="/settings" className="underline ml-1">
+          <Link href="/settings" className="ml-1 font-medium underline">
             設定画面
           </Link>
           で入力してください。
-        </div>
+        </Alert>
       )}
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-          {error}
-        </div>
-      )}
-      {result && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
-          {result}
-        </div>
-      )}
+      {error && <Alert tone="danger">{error}</Alert>}
+      {result && <Alert tone="success">{result}</Alert>}
 
-      <form onSubmit={handleSend} className="space-y-4">
+      <form onSubmit={handleSend} className="space-y-5">
         {/* Segment filter */}
-        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-4">
-          <div>
-            <span className="text-sm font-medium text-gray-700 block mb-2">
-              年度（必須・複数選択可）
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {awards.map((award) => (
-                <label
-                  key={award.id}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-sm cursor-pointer transition-colors ${
-                    selectedAwardIds.has(award.id)
-                      ? "bg-blue-50 border-blue-300 text-blue-700"
-                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
+        <Card>
+          <div className="space-y-5">
+            <div>
+              <span className={GROUP_LABEL}>年度（必須・複数選択可）</span>
+              <div className="flex flex-wrap gap-2">
+                {awards.map((award) => (
+                  <CheckPill
+                    key={award.id}
                     checked={selectedAwardIds.has(award.id)}
                     onChange={() => setSelectedAwardIds((s) => toggleInSet(s, award.id))}
-                    className="rounded border-gray-300"
-                  />
-                  {award.year}年度
-                </label>
-              ))}
-              {awards.length === 0 && (
-                <span className="text-sm text-gray-400">年度（Award）が登録されていません</span>
-              )}
+                  >
+                    {award.year}年度
+                  </CheckPill>
+                ))}
+                {awards.length === 0 && (
+                  <span className="text-sm text-ink-subtle">年度（Award）が登録されていません</span>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <span className="text-sm font-medium text-gray-700 block mb-2">
-              審査状況（未選択＝絞り込まない）
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {REVIEW_STATUS_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value || "none"}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-sm cursor-pointer transition-colors ${
-                    selectedReviewStatuses.has(opt.value)
-                      ? "bg-green-50 border-green-300 text-green-700"
-                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
+            <div>
+              <span className={GROUP_LABEL}>審査状況（未選択＝絞り込まない）</span>
+              <div className="flex flex-wrap gap-2">
+                {REVIEW_STATUS_OPTIONS.map((opt) => (
+                  <CheckPill
+                    key={opt.value || "none"}
                     checked={selectedReviewStatuses.has(opt.value)}
                     onChange={() => setSelectedReviewStatuses((s) => toggleInSet(s, opt.value))}
-                    className="rounded border-gray-300"
-                  />
-                  {opt.label}
-                </label>
-              ))}
+                  >
+                    {opt.label}
+                  </CheckPill>
+                ))}
+              </div>
+              <p className="mt-1.5 text-caption leading-5 text-ink-subtle">
+                各項目は「ちょうどその状況」のみに完全一致します（複数選択で対象を広げられます。両方の審査を通過済みなど複数状況が併記されているエントリーはいずれの単一選択にも一致しません）。
+              </p>
             </div>
-            <p className="mt-1 text-xs text-gray-400">
-              各項目は「ちょうどその状況」のみに完全一致します（複数選択で対象を広げられます。両方の審査を通過済みなど複数状況が併記されているエントリーはいずれの単一選択にも一致しません）。
-            </p>
-          </div>
 
-          <div>
-            <span className="text-sm font-medium text-gray-700 block mb-2">
-              受賞枠（未選択＝絞り込まない）
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {PRIZE_LEVEL_OPTIONS.map((opt) => (
-                <label
-                  key={opt.value || "none"}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-sm cursor-pointer transition-colors ${
-                    selectedPrizeLevels.has(opt.value)
-                      ? "bg-amber-50 border-amber-300 text-amber-700"
-                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
+            <div>
+              <span className={GROUP_LABEL}>受賞枠（未選択＝絞り込まない）</span>
+              <div className="flex flex-wrap gap-2">
+                {PRIZE_LEVEL_OPTIONS.map((opt) => (
+                  <CheckPill
+                    key={opt.value || "none"}
                     checked={selectedPrizeLevels.has(opt.value)}
                     onChange={() => setSelectedPrizeLevels((s) => toggleInSet(s, opt.value))}
-                    className="rounded border-gray-300"
-                  />
-                  {opt.label}
-                </label>
-              ))}
+                  >
+                    {opt.label}
+                  </CheckPill>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="pt-2 border-t border-gray-200 flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">対象人数:</span>
-            {selectedAwardIds.size === 0 ? (
-              <span className="text-sm text-gray-400">年度を選択してください</span>
-            ) : countLoading ? (
-              <span className="text-sm text-gray-400">読み込み中...</span>
-            ) : countError ? (
-              <span className="text-sm text-red-600">{countError}</span>
-            ) : (
-              <span className="text-sm font-bold text-blue-700">{count}件</span>
+            <div className="border-t border-line pt-4">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium text-ink">対象人数:</span>
+                {selectedAwardIds.size === 0 ? (
+                  <span className="text-ink-subtle">年度を選択してください</span>
+                ) : countLoading ? (
+                  <span className="text-ink-subtle">読み込み中...</span>
+                ) : countError ? (
+                  <span className="text-danger">{countError}</span>
+                ) : (
+                  <span className="font-semibold tabular-nums text-accent">{count}件</span>
+                )}
+              </div>
+              <div className="mt-2">
+                <Alert tone="info" compact>
+                  （配信停止・重複除外前の件数目安。実送信時にさらに減る場合があります）
+                </Alert>
+              </div>
+            </div>
+
+            {hasRejected && (
+              <Alert tone="danger" compact>
+                「選外」を含む対象への配信です。文面にご配慮ください。
+              </Alert>
             )}
-            <span className="text-xs text-gray-400">
-              （配信停止・重複除外前の件数目安。実送信時にさらに減る場合があります）
-            </span>
           </div>
+        </Card>
 
-          {hasRejected && (
-            <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
-              「選外」を含む対象への配信です。文面にご配慮ください。
-            </div>
-          )}
-        </div>
-
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">件名</span>
-          <div className="flex gap-1 mt-1 mb-1">
-            <button
-              type="button"
-              onClick={() => insertTag("name")}
-              className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-            >
-              [お名前]
-            </button>
-            <button
-              type="button"
-              onClick={() => insertTag("company")}
-              className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-            >
-              [会社名]
-            </button>
-          </div>
-          <input
+        <Field label="件名" htmlFor={subjectId}>
+          {tagButtons}
+          <Input
+            id={subjectId}
             ref={subjectRef}
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             onFocus={() => (lastFocusedRef.current = "subject")}
             required
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-              focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        </label>
+        </Field>
 
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">本文（改行OK・HTML可）</span>
-          <div className="flex gap-1 mt-1 mb-1">
-            <button
-              type="button"
-              onClick={() => insertTag("name")}
-              className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-            >
-              [お名前]
-            </button>
-            <button
-              type="button"
-              onClick={() => insertTag("company")}
-              className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-            >
-              [会社名]
-            </button>
-          </div>
-          <textarea
+        <Field label="本文（改行OK・HTML可）" htmlFor={htmlId}>
+          {tagButtons}
+          <Textarea
+            id={htmlId}
             ref={htmlRef}
             value={html}
             onChange={(e) => setHtml(e.target.value)}
@@ -428,100 +380,107 @@ export function EntryEmailComposer({ awards }: { awards: Award[] }) {
             required
             rows={10}
             placeholder="本文を入力してください。{{name}} / {{company}} / {{email}} で宛先ごとに差し込みできます。{{name|ご担当者様}} のようにフォールバック文字列も指定できます。"
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono
-              focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <p className="mt-1 text-xs text-gray-400">
-            改行はそのまま反映されます（Enterで段落を分けられます）。配信停止リンクと事務局情報は自動で本文末尾に付与されます。
-          </p>
-        </label>
+          <div className="mt-2">
+            <Alert tone="info">
+              改行はそのまま反映されます（Enterで段落を分けられます）。配信停止リンクと事務局情報は自動で本文末尾に付与されます。
+            </Alert>
+          </div>
+        </Field>
 
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">名前が空のときの初期値</span>
-          <input
-            type="text"
-            value={defaultName}
-            onChange={(e) => setDefaultName(e.target.value)}
-            className="mt-1 block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm
-              focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="mt-1 text-xs text-gray-400">
-            {"{{name}}"} に値がなく、フォールバック指定もない場合に使われます。
-          </p>
-        </label>
+        <Field
+          label="名前が空のときの初期値"
+          hint={<>{"{{name}}"} に値がなく、フォールバック指定もない場合に使われます。</>}
+        >
+          <div className="max-w-xs">
+            <Input
+              type="text"
+              value={defaultName}
+              onChange={(e) => setDefaultName(e.target.value)}
+            />
+          </div>
+        </Field>
 
         {/* Preview */}
-        <div className="p-3 border border-gray-200 rounded-lg space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">プレビュー</span>
-            <button
-              type="button"
+        <Card padding="sm">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>プレビュー</CardTitle>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handlePreview}
               disabled={previewLoading || !subject || !html}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700
-                hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              loading={previewLoading}
             >
               {previewLoading ? "読み込み中..." : "プレビュー表示"}
-            </button>
+            </Button>
           </div>
-          {previewError && <p className="text-sm text-red-600">{previewError}</p>}
+          {previewError && (
+            <div className="mt-3">
+              <Alert tone="danger">{previewError}</Alert>
+            </div>
+          )}
           {previewData && (
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 text-sm text-gray-700">
+            <div className="mt-3 overflow-hidden rounded-md border border-line">
+              <div className="border-b border-line bg-surface-muted/60 px-3 py-2 text-sm text-ink">
                 件名: {previewData.subject}
               </div>
               <iframe
                 srcDoc={previewData.html}
                 sandbox=""
-                className="w-full h-64 bg-white"
+                className="h-64 w-full bg-surface"
                 title="メールプレビュー"
               />
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Test send */}
-        <div className="p-3 border border-gray-200 rounded-lg space-y-2">
-          <span className="text-sm font-medium text-gray-700 block">テスト送信</span>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              value={testEmail}
-              onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="test@example.com"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="button"
+        <Card padding="sm">
+          <CardTitle>テスト送信</CardTitle>
+          <div className="mt-3 flex gap-2">
+            <div className="flex-1">
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="test@example.com"
+              />
+            </div>
+            <Button
+              variant="secondary"
               onClick={handleTestSend}
               disabled={testSending || !testEmail || !subject || !html}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-700
-                hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              loading={testSending}
             >
               {testSending ? "送信中..." : "テスト送信"}
-            </button>
+            </Button>
           </div>
-          {testError && <p className="text-sm text-red-600">{testError}</p>}
-          {testResult && <p className="text-sm text-green-600">{testResult}</p>}
-        </div>
+          {testError && (
+            <div className="mt-3">
+              <Alert tone="danger">{testError}</Alert>
+            </div>
+          )}
+          {testResult && (
+            <div className="mt-3">
+              <Alert tone="success">{testResult}</Alert>
+            </div>
+          )}
+        </Card>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Link
-            href="/entries"
-            className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg
-              hover:bg-gray-50 transition-colors"
-          >
+          <ButtonLink variant="secondary" href="/entries">
             戻る
-          </Link>
-          <button
+          </ButtonLink>
+          <Button
+            variant="primary"
             type="submit"
             disabled={sending || !canSend}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg font-medium
-              hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            loading={sending}
+            icon={<Send />}
           >
             {sending ? "送信中..." : "送信する"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

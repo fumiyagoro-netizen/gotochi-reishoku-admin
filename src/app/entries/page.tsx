@@ -1,11 +1,18 @@
 import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
-import Link from "next/link";
 import { getCurrentRole, getPermissions } from "@/lib/role";
 import { stripEntryPrivateFields } from "@/lib/entry-privacy";
 import { EntryTable } from "@/components/entry-table";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Toolbar, SearchInput } from "@/components/ui/toolbar";
+import { Select } from "@/components/ui/field-controls";
+import { Pagination } from "@/components/ui/pagination";
+import { Download, Mail, Search, Upload, X } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = { title: "エントリー一覧" };
 
 interface Props {
   searchParams: Promise<{
@@ -81,119 +88,95 @@ export default async function EntriesPage({ searchParams }: Props) {
     ? entries
     : entries.map(stripEntryPrivateFields);
 
-  return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          エントリー一覧
-          <span className="text-base font-normal text-gray-500 ml-3">
-            {total}件
-          </span>
-        </h2>
-        <div className="flex items-center gap-2">
-          {perms.canSendEmail && (
-            <Link
-              href="/entries/email"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-                hover:bg-gray-50 transition-colors"
-            >
-              ✉️ 応募者へメール配信
-            </Link>
-          )}
-          {total > 0 && perms.canDownload && (
-            <a
-              href={`/api/entries/export${year ? `?year=${year}` : ""}`}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-                hover:bg-gray-50 transition-colors"
-            >
-              📥 Excelダウンロード
-            </a>
-          )}
-          {/* Sits next to the download it pairs with: /upload only ever imports
-              entries, and its own bulk-update instructions start with
-              "エントリー一覧からExcelをダウンロード". Mirrors how the contacts
-              CSV import lives under the contacts screen rather than in the nav. */}
-          {perms.canUpload && (
-            <Link
-              href="/upload"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-                hover:bg-gray-50 transition-colors"
-            >
-              📁 CSVアップロード
-            </Link>
-          )}
-        </div>
-      </div>
+  const filtered = Boolean(q || category);
 
-      {/* Search & Filter */}
-      <form className="flex gap-3 mb-6">
-        {year && <input type="hidden" name="year" value={year} />}
-        <input
-          type="text"
-          name="q"
-          defaultValue={q}
-          placeholder="企業名・商品名・担当者名で検索..."
-          className="flex-1 max-w-md px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <select
-          name="category"
-          defaultValue={category}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
+  return (
+    <PageContainer>
+      <PageHeader
+        title="エントリー一覧"
+        count={total}
+        actions={
+          <>
+            {perms.canSendEmail && (
+              <ButtonLink href="/entries/email" icon={<Mail />}>
+                応募者へメール配信
+              </ButtonLink>
+            )}
+            {total > 0 && perms.canDownload && (
+              <ButtonLink
+                href={`/api/entries/export${year ? `?year=${year}` : ""}`}
+                external
+                icon={<Download />}
+              >
+                Excelダウンロード
+              </ButtonLink>
+            )}
+            {/* Sits next to the download it pairs with: /upload only ever imports
+                entries, and its own bulk-update instructions start with
+                "エントリー一覧からExcelをダウンロード". Mirrors how the contacts
+                CSV import lives under the contacts screen rather than in the nav. */}
+            {perms.canUpload && (
+              <ButtonLink href="/upload" variant="primary" icon={<Upload />}>
+                CSVアップロード
+              </ButtonLink>
+            )}
+          </>
+        }
+      >
+        {/* Search & Filter */}
+        <Toolbar
+          applied={filtered}
+          clear={
+            <ButtonLink
+              href={`/entries${year ? `?year=${year}` : ""}`}
+              variant="ghost"
+              icon={<X />}
+            >
+              クリア
+            </ButtonLink>
+          }
         >
-          <option value="">全カテゴリ</option>
-          {categories.map((cat) => (
-            <option key={cat.productCategory} value={cat.productCategory}>
-              {cat.productCategory || "未分類"} ({cat._count.id})
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium
-            hover:bg-blue-700 transition-colors"
-        >
-          検索
-        </button>
-        {(q || category) && (
-          <Link
-            href={`/entries${year ? `?year=${year}` : ""}`}
-            className="px-4 py-2.5 text-gray-600 border border-gray-300 rounded-lg text-sm
-              hover:bg-gray-50 transition-colors"
-          >
-            クリア
-          </Link>
-        )}
-      </form>
+          <form className="flex flex-wrap items-center gap-2">
+            {year && <input type="hidden" name="year" value={year} />}
+            <SearchInput
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="企業名・商品名・担当者名で検索..."
+              active={Boolean(q)}
+            />
+            <div className="w-44">
+              <Select
+                name="category"
+                defaultValue={category}
+                data-active={category ? "true" : undefined}
+              >
+                <option value="">全カテゴリ</option>
+                {categories.map((cat) => (
+                  <option key={cat.productCategory} value={cat.productCategory}>
+                    {cat.productCategory || "未分類"} ({cat._count.id})
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <Button type="submit" icon={<Search />}>
+              検索
+            </Button>
+          </form>
+        </Toolbar>
+      </PageHeader>
 
       {/* Entry Table with checkboxes */}
-      <EntryTable entries={visibleEntries} year={year} />
+      <EntryTable entries={visibleEntries} year={year} filtered={filtered} />
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {page > 1 && (
-            <Link
-              href={`/entries?q=${q}&category=${category}&page=${page - 1}${yearParam}`}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              前へ
-            </Link>
-          )}
-          <span className="px-3 py-2 text-sm text-gray-600">
-            {page} / {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link
-              href={`/entries?q=${q}&category=${category}&page=${page + 1}${yearParam}`}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              次へ
-            </Link>
-          )}
-        </div>
-      )}
-    </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={PAGE_SIZE}
+        hrefFor={(n) => `/entries?q=${q}&category=${category}&page=${n}${yearParam}`}
+      />
+    </PageContainer>
   );
 }

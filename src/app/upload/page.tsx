@@ -1,12 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useRole } from "@/lib/role-context";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, NoPermission } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
+import { FileInput, Input } from "@/components/ui/field-controls";
+import { Upload } from "@/components/ui/icons";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 
 type Mode = "create" | "update";
+
+const MODE_OPTIONS: { value: Mode; label: string }[] = [
+  { value: "create", label: "新規登録" },
+  { value: "update", label: "一括更新" },
+];
 
 function UploadForm() {
   const [uploading, setUploading] = useState(false);
@@ -22,11 +34,7 @@ function UploadForm() {
   const { permissions } = useRole();
 
   if (!permissions.canUpload) {
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-        <p className="text-gray-500">アップロード権限がありません</p>
-      </div>
-    );
+    return <NoPermission message="アップロード権限がありません" />;
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -62,114 +70,72 @@ function UploadForm() {
   }
 
   return (
-    <div className="max-w-xl">
-      {/* Mode Toggle */}
-      <div className="flex gap-2 mb-6">
-        <button
-          type="button"
-          onClick={() => { setMode("create"); setResult(null); }}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            mode === "create"
-              ? "bg-blue-600 text-white"
-              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          新規登録
-        </button>
-        <button
-          type="button"
-          onClick={() => { setMode("update"); setResult(null); }}
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-            mode === "update"
-              ? "bg-blue-600 text-white"
-              : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          一括更新
-        </button>
-      </div>
+    <div className="space-y-5">
+      {/* Mode Toggle（切替のたびに result を消す既存挙動は onChange にそのまま） */}
+      <SegmentedControl
+        value={mode}
+        onChange={(next) => { setMode(next); setResult(null); }}
+        options={MODE_OPTIONS}
+      />
 
       {mode === "update" && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-          <p className="text-sm text-amber-800 font-medium mb-1">一括更新モード</p>
-          <p className="text-xs text-amber-700">
+        <Alert tone="warning" title="一括更新モード">
+          <p>
             受付番号で照合し、CSVに値が入っている項目のみ更新します。空欄の項目は既存データを維持します。
           </p>
-          <p className="text-xs text-amber-700 mt-1">
+          <p className="mt-1">
             手順: エントリー一覧からExcelをダウンロード → 編集 → CSVで保存 → アップロード
           </p>
-        </div>
+        </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-8">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              CSVファイルを選択
-            </span>
-            <input
-              type="file"
-              name="csv"
-              accept=".csv"
-              className="mt-2 block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:text-sm file:font-medium
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100
-                cursor-pointer"
-            />
-          </label>
-          <p className="mt-2 text-xs text-gray-400">
-            エントリーデータのCSVファイルをアップロードしてください
-          </p>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <Card>
+          <div className="space-y-5">
+            {/* FileInput 自体が label なので、外側は htmlFor で結ぶ（label の入れ子を避ける） */}
+            <Field
+              label="CSVファイルを選択"
+              htmlFor="upload-csv"
+              hint="エントリーデータのCSVファイルをアップロードしてください"
+            >
+              <FileInput id="upload-csv" name="csv" accept=".csv" hint=".csv" />
+            </Field>
 
-          {mode === "create" && (
-            <>
-              <label className="block mt-4">
-                <span className="text-sm font-medium text-gray-700">
-                  アップロード先の年度
-                </span>
-                <input
+            {mode === "create" && (
+              <Field
+                label="アップロード先の年度"
+                hint="新しい年度を入力すると自動的に作成されます"
+              >
+                <Input
                   type="number"
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
                   min="2020"
                   max="2099"
-                  className="mt-2 block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-              </label>
-              <p className="mt-1 text-xs text-gray-400">
-                新しい年度を入力すると自動的に作成されます
-              </p>
-            </>
-          )}
-        </div>
+              </Field>
+            )}
+          </div>
+        </Card>
 
-        <button
-          type="submit"
-          disabled={uploading}
-          className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium
-            hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {uploading
-            ? (mode === "update" ? "更新中..." : "アップロード中...")
-            : (mode === "update" ? "一括更新する" : "アップロード")
-          }
-        </button>
+        <div className="flex justify-end">
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={uploading}
+            loading={uploading}
+            icon={<Upload />}
+          >
+            {uploading
+              ? (mode === "update" ? "更新中..." : "アップロード中...")
+              : (mode === "update" ? "一括更新する" : "アップロード")
+            }
+          </Button>
+        </div>
       </form>
 
       {result && (
-        <div
-          className={`mt-6 p-4 rounded-lg ${
-            result.success
-              ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
-          }`}
-        >
-          {result.message}
-        </div>
+        <Alert tone={result.success ? "success" : "danger"}>{result.message}</Alert>
       )}
     </div>
   );
@@ -177,20 +143,13 @@ function UploadForm() {
 
 export default function UploadPage() {
   return (
-    <div className="p-8">
+    <PageContainer width="form">
       {/* Reached from the entries list rather than the sidebar, so it needs its
           own way back — same pattern as the contact lists screen. */}
-      <div className="mb-6">
-        <Link href="/entries" className="text-sm text-gray-500 hover:text-gray-700">
-          ← エントリー一覧
-        </Link>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-8">
-        CSVアップロード
-      </h2>
+      <PageHeader title="CSVアップロード" backHref="/entries" backLabel="エントリー一覧" />
       <Suspense>
         <UploadForm />
       </Suspense>
-    </div>
+    </PageContainer>
   );
 }

@@ -5,6 +5,9 @@ import { getCachedCurrentUser } from "@/lib/auth";
 import { maskEntryPrivateFields } from "@/lib/entry-privacy";
 import { EntryDetail } from "@/components/entry-detail";
 
+// ブラウザタブの名前（layout の template で「| ご当地冷凍食品大賞」が付く）
+export const metadata = { title: "エントリー詳細" };
+
 interface Props {
   params: Promise<{ id: string }>;
 }

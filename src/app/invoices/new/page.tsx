@@ -1,9 +1,10 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { InvoiceForm } from "@/components/invoice-form";
 import { useRole } from "@/lib/role-context";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { NoPermission } from "@/components/ui/card";
 
 export default function NewInvoicePage() {
   const { permissions } = useRole();
@@ -13,27 +14,20 @@ export default function NewInvoicePage() {
   // roles that must not reach it.
   if (!permissions.canManageInvoices) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer width="form">
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <Link href="/invoices" className="text-sm text-gray-500 hover:text-gray-700">
-          ← 請求書一覧
-        </Link>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">請求書作成</h2>
+    <PageContainer width="form">
+      <PageHeader title="請求書作成" backHref="/invoices" backLabel="請求書一覧" />
       {/* InvoiceForm reads ?year= via useSearchParams, which Next.js
           requires a Suspense boundary for. */}
       <Suspense>
         <InvoiceForm />
       </Suspense>
-    </div>
+    </PageContainer>
   );
 }

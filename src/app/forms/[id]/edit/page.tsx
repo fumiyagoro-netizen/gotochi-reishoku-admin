@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import Link from "next/link";
 import { FormBuilder, type FormData } from "@/components/form-builder";
 import { useRole } from "@/lib/role-context";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { NoPermission } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
+import { CardSkeleton } from "@/components/ui/skeleton";
 
 export default function EditFormPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -44,30 +47,27 @@ export default function EditFormPage({ params }: { params: Promise<{ id: string 
   // builder for roles that must not reach it.
   if (!permissions.canManageForms) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer width="form">
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <Link href="/forms" className="text-sm text-gray-500 hover:text-gray-700">
-          ← フォーム一覧
-        </Link>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">フォーム編集</h2>
+    <PageContainer width="form">
+      <PageHeader title="フォーム編集" backHref="/forms" backLabel="フォーム一覧" />
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        // 基本情報カード＋項目カードの形で待つ（文言「読み込み中...」は sr-only で残る）
+        <div className="space-y-6">
+          <CardSkeleton lines={6} />
+          <CardSkeleton lines={3} />
+        </div>
       ) : error ? (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">{error}</div>
+        <Alert tone="danger">{error}</Alert>
       ) : form ? (
         <FormBuilder initial={form} />
       ) : null}
-    </div>
+    </PageContainer>
   );
 }

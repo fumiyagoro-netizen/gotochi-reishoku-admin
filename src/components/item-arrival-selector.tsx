@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ITEM_ARRIVAL_STATUSES,
-  ITEM_ARRIVAL_COLORS,
+  ITEM_ARRIVAL_PILL_CLASS,
   parseItemArrivalStatuses,
 } from "@/lib/item-arrival-shared";
+import { TogglePill } from "@/components/ui/toggle-pill";
 
 // Same toggle-button feel as ReviewStatusSelector (review-status-selector.tsx),
 // but a separate component rather than a generalization of it: that
@@ -22,6 +23,8 @@ export function ItemArrivalSelector({
 }) {
   const [statuses, setStatuses] = useState<string[]>(parseItemArrivalStatuses(currentStatus));
   const [saving, setSaving] = useState(false);
+  // 押した1つだけスピナーを出すために覚えておく（送信ロジックには関与しない）
+  const [pendingValue, setPendingValue] = useState<string | null>(null);
   const router = useRouter();
 
   async function toggleStatus(value: string) {
@@ -32,6 +35,7 @@ export function ItemArrivalSelector({
       current.add(value);
     }
     const newStatus = Array.from(current).join(",");
+    setPendingValue(value);
     setSaving(true);
     try {
       const res = await fetch(`/api/entries/${entryId}`, {
@@ -52,48 +56,25 @@ export function ItemArrivalSelector({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {ITEM_ARRIVAL_STATUSES.map((rs) => {
         const isActive = statuses.includes(rs.value);
-        const colors = ITEM_ARRIVAL_COLORS[rs.value];
         return (
-          <button
+          <TogglePill
             key={rs.value}
-            onClick={() => toggleStatus(rs.value)}
+            pressed={isActive}
+            pending={saving && pendingValue === rs.value}
             disabled={saving}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-full border transition-colors disabled:opacity-50 ${
-              isActive
-                ? `${colors.bg} ${colors.text} ${colors.border}`
-                : "border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-600"
-            }`}
+            toneClassName={ITEM_ARRIVAL_PILL_CLASS[rs.value]}
+            onClick={() => toggleStatus(rs.value)}
           >
-            {rs.icon} {rs.label}
-            {isActive && <span className="ml-1">✓</span>}
-          </button>
+            {rs.label}
+          </TogglePill>
         );
       })}
     </div>
   );
 }
 
-export function ItemArrivalBadge({ status }: { status: string }) {
-  const active = parseItemArrivalStatuses(status);
-  if (active.length === 0) return null;
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {active.map((s) => {
-        const rs = ITEM_ARRIVAL_STATUSES.find((r) => r.value === s);
-        if (!rs) return null;
-        const colors = ITEM_ARRIVAL_COLORS[rs.value];
-        return (
-          <span
-            key={s}
-            className={`inline-flex items-center px-2.5 py-0.5 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
-          >
-            {rs.icon} {rs.label}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
+// 本体は ui/badge.tsx に移った。import 先（reviews / entry-detail / entry-table）を変えずに済むよう再 export する
+export { ItemArrivalBadge } from "@/components/ui/badge";

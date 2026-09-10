@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatYen } from "@/lib/invoice-shared";
+import { Modal } from "@/components/ui/modal";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
+import { Input, Textarea } from "@/components/ui/field-controls";
+import { Send } from "@/components/ui/icons";
 
 interface FooterSettings {
   senderName: string;
@@ -212,159 +219,140 @@ export function InvoiceSendModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">請求書を送信</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          {invoiceNo}（{recipientName} 様 / {formatYen(totalAmount)}）のPDFを添付して送信します
-        </p>
-
-        {sentAt && (
-          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg">
-            この請求書は {formatJstDateTime(sentAt)} に {sentTo} へ送信済みです。今回の操作は再送になります。
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
-            {error}
-          </div>
-        )}
-        {result && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
-            {result}
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">宛先</span>
-            <input
-              type="email"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="mt-1 text-xs text-gray-400 block">
-              既定はエントリー登録時のメールアドレスです。経理担当者など別アドレス宛の場合はここで変更してください。
+    // 入力途中の本文を失わないよう、背景クリック・Esc では閉じない（既存どおり）
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      title="請求書を送信"
+      description={`${invoiceNo}（${recipientName} 様 / ${formatYen(totalAmount)}）のPDFを添付して送信します`}
+      footerStart={
+        <Button variant="secondary" onClick={onClose}>
+          閉じる
+        </Button>
+      }
+      footer={
+        confirmingSend ? (
+          <div
+            role="group"
+            className="inline-flex flex-wrap items-center justify-end gap-2 rounded-md border border-accent-line bg-accent-soft px-3 py-1.5 text-sm text-ink"
+          >
+            <span>
+              {recipientName} 様（{to}）
+              {ccRecipients.length > 0 ? `／CC: ${ccRecipients.join("、")}` : ""}
+              に{sentAt ? "再送" : "送信"}します。よろしいですか？
             </span>
-          </label>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Send />}
+              onClick={handleSend}
+              disabled={sending}
+              loading={sending}
+            >
+              {sending ? "送信中..." : sentAt ? "再送する" : "送信する"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setConfirmingSend(false)}
+              disabled={sending}
+            >
+              キャンセル
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="primary"
+            icon={<Send />}
+            onClick={() => setConfirmingSend(true)}
+            disabled={!canSend}
+          >
+            {sentAt ? "再送する" : "送信する"}
+          </Button>
+        )
+      }
+    >
+      {sentAt && (
+        <Alert tone="warning">
+          この請求書は {formatJstDateTime(sentAt)} に {sentTo} へ送信済みです。今回の操作は再送になります。
+        </Alert>
+      )}
 
-          {ccRecipients.length > 0 && (
-            <div className="text-sm">
-              <span className="font-medium text-gray-700">CC（代表者）</span>
-              <p className="mt-1 text-gray-700">{ccRecipients.join("、")}</p>
-              <span className="mt-1 text-xs text-gray-400 block">
-                送付先にも表示されます。ユーザー管理で代表者を変更すると、ここも変わります。テスト送信では送られません。
-              </span>
-            </div>
-          )}
+      {error && <Alert tone="danger">{error}</Alert>}
+      {result && <Alert tone="success">{result}</Alert>}
 
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">件名</span>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
+      <Field
+        label="宛先"
+        hint="既定はエントリー登録時のメールアドレスです。経理担当者など別アドレス宛の場合はここで変更してください。"
+      >
+        <Input
+          type="email"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+        />
+      </Field>
 
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">本文</span>
-            <textarea
-              value={bodyText}
-              onChange={(e) => {
-                bodyEditedRef.current = true;
-                setBodyText(e.target.value);
-              }}
-              rows={12}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="mt-1 text-xs text-gray-400 block">
-              請求書PDF（{invoiceNo}）が添付されます。配信停止リンクは付きません（取引に必要な連絡のため）。
-            </span>
-          </label>
+      {ccRecipients.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-ink">CC（代表者）</p>
+          <p className="text-sm text-ink">{ccRecipients.join("、")}</p>
+          <p className="mt-1.5 text-caption leading-5 text-ink-subtle">
+            送付先にも表示されます。ユーザー管理で代表者を変更すると、ここも変わります。テスト送信では送られません。
+          </p>
+        </div>
+      )}
 
-          {/* Test send */}
-          <div className="p-3 border border-gray-200 rounded-lg space-y-2">
-            <span className="text-sm font-medium text-gray-700 block">
-              テスト送信（自分宛に送って内容を確認できます）
-            </span>
-            <div className="flex gap-2">
-              <input
+      <Field label="件名">
+        <Input
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+        />
+      </Field>
+
+      <Field
+        label="本文"
+        hint={`請求書PDF（${invoiceNo}）が添付されます。配信停止リンクは付きません（取引に必要な連絡のため）。`}
+      >
+        <Textarea
+          value={bodyText}
+          onChange={(e) => {
+            bodyEditedRef.current = true;
+            setBodyText(e.target.value);
+          }}
+          rows={12}
+        />
+      </Field>
+
+      {/* Test send */}
+      <Card padding="sm">
+        <div className="space-y-2">
+          <span className="block text-sm font-medium text-ink">
+            テスト送信（自分宛に送って内容を確認できます）
+          </span>
+          <div className="flex gap-2">
+            <div className="flex-1 min-w-0">
+              <Input
                 type="email"
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
                 placeholder="test@example.com"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                type="button"
-                onClick={handleTestSend}
-                disabled={testSending || !testEmail.includes("@") || !subject.trim() || !bodyText.trim()}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-700
-                  hover:bg-gray-50 disabled:opacity-50 transition-colors"
-              >
-                {testSending ? "送信中..." : "テスト送信"}
-              </button>
             </div>
-            {testError && <p className="text-sm text-red-600">{testError}</p>}
-            {testResult && <p className="text-sm text-green-600">{testResult}</p>}
-          </div>
-
-          <div className="flex items-center justify-between gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+            <Button
+              variant="secondary"
+              onClick={handleTestSend}
+              disabled={testSending || !testEmail.includes("@") || !subject.trim() || !bodyText.trim()}
+              loading={testSending}
             >
-              閉じる
-            </button>
-
-            {confirmingSend ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-blue-900">
-                  {recipientName} 様（{to}）
-                  {ccRecipients.length > 0 ? `／CC: ${ccRecipients.join("、")}` : ""}
-                  に{sentAt ? "再送" : "送信"}します。よろしいですか？
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSend}
-                  disabled={sending}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-                    hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  {sending ? "送信中..." : sentAt ? "再送する" : "送信する"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingSend(false)}
-                  disabled={sending}
-                  className="px-3 py-2 border border-gray-300 text-sm text-gray-600 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                >
-                  キャンセル
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmingSend(true)}
-                disabled={!canSend}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-                  hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {sentAt ? "再送する" : "送信する"}
-              </button>
-            )}
+              {testSending ? "送信中..." : "テスト送信"}
+            </Button>
           </div>
+          {testError && <Alert tone="danger" compact>{testError}</Alert>}
+          {testResult && <Alert tone="success" compact>{testResult}</Alert>}
         </div>
-      </div>
-    </div>
+      </Card>
+    </Modal>
   );
 }

@@ -2,8 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRole } from "@/lib/role-context";
-import { ROLE_LABELS } from "@/lib/role-shared";
-import type { Role } from "@/lib/role-shared";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { NoPermission } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { RoleBadge } from "@/components/ui/role-badge";
+import { Alert } from "@/components/ui/alert";
+import { Table, Th, Td, Tr } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { Modal } from "@/components/ui/modal";
+import { Field } from "@/components/ui/field";
+import { Input, Select, Checkbox } from "@/components/ui/field-controls";
+import { Plus, Users } from "@/components/ui/icons";
 
 interface User {
   id: number;
@@ -34,83 +45,79 @@ export default function UsersPage() {
 
   if (role !== "admin") {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">ユーザー管理の権限がありません</p>
-        </div>
-      </div>
+      <PageContainer>
+        <NoPermission message="ユーザー管理の権限がありません" />
+      </PageContainer>
     );
   }
 
-  const roleColors: Record<string, string> = {
-    admin: "bg-red-100 text-red-700",
-    editor: "bg-blue-100 text-blue-700",
-    viewer: "bg-gray-100 text-gray-600",
-    judge: "bg-green-100 text-green-700",
-  };
-
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          ユーザー管理
-          <span className="text-base font-normal text-gray-500 ml-3">
-            {users.length}名
-          </span>
-        </h2>
-        <button
-          onClick={() => { setEditingUser(null); setShowForm(true); }}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-            hover:bg-blue-700 transition-colors"
-        >
-          + ユーザー追加
-        </button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="ユーザー管理"
+        count={users.length}
+        countUnit="名"
+        actions={
+          <Button
+            variant="primary"
+            icon={<Plus />}
+            onClick={() => { setEditingUser(null); setShowForm(true); }}
+          >
+            ユーザー追加
+          </Button>
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        <TableSkeleton cols={5} />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">名前</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">メールアドレス</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">権限</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">状態</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{user.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full ${roleColors[user.role] || roleColors.viewer}`}>
-                      {ROLE_LABELS[user.role as Role] || user.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
-                      user.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                    }`}>
-                      {user.isActive ? "有効" : "無効"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => { setEditingUser(user); setShowForm(true); }}
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      編集
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <thead>
+            <tr>
+              <Th>名前</Th>
+              <Th>メールアドレス</Th>
+              <Th>権限</Th>
+              <Th>状態</Th>
+              <Th>操作</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <Tr key={user.id}>
+                <Td primary>{user.name}</Td>
+                <Td>{user.email}</Td>
+                <Td>
+                  {/* 役割→色は role-badge.tsx に一元化（代表者は紫、未知値は viewer 色＋生文字列） */}
+                  <RoleBadge role={user.role} />
+                </Td>
+                <Td>
+                  {user.isActive ? (
+                    <Badge tone="success">有効</Badge>
+                  ) : (
+                    <Badge tone="outline">無効</Badge>
+                  )}
+                </Td>
+                <Td>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setEditingUser(user); setShowForm(true); }}
+                  >
+                    編集
+                  </Button>
+                </Td>
+              </Tr>
+            ))}
+            {users.length === 0 && (
+              <EmptyState
+                icon={Users}
+                title="ユーザーが登録されていません"
+                description="「ユーザー追加」から登録すると、ここに表示されます"
+                colSpan={5}
+              />
+            )}
+          </tbody>
+        </Table>
       )}
 
       {showForm && (
@@ -120,7 +127,7 @@ export default function UsersPage() {
           onSaved={fetchUsers}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
 
@@ -200,122 +207,91 @@ function UserFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {isEdit ? "ユーザー編集" : "ユーザー追加"}
-        </h3>
+    // 背景クリック・Esc では閉じない（既存どおり）。パネル自体を form にして
+    // フッタの type="submit" と required / minLength 検証をそのまま効かせる
+    <Modal
+      open
+      onClose={onClose}
+      title={isEdit ? "ユーザー編集" : "ユーザー追加"}
+      as="form"
+      onSubmit={handleSubmit}
+      footerStart={
+        isEdit && (
+          // 削除は既存どおり confirm() で確認する（InlineConfirm に置換しない）
+          <Button
+            variant="dangerGhost"
+            onClick={handleDelete}
+            disabled={deleting}
+            loading={deleting}
+          >
+            {deleting ? "削除中..." : "ユーザーを削除"}
+          </Button>
+        )
+      }
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            キャンセル
+          </Button>
+          <Button variant="primary" type="submit" disabled={saving} loading={saving}>
+            {saving ? "保存中..." : "保存"}
+          </Button>
+        </>
+      }
+    >
+      {error && <Alert tone="danger">{error}</Alert>}
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-            {error}
-          </div>
-        )}
+      <Field label="名前">
+        <Input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </Field>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">名前</span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
+      <Field label="メールアドレス">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={isEdit}
+        />
+      </Field>
 
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">メールアドレス</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isEdit}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-            />
-          </label>
+      <Field label={<>パスワード{isEdit && "（変更する場合のみ）"}</>}>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required={!isEdit}
+          minLength={6}
+          placeholder={isEdit ? "変更しない場合は空欄" : "6文字以上"}
+        />
+      </Field>
 
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              パスワード{isEdit && "（変更する場合のみ）"}
-            </span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required={!isEdit}
-              minLength={6}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={isEdit ? "変更しない場合は空欄" : "6文字以上"}
-            />
-          </label>
+      <Field label="権限ロール">
+        <Select
+          value={userRole}
+          onChange={(e) => setUserRole(e.target.value)}
+        >
+          <option value="admin">管理者 — すべての操作が可能</option>
+          <option value="representative">代表者 — 設定・ユーザー管理・操作ログ・年度管理・削除以外</option>
+          <option value="editor">編集者 — 削除・受賞設定以外</option>
+          <option value="viewer">閲覧者 — 閲覧のみ</option>
+          <option value="judge">審査員 — 閲覧のみ＋審査コメントの投稿</option>
+        </Select>
+      </Field>
 
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">権限ロール</span>
-            <select
-              value={userRole}
-              onChange={(e) => setUserRole(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="admin">管理者 — すべての操作が可能</option>
-              <option value="representative">代表者 — 設定・ユーザー管理・操作ログ・年度管理・削除以外</option>
-              <option value="editor">編集者 — 削除・受賞設定以外</option>
-              <option value="viewer">閲覧者 — 閲覧のみ</option>
-              <option value="judge">審査員 — 閲覧のみ＋審査コメントの投稿</option>
-            </select>
-          </label>
-
-          {isEdit && (
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="rounded border-gray-300"
-              />
-              <span className="text-sm text-gray-700">有効</span>
-            </label>
-          )}
-
-          <div className="flex items-center justify-between pt-2">
-            <div>
-              {isEdit && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="text-sm text-red-600 hover:text-red-800 hover:underline disabled:opacity-50"
-                >
-                  {deleting ? "削除中..." : "ユーザーを削除"}
-                </button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg
-                  hover:bg-gray-50 transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg font-medium
-                  hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {saving ? "保存中..." : "保存"}
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+      {isEdit && (
+        <Field inline label="有効">
+          <Checkbox
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+          />
+        </Field>
+      )}
+    </Modal>
   );
 }

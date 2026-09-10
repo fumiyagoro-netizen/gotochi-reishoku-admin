@@ -5,6 +5,17 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRole } from "@/lib/role-context";
 import { formatYen } from "@/lib/invoice-shared";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { NoPermission } from "@/components/ui/card";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { Toolbar, SearchInput } from "@/components/ui/toolbar";
+import { Table, Th, Td, Tr } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { Plus, Search, X, Receipt } from "@/components/ui/icons";
 
 interface InvoiceRow {
   id: number;
@@ -20,6 +31,9 @@ interface InvoiceRow {
   sentAt: string | null;
   sentTo: string;
 }
+
+// GET /api/invoices の PAGE_SIZE と同じ値。ページ送りの「1–20 / 57件」表示にだけ使う
+const PAGE_SIZE = 20;
 
 function formatJstDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
@@ -101,157 +115,129 @@ function InvoicesPageInner() {
 
   if (!permissions.canManageInvoices) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer>
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          請求書
-          {year && <span className="text-base font-normal text-gray-500 ml-3">{year}年度</span>}
-          <span className="text-base font-normal text-gray-500 ml-3">{total}件</span>
-        </h2>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/invoices/items"
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-              hover:bg-gray-50 transition-colors"
-          >
-            請求項目マスタ
-          </Link>
-          <Link
-            href="/invoices/new"
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-              hover:bg-blue-700 transition-colors"
-          >
-            + 新規作成
-          </Link>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="請求書"
+        meta={year && <Badge tone="neutral">{year}年度</Badge>}
+        count={total}
+        actions={
+          <>
+            <ButtonLink href="/invoices/items" variant="secondary">
+              請求項目マスタ
+            </ButtonLink>
+            <ButtonLink href="/invoices/new" variant="primary" icon={<Plus />}>
+              新規作成
+            </ButtonLink>
+          </>
+        }
+      />
 
       {errorMsg && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
-          {errorMsg}
+        <div className="mb-4">
+          <Alert tone="danger">{errorMsg}</Alert>
         </div>
       )}
 
-      <form onSubmit={handleSearch} className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="text"
-          value={qInput}
-          onChange={(e) => setQInput(e.target.value)}
-          placeholder="書類番号・宛先名で検索..."
-          className="flex-1 min-w-[220px] max-w-md px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <button
-          type="submit"
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium
-            hover:bg-blue-700 transition-colors"
-        >
-          検索
-        </button>
-        {q && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="px-4 py-2.5 text-gray-600 border border-gray-300 rounded-lg text-sm
-              hover:bg-gray-50 transition-colors"
-          >
+      <Toolbar
+        applied={!!q}
+        clear={
+          <Button variant="ghost" icon={<X />} onClick={handleClear}>
             クリア
-          </button>
-        )}
-      </form>
+          </Button>
+        }
+      >
+        <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            type="text"
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            placeholder="書類番号・宛先名で検索..."
+            active={!!q}
+          />
+          <Button type="submit" variant="secondary" icon={<Search />}>
+            検索
+          </Button>
+        </form>
+      </Toolbar>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        <TableSkeleton cols={6} />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">書類番号</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">宛先</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">金額（税込）</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">発行日</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">支払期限</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">送信状況</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {invoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-gray-50 cursor-pointer">
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    <Link href={`/invoices/${inv.id}/edit`} className="text-blue-600 hover:underline">
-                      {inv.invoiceNo}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{inv.recipientName} 様</td>
-                  <td className="px-4 py-3 text-sm text-gray-900 text-right whitespace-nowrap">
-                    {formatYen(inv.totalAmount)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{formatJstDate(inv.issueDate)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{formatJstDate(inv.dueDate)}</td>
-                  <td className="px-4 py-3 text-sm whitespace-nowrap">
-                    <Link href={`/invoices/${inv.id}/edit`} className="hover:underline">
-                      {inv.sentAt ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
-                            送信済み
-                          </span>
-                          <span className="text-xs text-gray-400">{formatJstDateTime(inv.sentAt)}</span>
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
-                          未送信
-                        </span>
-                      )}
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-              {invoices.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
-                    請求書がありません
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <thead>
+            <tr>
+              <Th>書類番号</Th>
+              <Th>宛先</Th>
+              <Th align="right">金額（税込）</Th>
+              <Th>発行日</Th>
+              <Th>支払期限</Th>
+              <Th>送信状況</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((inv) => (
+              // 行自体にクリック先は無いので cursor-pointer は付けない（書類番号と送信状況のリンクから編集へ）
+              <Tr key={inv.id}>
+                <Td nowrap>
+                  <Link
+                    href={`/invoices/${inv.id}/edit`}
+                    className="rounded-sm font-medium text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    {inv.invoiceNo}
+                  </Link>
+                </Td>
+                <Td primary>{inv.recipientName} 様</Td>
+                <Td numeric>{formatYen(inv.totalAmount)}</Td>
+                <Td subtle nowrap>{formatJstDate(inv.issueDate)}</Td>
+                <Td subtle nowrap>{formatJstDate(inv.dueDate)}</Td>
+                <Td nowrap>
+                  <Link
+                    href={`/invoices/${inv.id}/edit`}
+                    className="inline-flex items-center gap-1.5 rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    {inv.sentAt ? (
+                      <>
+                        <Badge tone="success">送信済み</Badge>
+                        <span className="text-caption text-ink-subtle">{formatJstDateTime(inv.sentAt)}</span>
+                      </>
+                    ) : (
+                      <Badge tone="outline">未送信</Badge>
+                    )}
+                  </Link>
+                </Td>
+              </Tr>
+            ))}
+            {invoices.length === 0 && (
+              <EmptyState
+                icon={Receipt}
+                title="請求書がありません"
+                description={
+                  q
+                    ? "検索条件に一致する請求書がありません。条件を変えるかクリアしてください"
+                    : "「新規作成」から作成すると、ここに表示されます"
+                }
+                colSpan={6}
+              />
+            )}
+          </tbody>
+        </Table>
       )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {page > 1 && (
-            <button
-              onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              前へ
-            </button>
-          )}
-          <span className="px-3 py-2 text-sm text-gray-600">
-            {page} / {totalPages}
-          </span>
-          {page < totalPages && (
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              次へ
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onChange={setPage}
+        total={total}
+        pageSize={PAGE_SIZE}
+      />
+    </PageContainer>
   );
 }
 

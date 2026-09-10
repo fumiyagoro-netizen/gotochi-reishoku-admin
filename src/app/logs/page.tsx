@@ -1,20 +1,53 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentRole } from "@/lib/role";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
+import { Table, Th, Td, Tr } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import { History } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 
-const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-  login: { label: "ログイン", color: "bg-green-100 text-green-700" },
-  create: { label: "作成", color: "bg-blue-100 text-blue-700" },
-  update: { label: "編集", color: "bg-yellow-100 text-yellow-800" },
-  delete: { label: "削除", color: "bg-red-100 text-red-700" },
-  prize: { label: "受賞設定", color: "bg-amber-100 text-amber-800" },
-  bulk_prize: { label: "一括受賞", color: "bg-amber-100 text-amber-800" },
-  upload: { label: "アップロード", color: "bg-purple-100 text-purple-700" },
-  unsubscribe: { label: "配信停止", color: "bg-gray-200 text-gray-700" },
-  resubscribe: { label: "配信再開", color: "bg-emerald-100 text-emerald-700" },
+export const metadata = { title: "操作ログ" };
+
+// tone は Badge の意味色。Badge に無い色（受賞の琥珀・アップロードの紫・再開の翠）だけ
+// tone="custom" ＋ 完全クラス文字列。dot はフィルタチップの先頭の点。
+const ACTION_LABELS: Record<
+  string,
+  { label: string; tone: BadgeTone; className?: string; dot: string }
+> = {
+  login: { label: "ログイン", tone: "success", dot: "bg-emerald-500" },
+  create: { label: "作成", tone: "info", dot: "bg-blue-500" },
+  update: { label: "編集", tone: "warning", dot: "bg-yellow-400" },
+  delete: { label: "削除", tone: "danger", dot: "bg-red-500" },
+  prize: {
+    label: "受賞設定",
+    tone: "custom",
+    className: "bg-amber-50 text-amber-800 ring-amber-600/25",
+    dot: "bg-amber-500",
+  },
+  bulk_prize: {
+    label: "一括受賞",
+    tone: "custom",
+    className: "bg-amber-50 text-amber-800 ring-amber-600/25",
+    dot: "bg-amber-500",
+  },
+  upload: {
+    label: "アップロード",
+    tone: "custom",
+    className: "bg-purple-50 text-purple-700 ring-purple-600/20",
+    dot: "bg-purple-500",
+  },
+  unsubscribe: { label: "配信停止", tone: "outline", dot: "bg-zinc-400" },
+  resubscribe: {
+    label: "配信再開",
+    tone: "custom",
+    className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    dot: "bg-emerald-500",
+  },
 };
 
 interface Props {
@@ -46,118 +79,94 @@ export default async function LogsPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
-        操作ログ
-        <span className="text-base font-normal text-gray-500 ml-3">
-          {total}件
-        </span>
-      </h2>
+    <PageContainer>
+      <PageHeader title="操作ログ" count={total} />
 
       {/* Filter */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        <Link
-          href="/logs"
-          className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-            !actionFilter ? "bg-blue-50 border-blue-300 text-blue-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"
-          }`}
-        >
+      <FilterChipGroup>
+        <FilterChip href="/logs" active={!actionFilter}>
           すべて
-        </Link>
-        {Object.entries(ACTION_LABELS).map(([key, { label, color }]) => (
-          <Link
+        </FilterChip>
+        {Object.entries(ACTION_LABELS).map(([key, { label, dot }]) => (
+          <FilterChip
             key={key}
             href={`/logs?action=${key}`}
-            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-              actionFilter === key ? `${color} border-current` : "border-gray-200 text-gray-600 hover:bg-gray-50"
-            }`}
+            active={actionFilter === key}
+            dotClassName={dot}
           >
             {label}
-          </Link>
+          </FilterChip>
         ))}
-      </div>
+      </FilterChipGroup>
 
       {/* Log Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase w-40">日時</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase w-28">操作</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase w-40">ユーザー</th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">詳細</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {logs.map((log) => {
-              const actionInfo = ACTION_LABELS[log.action] || {
-                label: log.action,
-                color: "bg-gray-100 text-gray-600",
-              };
-              return (
-                <tr key={log.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
-                    {/* Rendered on the server, which runs in UTC — without an
-                        explicit timeZone this shows every log 9 hours behind
-                        the Japan time the operator actually acted at. */}
-                    {new Date(log.createdAt).toLocaleString("ja-JP", {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone: "Asia/Tokyo",
-                    })}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full ${actionInfo.color}`}>
-                      {actionInfo.label}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {log.userEmail || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 max-w-lg truncate">
-                    {log.detail}
-                  </td>
-                </tr>
-              );
-            })}
-            {logs.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
-                  ログがありません
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table density="compact">
+        <thead>
+          <tr>
+            <Th width="w-40">日時</Th>
+            <Th width="w-28">操作</Th>
+            <Th width="w-40">ユーザー</Th>
+            <Th>詳細</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {logs.map((log) => {
+            // 未知の action は neutral ＋ 生文字列で落とさない
+            const actionInfo = ACTION_LABELS[log.action] || {
+              label: log.action,
+              tone: "neutral" as const,
+              className: undefined,
+              dot: "",
+            };
+            return (
+              <Tr key={log.id}>
+                <Td subtle nowrap>
+                  {/* Rendered on the server, which runs in UTC — without an
+                      explicit timeZone this shows every log 9 hours behind
+                      the Japan time the operator actually acted at. */}
+                  {new Date(log.createdAt).toLocaleString("ja-JP", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "Asia/Tokyo",
+                  })}
+                </Td>
+                <Td>
+                  <Badge tone={actionInfo.tone} className={actionInfo.className}>
+                    {actionInfo.label}
+                  </Badge>
+                </Td>
+                <Td>{log.userEmail || "—"}</Td>
+                {/* 切れた全文は title で読める */}
+                <Td truncate={log.detail}>{log.detail}</Td>
+              </Tr>
+            );
+          })}
+          {logs.length === 0 && (
+            <EmptyState
+              icon={History}
+              title="ログがありません"
+              description={
+                actionFilter
+                  ? "この操作のログはまだありません。「すべて」で他の操作も確認できます"
+                  : "ログイン・作成・編集などの操作が記録されると、ここに表示されます"
+              }
+              colSpan={4}
+            />
+          )}
+        </tbody>
+      </Table>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {page > 1 && (
-            <Link
-              href={`/logs?action=${actionFilter}&page=${page - 1}`}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              前へ
-            </Link>
-          )}
-          <span className="px-3 py-2 text-sm text-gray-600">
-            {page} / {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link
-              href={`/logs?action=${actionFilter}&page=${page + 1}`}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              次へ
-            </Link>
-          )}
-        </div>
-      )}
-    </div>
+      {/* Pagination — ?action= は空でも付ける（既存の href をそのまま関数化） */}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        hrefFor={(n) => `/logs?action=${actionFilter}&page=${n}`}
+        total={total}
+        pageSize={PAGE_SIZE}
+      />
+    </PageContainer>
   );
 }

@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
+import { Trash2 } from "@/components/ui/icons";
 
 export function DeleteEntryButton({ entryId }: { entryId: number }) {
   const [confirming, setConfirming] = useState(false);
@@ -27,36 +30,23 @@ export function DeleteEntryButton({ entryId }: { entryId: number }) {
     }
   }
 
+  // confirming の分岐はここに残し、確認段階の見た目だけ InlineConfirm に任せる
   if (confirming) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-red-600">本当に削除しますか？</span>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700
-            disabled:opacity-50 transition-colors"
-        >
-          {deleting ? "削除中..." : "削除する"}
-        </button>
-        <button
-          onClick={() => setConfirming(false)}
-          className="px-3 py-1.5 border border-gray-300 text-sm text-gray-600 rounded-lg
-            hover:bg-gray-50 transition-colors"
-        >
-          キャンセル
-        </button>
-      </div>
+      <InlineConfirm
+        message="本当に削除しますか？"
+        // 実行中の文言は旧来の「削除中...」のまま（スピナーは InlineConfirm 側）
+        confirmLabel={deleting ? "削除中..." : "削除する"}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirming(false)}
+        loading={deleting}
+      />
     );
   }
 
   return (
-    <button
-      onClick={() => setConfirming(true)}
-      className="px-3 py-1.5 border border-red-300 text-red-600 text-sm rounded-lg
-        hover:bg-red-50 transition-colors"
-    >
+    <Button variant="dangerGhost" icon={<Trash2 />} onClick={() => setConfirming(true)}>
       削除
-    </button>
+    </Button>
   );
 }

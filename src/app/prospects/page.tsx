@@ -1,13 +1,37 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRole } from "@/lib/role-context";
 import {
   PROSPECT_CONTACT_STATUSES,
   PROSPECT_STATUS_DROPPED,
 } from "@/lib/prospect-shared";
+import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { NoPermission } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field } from "@/components/ui/field";
+import { Input, Select, Textarea } from "@/components/ui/field-controls";
+import {
+  ChevronRight,
+  Download,
+  ExternalLink,
+  Plus,
+  Search,
+  Target,
+  Trash2,
+  Upload,
+  X,
+} from "@/components/ui/icons";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
+import { Modal } from "@/components/ui/modal";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { Pagination } from "@/components/ui/pagination";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { Table, Td, Th, Tr } from "@/components/ui/table";
+import { SearchInput, Toolbar } from "@/components/ui/toolbar";
 
 interface Prospect {
   id: number;
@@ -28,13 +52,25 @@ interface FilterOptions {
   prefectures: string[];
 }
 
-const CONTACT_STATUS_COLORS: Record<string, string> = {
-  未着手: "bg-gray-100 text-gray-600",
-  連絡済: "bg-blue-100 text-blue-700",
-  資料送付済: "bg-amber-100 text-amber-700",
-  エントリー意向: "bg-green-100 text-green-700",
-  [PROSPECT_STATUS_DROPPED]: "bg-gray-200 text-gray-500",
+// コンタクト状況 → Badge の完全クラス文字列（JIT のため結合しない）。
+// 「追客しない」は outline（不在）で示すのでここには含めない。未知値は neutral。
+const CONTACT_STATUS_BADGE_CLASS: Record<string, string> = {
+  未着手: "bg-zinc-100 text-zinc-700 ring-zinc-500/20",
+  連絡済: "bg-blue-50 text-blue-700 ring-blue-600/20",
+  資料送付済: "bg-amber-50 text-amber-800 ring-amber-600/25",
+  エントリー意向: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
 };
+
+function ContactStatusBadge({ status }: { status: string }) {
+  if (status === PROSPECT_STATUS_DROPPED) return <Badge tone="outline">{status}</Badge>;
+  const cls = CONTACT_STATUS_BADGE_CLASS[status];
+  if (!cls) return <Badge tone="neutral">{status}</Badge>;
+  return (
+    <Badge tone="custom" className={cls}>
+      {status}
+    </Badge>
+  );
+}
 
 // Reads ?year= from the URL — sidebar always appends it once at least one
 // Award exists (src/components/sidebar.tsx hrefWithYear) — so this stays
@@ -129,245 +165,205 @@ function ProspectsPageInner() {
   // src/lib/role-shared.ts.
   if (!permissions.canManageProspects) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer>
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          追客リスト
-          {year && (
-            <span className="text-base font-normal text-gray-500 ml-3">
-              {year}年度
-            </span>
-          )}
-          <span className="text-base font-normal text-gray-500 ml-3">
-            {total}件
-          </span>
-        </h2>
-        <div className="flex items-center gap-2">
-          {permissions.canDownload && (
-            <a
-              href={`/api/prospects/export?${exportParams.toString()}`}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-                hover:bg-gray-50 transition-colors"
+    <PageContainer>
+      <PageHeader
+        title="追客リスト"
+        meta={year && <Badge tone="neutral">{year}年度</Badge>}
+        count={total}
+        actions={
+          <>
+            {permissions.canDownload && (
+              <ButtonLink
+                variant="secondary"
+                external
+                href={`/api/prospects/export?${exportParams.toString()}`}
+                icon={<Download />}
+              >
+                Excelダウンロード
+              </ButtonLink>
+            )}
+            {permissions.canUpload && (
+              <ButtonLink variant="secondary" href="/prospects/import" icon={<Upload />}>
+                Excelインポート
+              </ButtonLink>
+            )}
+            <Button
+              variant="primary"
+              icon={<Plus />}
+              onClick={() => { setEditingProspect(null); setShowForm(true); }}
             >
-              📥 Excelダウンロード
-            </a>
-          )}
-          {permissions.canUpload && (
-            <Link
-              href="/prospects/import"
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700
-                hover:bg-gray-50 transition-colors"
-            >
-              Excelインポート
-            </Link>
-          )}
-          <button
-            onClick={() => { setEditingProspect(null); setShowForm(true); }}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-              hover:bg-blue-700 transition-colors"
-          >
-            + 新規追加
-          </button>
-        </div>
-      </div>
+              新規追加
+            </Button>
+          </>
+        }
+      />
 
       {errorMsg && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
-          {errorMsg}
+        <div className="mb-4">
+          <Alert tone="danger">{errorMsg}</Alert>
         </div>
       )}
 
-      {/* Search & Filter */}
-      <form onSubmit={handleSearch} className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="text"
-          value={qInput}
-          onChange={(e) => setQInput(e.target.value)}
-          placeholder="メーカー名・商品名で検索..."
-          className="flex-1 min-w-[220px] max-w-md px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <select
-          value={contactStatus}
-          onChange={(e) => { setContactStatus(e.target.value); setPage(1); }}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">コンタクト状況（すべて）</option>
-          {PROSPECT_CONTACT_STATUSES.map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
-        </select>
-        <select
-          value={prefecture}
-          onChange={(e) => { setPrefecture(e.target.value); setPage(1); }}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white
-            focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">県名（すべて）</option>
-          {filterOptions.prefectures.map((pref) => (
-            <option key={pref} value={pref}>{pref}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium
-            hover:bg-blue-700 transition-colors"
-        >
-          検索
-        </button>
-        {hasFilter && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="px-4 py-2.5 text-gray-600 border border-gray-300 rounded-lg text-sm
-              hover:bg-gray-50 transition-colors"
-          >
+      {/* Search & Filter（検索語は submit で反映、select は即時。既存の挙動差はそのまま） */}
+      <Toolbar
+        applied={Boolean(hasFilter)}
+        clear={
+          <Button variant="ghost" icon={<X />} onClick={handleClear}>
             クリア
-          </button>
-        )}
-      </form>
+          </Button>
+        }
+      >
+        <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            type="text"
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            placeholder="メーカー名・商品名で検索..."
+            active={Boolean(q)}
+          />
+          <div className="w-44">
+            <Select
+              value={contactStatus}
+              onChange={(e) => { setContactStatus(e.target.value); setPage(1); }}
+              data-active={contactStatus ? "true" : undefined}
+            >
+              <option value="">コンタクト状況（すべて）</option>
+              {PROSPECT_CONTACT_STATUSES.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </Select>
+          </div>
+          <div className="w-44">
+            <Select
+              value={prefecture}
+              onChange={(e) => { setPrefecture(e.target.value); setPage(1); }}
+              data-active={prefecture ? "true" : undefined}
+            >
+              <option value="">県名（すべて）</option>
+              {filterOptions.prefectures.map((pref) => (
+                <option key={pref} value={pref}>{pref}</option>
+              ))}
+            </Select>
+          </div>
+          <Button variant="secondary" type="submit" icon={<Search />}>
+            検索
+          </Button>
+        </form>
+      </Toolbar>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        <TableSkeleton cols={7} />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
-              {/* The URL column only holds a fixed-width button now, so the
-                  three text columns that were widest can give space back and
-                  the whole table fits without scrolling on most screens.
-                  Values that still overrun truncate with the full text on
-                  hover, as before. */}
-              <colgroup>
-                <col className="w-[150px]" />
-                <col className="w-[70px]" />
-                <col className="w-[170px]" />
-                <col className="w-[120px]" />
-                <col className="w-[100px]" />
-                <col className="w-[180px]" />
-                <col className="w-[140px]" />
-              </colgroup>
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">メーカー名</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">県名</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">商品名</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">コンタクト状況</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">担当者</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">連絡先</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">URL</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {prospects.map((p) => (
-                  <tr
-                    key={p.id}
-                    onClick={() => { setEditingProspect(p); setShowForm(true); }}
-                    // Dropped prospects stay in the list but recede, so the rows
-                    // still worth working stand out. Dimming the whole row (rather
-                    // than restyling each cell) also fades the status badge and the
-                    // URL link, and it lifts back to full opacity on hover so the
-                    // row is still readable when you go to open it.
-                    className={`transition-colors cursor-pointer ${
-                      p.contactStatus === PROSPECT_STATUS_DROPPED
-                        ? "bg-gray-50 opacity-50 hover:opacity-100 hover:bg-gray-100"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900 truncate" title={p.makerName}>
-                      {p.makerName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 truncate" title={p.prefecture}>
-                      {p.prefecture}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 truncate" title={p.productName}>
-                      {p.productName}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 text-xs rounded-full whitespace-nowrap ${
-                          CONTACT_STATUS_COLORS[p.contactStatus] || "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {p.contactStatus}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 truncate" title={p.assignee}>
-                      {p.assignee || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 truncate" title={p.email}>
-                      {p.email || "-"}
-                    </td>
-                    {/* No truncate here, unlike the text cells: it would clip
-                        the button rather than shorten a long value. */}
-                    <td className="px-4 py-3 text-sm">
-                      {p.url ? (
-                        <a
-                          href={p.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          // The row itself opens the edit modal, so the link
-                          // has to stop the click from reaching it.
-                          onClick={(e) => e.stopPropagation()}
-                          title={p.url}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-lg
-                            text-xs text-gray-700 whitespace-nowrap hover:bg-gray-50 transition-colors"
-                        >
-                          サイトを見る
-                        </a>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {prospects.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                      追客先データがありません
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <Table fixed>
+          {/* The URL column only holds a fixed-width button now, so the
+              three text columns that were widest can give space back and
+              the whole table fits without scrolling on most screens.
+              Values that still overrun truncate with the full text on
+              hover, as before. 県名は4文字（神奈川県）が切れない w-24。
+              末尾の列は「行を押すと開く」ことを示す ChevronRight。 */}
+          <colgroup>
+            <col className="w-[150px]" />
+            <col className="w-24" />
+            <col className="w-[170px]" />
+            <col className="w-[120px]" />
+            <col className="w-[100px]" />
+            <col className="w-[180px]" />
+            <col className="w-[140px]" />
+            <col className="w-10" />
+          </colgroup>
+          <thead>
+            <tr>
+              <Th>メーカー名</Th>
+              <Th>県名</Th>
+              <Th>商品名</Th>
+              <Th>コンタクト状況</Th>
+              <Th>担当者</Th>
+              <Th>連絡先</Th>
+              <Th>URL</Th>
+              <Th srLabel="開く" />
+            </tr>
+          </thead>
+          <tbody>
+            {prospects.map((p) => (
+              <Tr
+                key={p.id}
+                onClick={() => { setEditingProspect(p); setShowForm(true); }}
+                clickable
+                // Dropped prospects stay in the list but recede, so the rows
+                // still worth working stand out. 文字色を落とす方式なので
+                // バッジは読めたまま（opacity で行ごと薄くしない）。
+                muted={p.contactStatus === PROSPECT_STATUS_DROPPED}
+              >
+                <Td primary truncate={p.makerName}>
+                  {p.makerName}
+                </Td>
+                <Td subtle truncate={p.prefecture}>
+                  {p.prefecture}
+                </Td>
+                <Td truncate={p.productName}>
+                  {p.productName}
+                </Td>
+                <Td>
+                  <ContactStatusBadge status={p.contactStatus} />
+                </Td>
+                <Td truncate={p.assignee}>
+                  {p.assignee || "-"}
+                </Td>
+                <Td truncate={p.email}>
+                  {p.email || "-"}
+                </Td>
+                {/* No truncate here, unlike the text cells: it would clip
+                    the button rather than shorten a long value. */}
+                <Td>
+                  {p.url ? (
+                    <ButtonLink
+                      variant="secondary"
+                      size="sm"
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      // The row itself opens the edit modal, so the link
+                      // has to stop the click from reaching it.
+                      onClick={(e) => e.stopPropagation()}
+                      title={p.url}
+                      icon={<ExternalLink />}
+                    >
+                      サイトを見る
+                    </ButtonLink>
+                  ) : (
+                    <span className="text-ink-subtle">-</span>
+                  )}
+                </Td>
+                <Td>
+                  <ChevronRight className="size-4 text-ink-faint" aria-hidden="true" />
+                </Td>
+              </Tr>
+            ))}
+            {prospects.length === 0 && (
+              <EmptyState
+                colSpan={8}
+                icon={Target}
+                title="追客先データがありません"
+                description={
+                  hasFilter
+                    ? "検索条件に一致する追客先がありません。条件を変えるかクリアしてください"
+                    : "「新規追加」から登録すると、ここに表示されます"
+                }
+              />
+            )}
+          </tbody>
+        </Table>
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {page > 1 && (
-            <button
-              onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              前へ
-            </button>
-          )}
-          <span className="px-3 py-2 text-sm text-gray-600">
-            {page} / {totalPages}
-          </span>
-          {page < totalPages && (
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              次へ
-            </button>
-          )}
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
 
       {showForm && (
         <ProspectFormModal
@@ -384,7 +380,7 @@ function ProspectsPageInner() {
           onSaved={fetchProspects}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
 
@@ -495,209 +491,142 @@ function ProspectFormModal({
   }
 
   return (
-    // Clicking the backdrop closes the modal. The check is on the click's
-    // target being the backdrop itself, so a click that starts inside the
-    // panel — or lands on it — doesn't bubble up and close the form.
-    <div
-      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-xl p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {isEdit ? "追客先編集" : "追客先追加"}
-        </h3>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">メーカー名</span>
-              <input
-                type="text"
-                value={makerName}
-                onChange={(e) => setMakerName(e.target.value)}
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">県名</span>
-              <input
-                type="text"
-                value={prefecture}
-                onChange={(e) => setPrefecture(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-          </div>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">商品名</span>
-            <input
-              type="text"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
+    // Clicking the backdrop closes the modal（既存どおり。この画面だけ closeOnBackdrop）
+    <Modal
+      open
+      onClose={onClose}
+      title={isEdit ? "追客先編集" : "追客先追加"}
+      size="lg"
+      closeOnBackdrop
+      as="form"
+      onSubmit={handleSubmit}
+      footerStart={
+        isEdit && canDelete && (
+          confirmingDelete ? (
+            <InlineConfirm
+              message="本当に削除しますか？"
+              confirmLabel={deleting ? "削除中..." : "削除する"}
+              onConfirm={handleDelete}
+              onCancel={() => setConfirmingDelete(false)}
+              loading={deleting}
             />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">サイトで確認できる温度帯</span>
-            <input
-              type="text"
-              value={tempZone}
-              onChange={(e) => setTempZone(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">コンタクト状況</span>
-            <select
-              value={contactStatus}
-              onChange={(e) => setContactStatus(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ) : (
+            <Button
+              variant="dangerGhost"
+              icon={<Trash2 />}
+              onClick={() => setConfirmingDelete(true)}
             >
-              {PROSPECT_CONTACT_STATUSES.map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </label>
+              削除
+            </Button>
+          )
+        )
+      }
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            キャンセル
+          </Button>
+          <Button variant="primary" type="submit" disabled={saving} loading={saving}>
+            {saving ? "保存中..." : "保存"}
+          </Button>
+        </>
+      }
+    >
+      {error && <Alert tone="danger">{error}</Alert>}
 
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">補足</span>
-            <input
-              type="text"
-              value={supplement}
-              onChange={(e) => setSupplement(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">URL</span>
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://..."
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <div className="grid grid-cols-2 gap-4">
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">担当者</span>
-              <input
-                type="text"
-                value={assignee}
-                onChange={(e) => setAssignee(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">連絡先（メールアドレス）</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium text-gray-700">連絡先（電話番号）</span>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </label>
-          </div>
-
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">備考・メモ欄</span>
-            <textarea
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-              rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <div className="flex items-center justify-between gap-2 pt-2">
-            <div>
-              {isEdit && canDelete && (
-                confirmingDelete ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-red-600">本当に削除しますか？</span>
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg
-                        hover:bg-red-700 disabled:opacity-50 transition-colors"
-                    >
-                      {deleting ? "削除中..." : "削除する"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmingDelete(false)}
-                      className="px-3 py-1.5 border border-gray-300 text-sm text-gray-600 rounded-lg
-                        hover:bg-gray-50 transition-colors"
-                    >
-                      キャンセル
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmingDelete(true)}
-                    className="px-3 py-1.5 border border-red-300 text-red-600 text-sm rounded-lg
-                      hover:bg-red-50 transition-colors"
-                  >
-                    削除
-                  </button>
-                )
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg
-                  hover:bg-gray-50 transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg font-medium
-                  hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {saving ? "保存中..." : "保存"}
-              </button>
-            </div>
-          </div>
-        </form>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <Field label="メーカー名">
+          <Input
+            type="text"
+            value={makerName}
+            onChange={(e) => setMakerName(e.target.value)}
+            required
+          />
+        </Field>
+        <Field label="県名">
+          <Input
+            type="text"
+            value={prefecture}
+            onChange={(e) => setPrefecture(e.target.value)}
+          />
+        </Field>
       </div>
-    </div>
+
+      <Field label="商品名">
+        <Input
+          type="text"
+          value={productName}
+          onChange={(e) => setProductName(e.target.value)}
+        />
+      </Field>
+
+      <Field label="サイトで確認できる温度帯">
+        <Input
+          type="text"
+          value={tempZone}
+          onChange={(e) => setTempZone(e.target.value)}
+        />
+      </Field>
+
+      <Field label="コンタクト状況">
+        <Select
+          value={contactStatus}
+          onChange={(e) => setContactStatus(e.target.value)}
+        >
+          {PROSPECT_CONTACT_STATUSES.map((status) => (
+            <option key={status} value={status}>{status}</option>
+          ))}
+        </Select>
+      </Field>
+
+      <Field label="補足">
+        <Input
+          type="text"
+          value={supplement}
+          onChange={(e) => setSupplement(e.target.value)}
+        />
+      </Field>
+
+      <Field label="URL">
+        <Input
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://..."
+        />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        <Field label="担当者">
+          <Input
+            type="text"
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value)}
+          />
+        </Field>
+        <Field label="連絡先（メールアドレス）">
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </Field>
+        <Field label="連絡先（電話番号）">
+          <Input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </Field>
+      </div>
+
+      <Field label="備考・メモ欄">
+        <Textarea
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          rows={3}
+        />
+      </Field>
+    </Modal>
   );
 }

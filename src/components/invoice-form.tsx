@@ -10,6 +10,28 @@ import {
   formatYen,
 } from "@/lib/invoice-shared";
 import { InvoiceSendModal } from "@/components/invoice-send-modal";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
+import { Input, Select, Textarea } from "@/components/ui/field-controls";
+import { KeyValueList, KeyValue } from "@/components/ui/key-value";
+import { Th, Td, Tr } from "@/components/ui/table";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
+import { StickyActionBar } from "@/components/ui/sticky-action-bar";
+import {
+  Search,
+  Pencil,
+  Plus,
+  ChevronUp,
+  ChevronDown,
+  X,
+  Trash2,
+  FileText,
+  Download,
+  Send,
+} from "@/components/ui/icons";
 
 interface EntrySummary {
   id: number;
@@ -329,414 +351,378 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
     }
   }
 
-  const inputClass =
-    "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  // 最上部と sticky バー直上に同じエラーを出す（明細を編集中でも気づけるように）
+  const errorAlert = error ? <Alert tone="danger">{error}</Alert> : null;
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg break-words">
-          {error}
-        </div>
-      )}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {errorAlert}
 
       {/* 対象エントリー */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">対象エントリー</h3>
-        {entry ? (
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-base font-medium text-gray-900">{entry.companyName}</div>
-              <div className="text-sm text-gray-500">
+      <Card padding="none">
+        <CardHeader
+          title="対象エントリー"
+          actions={
+            entry && !isEdit && (
+              <Button variant="ghost" size="sm" icon={<Pencil />} onClick={() => setEntry(null)}>
+                変更
+              </Button>
+            )
+          }
+        />
+        <div className="p-5">
+          {entry ? (
+            <KeyValueList>
+              <KeyValue label="企業名">{entry.companyName}</KeyValue>
+              <KeyValue label="担当者">
                 {entry.contactLastName}
                 {entry.contactFirstName} / {entry.email}
-              </div>
-              <div className="text-xs text-gray-400 mt-1">
+              </KeyValue>
+              <KeyValue label="エントリー">
                 {entry.award.year}年度エントリー（回答番号: {entry.answerNo}）
+              </KeyValue>
+            </KeyValueList>
+          ) : (
+            <div>
+              <div className="flex gap-2">
+                <div className="flex-1 min-w-0">
+                  <Input
+                    type="text"
+                    value={entryQuery}
+                    onChange={(e) => setEntryQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        searchEntries();
+                      }
+                    }}
+                    placeholder="企業名・商品名・担当者名・メールアドレスで検索"
+                    leadingIcon={<Search />}
+                  />
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={searchEntries}
+                  disabled={searchingEntry}
+                  loading={searchingEntry}
+                >
+                  {searchingEntry ? "検索中..." : "検索"}
+                </Button>
               </div>
+              {entryResults.length > 0 && (
+                <ul className="mt-3 max-h-64 divide-y divide-line overflow-y-auto rounded-md border border-line">
+                  {entryResults.map((r) => (
+                    <li key={r.id}>
+                      <button
+                        type="button"
+                        onClick={() => selectEntry(r)}
+                        className="w-full px-4 py-2.5 text-left transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:bg-surface-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/40"
+                      >
+                        <div className="text-sm font-medium text-ink">{r.companyName}</div>
+                        <div className="text-caption text-ink-muted">{r.productName}</div>
+                        <div className="text-caption text-ink-subtle">
+                          {r.contactLastName}
+                          {r.contactFirstName} / {r.email} / {r.award.year}年度
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            {!isEdit && (
-              <button
-                type="button"
-                onClick={() => setEntry(null)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 hover:bg-gray-50"
-              >
-                変更
-              </button>
-            )}
-          </div>
-        ) : (
-          <div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={entryQuery}
-                onChange={(e) => setEntryQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    searchEntries();
-                  }
-                }}
-                placeholder="企業名・商品名・担当者名・メールアドレスで検索"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="button"
-                onClick={searchEntries}
-                disabled={searchingEntry}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-                  hover:bg-blue-700 disabled:opacity-50"
-              >
-                {searchingEntry ? "検索中..." : "検索"}
-              </button>
-            </div>
-            {entryResults.length > 0 && (
-              <ul className="mt-3 border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                {entryResults.map((r) => (
-                  <li key={r.id}>
-                    <button
-                      type="button"
-                      onClick={() => selectEntry(r)}
-                      className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="text-sm font-medium text-gray-900">{r.companyName}</div>
-                      <div className="text-xs text-gray-700">{r.productName}</div>
-                      <div className="text-xs text-gray-500">
-                        {r.contactLastName}
-                        {r.contactFirstName} / {r.email} / {r.award.year}年度
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Card>
 
       {/* ヘッダー情報 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">宛名</span>
-          <input
-            type="text"
-            value={recipientName}
-            onChange={(e) => setRecipientName(e.target.value)}
-            required
-            placeholder="株式会社◯◯"
-            className={inputClass}
-          />
-          <span className="text-xs text-gray-400 mt-1 block">PDF・画面には「{recipientName || "（宛名）"} 様」と表示されます</span>
-        </label>
-
-        <div className="grid grid-cols-3 gap-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">発行日</span>
-            <input
-              type="date"
-              value={issueDate}
-              onChange={(e) => handleIssueDateChange(e.target.value)}
-              required
-              className={inputClass}
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              支払期限
-              <span className="ml-1 text-xs text-gray-400 font-normal">（既定: 発行月の翌月末）</span>
-            </span>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => {
-                setDueDate(e.target.value);
-                setDueDateTouched(true);
-              }}
-              required
-              className={inputClass}
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">
-              書類番号
-              <span className="ml-1 text-xs text-gray-400 font-normal">（空欄なら自動採番）</span>
-            </span>
-            <input
+      <Card>
+        <div className="space-y-5">
+          <Field
+            label="宛名"
+            hint={`PDF・画面には「${recipientName || "（宛名）"} 様」と表示されます`}
+          >
+            <Input
               type="text"
-              value={invoiceNo}
-              onChange={(e) => setInvoiceNo(e.target.value)}
-              placeholder="IN202608-0001"
-              className={inputClass}
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+              required
+              placeholder="株式会社◯◯"
             />
-          </label>
-        </div>
-      </div>
+          </Field>
 
-      {/* 明細 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-700">明細</h3>
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedMasterId}
-              onChange={(e) => setSelectedMasterId(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs bg-white
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">請求項目マスタから選択...</option>
-              {masterItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}（{formatYen(item.unitPrice)}）
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={addLineFromMaster}
-              disabled={!selectedMasterId}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700
-                hover:bg-gray-50 disabled:opacity-50"
-            >
-              + 追加
-            </button>
-            <button
-              type="button"
-              onClick={addBlankLine}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs text-gray-700 hover:bg-gray-50"
-            >
-              + 空の行を追加
-            </button>
+          <div className="grid grid-cols-3 gap-x-6 gap-y-5">
+            <Field label="発行日">
+              <Input
+                type="date"
+                value={issueDate}
+                onChange={(e) => handleIssueDateChange(e.target.value)}
+                required
+              />
+            </Field>
+            <Field label="支払期限" hint="（既定: 発行月の翌月末）">
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => {
+                  setDueDate(e.target.value);
+                  setDueDateTouched(true);
+                }}
+                required
+              />
+            </Field>
+            <Field label="書類番号" hint="（空欄なら自動採番）">
+              <Input
+                type="text"
+                value={invoiceNo}
+                onChange={(e) => setInvoiceNo(e.target.value)}
+                placeholder="IN202608-0001"
+              />
+            </Field>
           </div>
         </div>
+      </Card>
 
+      {/* 明細 */}
+      <Card padding="none">
+        <CardHeader
+          title="明細"
+          actions={
+            <>
+              <div className="w-64">
+                <Select
+                  size="sm"
+                  value={selectedMasterId}
+                  onChange={(e) => setSelectedMasterId(e.target.value)}
+                >
+                  <option value="">請求項目マスタから選択...</option>
+                  {masterItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}（{formatYen(item.unitPrice)}）
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Plus />}
+                onClick={addLineFromMaster}
+                disabled={!selectedMasterId}
+              >
+                追加
+              </Button>
+              <Button variant="secondary" size="sm" icon={<Plus />} onClick={addBlankLine}>
+                空の行を追加
+              </Button>
+            </>
+          }
+        />
+
+        {/* Card を二重にしないため Table 部品ではなく素の table に Th / Td / Tr を使う */}
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm [&_td]:py-1.5">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-2 py-2 text-xs font-medium text-gray-500 uppercase w-36">日付</th>
-                <th className="text-left px-2 py-2 text-xs font-medium text-gray-500 uppercase">品名</th>
-                <th className="text-left px-2 py-2 text-xs font-medium text-gray-500 uppercase w-20">数量</th>
-                <th className="text-left px-2 py-2 text-xs font-medium text-gray-500 uppercase w-16">単位</th>
-                <th className="text-right px-2 py-2 text-xs font-medium text-gray-500 uppercase w-28">単価</th>
-                <th className="text-right px-2 py-2 text-xs font-medium text-gray-500 uppercase w-28">金額</th>
-                <th className="w-20" />
+              <tr>
+                <Th width="w-36">日付</Th>
+                <Th>品名</Th>
+                <Th width="w-20">数量</Th>
+                <Th width="w-16">単位</Th>
+                <Th align="right" width="w-28">単価</Th>
+                <Th align="right" width="w-28">金額</Th>
+                <Th width="w-24" srLabel="操作" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {lines.map((line, i) => (
-                <tr key={i}>
-                  <td className="px-2 py-2">
-                    <input
+                <Tr key={i}>
+                  <Td>
+                    <Input
+                      size="sm"
                       type="date"
                       value={line.date}
                       onChange={(e) => updateLine(i, { date: e.target.value })}
                       required
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
                     />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
+                  </Td>
+                  <Td>
+                    <Input
+                      size="sm"
                       type="text"
                       value={line.name}
                       onChange={(e) => updateLine(i, { name: e.target.value })}
                       required
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
                     />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
+                  </Td>
+                  <Td>
+                    <Input
+                      size="sm"
                       type="number"
                       value={line.quantity}
                       onChange={(e) => updateLine(i, { quantity: e.target.value })}
                       min={1}
                       required
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
                     />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
+                  </Td>
+                  <Td>
+                    <Input
+                      size="sm"
                       type="text"
                       value={line.unit}
                       onChange={(e) => updateLine(i, { unit: e.target.value })}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs"
                     />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
+                  </Td>
+                  <Td>
+                    <Input
+                      size="sm"
                       type="number"
+                      align="right"
                       value={line.unitPrice}
                       onChange={(e) => updateLine(i, { unitPrice: e.target.value })}
                       required
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs text-right"
                     />
-                  </td>
-                  <td className="px-2 py-2 text-right text-xs text-gray-700 whitespace-nowrap">
+                  </Td>
+                  <Td numeric>
                     {formatYen(toNum(line.quantity) * toNum(line.unitPrice))}
-                  </td>
-                  <td className="px-2 py-2">
+                  </Td>
+                  <Td>
                     <div className="flex items-center justify-end gap-1">
-                      <button
-                        type="button"
+                      <IconButton
+                        size="sm"
+                        label="上へ"
+                        icon={<ChevronUp />}
                         onClick={() => moveLine(i, -1)}
                         disabled={i === 0}
-                        className="px-1.5 py-1 text-gray-400 hover:text-gray-700 disabled:opacity-30"
-                        title="上へ"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
+                      />
+                      <IconButton
+                        size="sm"
+                        label="下へ"
+                        icon={<ChevronDown />}
                         onClick={() => moveLine(i, 1)}
                         disabled={i === lines.length - 1}
-                        className="px-1.5 py-1 text-gray-400 hover:text-gray-700 disabled:opacity-30"
-                        title="下へ"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
+                      />
+                      <IconButton
+                        size="sm"
+                        tone="danger"
+                        label="削除"
+                        icon={<X />}
                         onClick={() => removeLine(i)}
                         disabled={lines.length <= 1}
-                        className="px-1.5 py-1 text-red-400 hover:text-red-700 disabled:opacity-30"
-                        title="削除"
-                      >
-                        ×
-                      </button>
+                      />
                     </div>
-                  </td>
-                </tr>
+                  </Td>
+                </Tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end border-t border-line px-5 py-4">
           <div className="w-64 space-y-1.5 text-sm">
-            <div className="flex justify-between text-gray-600">
+            <div className="flex justify-between text-ink-muted">
               <span>合計（税抜）</span>
-              <span>{formatYen(totals.subtotal)}</span>
+              <span className="tabular-nums">{formatYen(totals.subtotal)}</span>
             </div>
-            <div className="flex justify-between text-gray-600">
+            <div className="flex justify-between text-ink-muted">
               <span>消費税（10%・切り捨て）</span>
-              <span>{formatYen(totals.taxAmount)}</span>
+              <span className="tabular-nums">{formatYen(totals.taxAmount)}</span>
             </div>
-            <div className="flex justify-between font-semibold text-gray-900 pt-1.5 border-t border-gray-200">
+            <div className="flex justify-between border-t border-line pt-1.5 font-semibold text-ink">
               <span>合計金額</span>
-              <span>{formatYen(totals.totalAmount)}</span>
+              <span className="tabular-nums">{formatYen(totals.totalAmount)}</span>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* 送付状況 — 保存前の新規作成フォームには表示しない（isEdit のときのみ送信可能） */}
       {isEdit && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">送付状況</h3>
-          {sentAt ? (
-            <p className="text-sm text-gray-700">
-              送信済み：{formatJstDateTime(sentAt)} → {sentTo}
-            </p>
-          ) : (
-            <p className="text-sm text-gray-400">未送信</p>
-          )}
-          {hasUnsavedChanges && (
-            <p className="text-xs text-amber-600 mt-1">
-              未保存の変更があります。保存すると送信できるようになります（送信メールには保存済みの内容が添付されます）。
-            </p>
-          )}
-        </div>
+        <Card padding="none">
+          <CardHeader title="送付状況" />
+          <div className="space-y-3 p-5">
+            {sentAt ? (
+              <p className="text-sm text-ink">
+                送信済み：{formatJstDateTime(sentAt)} → {sentTo}
+              </p>
+            ) : (
+              <p className="text-sm text-ink-subtle">未送信</p>
+            )}
+            {hasUnsavedChanges && (
+              <Alert tone="warning" compact>
+                未保存の変更があります。保存すると送信できるようになります（送信メールには保存済みの内容が添付されます）。
+              </Alert>
+            )}
+          </div>
+        </Card>
       )}
 
       {/* 備考 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <label className="block">
-          <span className="text-sm font-medium text-gray-700">備考</span>
-          <textarea
+      <Card>
+        <Field label="備考">
+          <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
-            className={inputClass}
           />
-        </label>
-      </div>
+        </Field>
+      </Card>
 
       {/* アクション */}
-      <div className="flex items-center justify-between gap-2">
-        <div>
-          {isEdit && (
+      <StickyActionBar
+        error={errorAlert}
+        start={
+          isEdit && (
             confirmingDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-red-600">本当に削除しますか？</span>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg
-                    hover:bg-red-700 disabled:opacity-50"
-                >
-                  {deleting ? "削除中..." : "削除する"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingDelete(false)}
-                  className="px-3 py-1.5 border border-gray-300 text-sm text-gray-600 rounded-lg hover:bg-gray-50"
-                >
-                  キャンセル
-                </button>
-              </div>
+              <InlineConfirm
+                message="本当に削除しますか？"
+                confirmLabel={deleting ? "削除中..." : "削除する"}
+                loading={deleting}
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmingDelete(false)}
+              />
             ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(true)}
-                className="px-3 py-1.5 border border-red-300 text-red-600 text-sm rounded-lg hover:bg-red-50"
-              >
+              <Button variant="dangerGhost" icon={<Trash2 />} onClick={() => setConfirmingDelete(true)}>
                 削除
-              </button>
+              </Button>
             )
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {isEdit && (
-            <>
-              <a
-                href={`/api/invoices/${initial!.id}/pdf`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                PDFプレビュー
-              </a>
-              <a
-                href={`/api/invoices/${initial!.id}/pdf?download=1`}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
-              >
-                📥 PDFダウンロード
-              </a>
-              <button
-                type="button"
-                onClick={() => setShowSendModal(true)}
-                disabled={hasUnsavedChanges}
-                title={hasUnsavedChanges ? "未保存の変更があります。先に保存してください" : undefined}
-                className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg text-sm
-                  hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {sentAt ? "請求書を再送" : "請求書を送信"}
-              </button>
-            </>
-          )}
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium
-              hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {saving ? "保存中..." : "保存する"}
-          </button>
-        </div>
-      </div>
+          )
+        }
+      >
+        {isEdit && (
+          <>
+            {/* PDF は API 経由の <a href> のまま（next/link を通さない） */}
+            <ButtonLink
+              variant="secondary"
+              href={`/api/invoices/${initial!.id}/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              icon={<FileText />}
+            >
+              PDFプレビュー
+            </ButtonLink>
+            <ButtonLink
+              variant="secondary"
+              href={`/api/invoices/${initial!.id}/pdf?download=1`}
+              external
+              icon={<Download />}
+            >
+              PDFダウンロード
+            </ButtonLink>
+            <Button
+              variant="secondary"
+              icon={<Send />}
+              onClick={() => setShowSendModal(true)}
+              disabled={hasUnsavedChanges}
+              title={hasUnsavedChanges ? "未保存の変更があります。先に保存してください" : undefined}
+            >
+              {sentAt ? "請求書を再送" : "請求書を送信"}
+            </Button>
+          </>
+        )}
+        <Button variant="primary" type="submit" disabled={saving} loading={saving}>
+          {saving ? "保存中..." : "保存する"}
+        </Button>
+      </StickyActionBar>
     </form>
 
     {isEdit && showSendModal && (

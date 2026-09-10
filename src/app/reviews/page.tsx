@@ -2,8 +2,19 @@ import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
 import Link from "next/link";
 import { ItemArrivalBadge } from "@/components/item-arrival-selector";
+import { REVIEW_LABELS, REVIEW_BADGE_CLASS, isReviewStatus } from "@/lib/review-status-shared";
+import { isPrizeLevel } from "@/lib/prize-shared";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { FilterGroup, FilterTile } from "@/components/ui/filter-tile";
+import { Table, Th, Td, Tr, Thumb } from "@/components/ui/table";
+import { Badge, PrizeBadge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
+import { Ban, CircleCheck, ClipboardCheck } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = { title: "審査状況" };
 
 interface Props {
   searchParams: Promise<{
@@ -14,16 +25,14 @@ interface Props {
   }>;
 }
 
-const REVIEW_STATUSES = [
-  { value: "first_passed", label: "1次審査通過", icon: "①" },
-  { value: "second_passed", label: "2次審査通過", icon: "②" },
-  { value: "rejected", label: "選外", icon: "✕" },
-];
+// タイルの並びは 1次 → 2次 → 選外（review-status-shared.ts の配列順とは別）
+const REVIEW_TILES = ["first_passed", "second_passed", "rejected"] as const;
 
-const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  rejected: { bg: "bg-red-50", text: "text-red-700", border: "border-red-300" },
-  first_passed: { bg: "bg-green-50", text: "text-green-700", border: "border-green-300" },
-  second_passed: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-300" },
+// FilterTile の小さな点（Badge の hue と揃える。JIT のため完全なクラス文字列）
+const REVIEW_DOT_CLASS: Record<(typeof REVIEW_TILES)[number], string> = {
+  first_passed: "bg-emerald-400",
+  second_passed: "bg-indigo-400",
+  rejected: "bg-red-400",
 };
 
 // 商品到着の絞り込み値。second_arrived / final_arrived は Entry.itemArrivalStatus
@@ -31,18 +40,22 @@ const REVIEW_COLORS: Record<string, { bg: string; text: string; border: string }
 // 「どちらのラベルも付いていない（itemArrivalStatus === ""）」に対応する —
 // まだ商品が届いていない企業を洗い出す用途のための絞り込み。
 const ARRIVAL_FILTERS = [
-  { value: "second_arrived", label: "2次審査商品到着", icon: "📦" },
-  { value: "final_arrived", label: "最終審査商品到着", icon: "📦" },
-  { value: "not_arrived", label: "未到着", icon: "📭" },
+  { value: "second_arrived", label: "2次審査商品到着" },
+  { value: "final_arrived", label: "最終審査商品到着" },
+  { value: "not_arrived", label: "未到着" },
 ];
 
-const ARRIVAL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  second_arrived: { bg: "bg-sky-50", text: "text-sky-700", border: "border-sky-300" },
-  final_arrived: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-300" },
-  not_arrived: { bg: "bg-gray-100", text: "text-gray-600", border: "border-gray-300" },
+const ARRIVAL_DOT_CLASS: Record<string, string> = {
+  second_arrived: "bg-sky-400",
+  final_arrived: "bg-purple-400",
+  not_arrived: "bg-zinc-400",
 };
 
 const PAGE_SIZE = 20;
+
+// 表内リンク。Td primary の font-medium を引き継ぎ、色だけアクセントにする
+const LINK_CLASS =
+  "text-accent hover:underline rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
 
 export default async function ReviewsPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -137,200 +150,144 @@ export default async function ReviewsPage({ searchParams }: Props) {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          審査状況
-          <span className="text-base font-normal text-gray-500 ml-3">
-            {total}件
-          </span>
-        </h2>
-      </div>
+    <PageContainer>
+      <PageHeader title="審査状況" count={total} />
 
-      {/* Status Summary Cards */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {REVIEW_STATUSES.map((rs) => {
-          const count = statusCountMap[rs.value] || 0;
-          const colors = REVIEW_COLORS[rs.value];
-          const isActive = statusFilter === rs.value;
-          return (
-            <Link
-              key={rs.value}
-              href={`/reviews?status=${rs.value}${yearParam}`}
-              className={`px-4 py-3 rounded-xl border text-center transition-colors ${
-                isActive
-                  ? `${colors.bg} ${colors.border} ${colors.text}`
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <p className="text-2xl font-bold">{count}</p>
-              <p className="text-xs mt-0.5">{rs.icon} {rs.label}</p>
-            </Link>
-          );
-        })}
-      </div>
+      <div className="mb-6 space-y-4">
+        {/* Status Summary Cards */}
+        <FilterGroup label="審査状況" className="grid grid-cols-3 gap-3">
+          {REVIEW_TILES.map((value) => (
+            <FilterTile
+              key={value}
+              href={`/reviews?status=${value}${yearParam}`}
+              active={statusFilter === value}
+              label={REVIEW_LABELS[value]}
+              count={statusCountMap[value] || 0}
+              dotClassName={REVIEW_DOT_CLASS[value]}
+            />
+          ))}
+        </FilterGroup>
 
-      {/* Item Arrival Summary Cards — independent filter axis from review
-          status above (see the `where.AND` combination), so a company can be
-          isolated by e.g. "1次審査通過" AND "未到着" to chase up samples
-          that still haven't arrived. */}
-      <div className="mb-2">
-        <p className="text-xs font-medium text-gray-500">商品到着状況で絞り込み</p>
-      </div>
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {ARRIVAL_FILTERS.map((af) => {
-          const count = arrivalCountMap[af.value] || 0;
-          const colors = ARRIVAL_COLORS[af.value];
-          const isActive = arrivalFilter === af.value;
-          return (
-            <Link
+        {/* Item Arrival Summary Cards — independent filter axis from review
+            status above (see the `where.AND` combination), so a company can be
+            isolated by e.g. "1次審査通過" AND "未到着" to chase up samples
+            that still haven't arrived. */}
+        <FilterGroup
+          label="商品到着状況（同じタイルをもう一度押すと解除）"
+          className="grid grid-cols-3 gap-3"
+        >
+          {ARRIVAL_FILTERS.map((af) => (
+            <FilterTile
               key={af.value}
               href={arrivalHref(af.value)}
-              className={`px-4 py-3 rounded-xl border text-center transition-colors ${
-                isActive
-                  ? `${colors.bg} ${colors.border} ${colors.text}`
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <p className="text-2xl font-bold">{count}</p>
-              <p className="text-xs mt-0.5">{af.icon} {af.label}</p>
-            </Link>
-          );
-        })}
+              active={arrivalFilter === af.value}
+              label={af.label}
+              count={arrivalCountMap[af.value] || 0}
+              dotClassName={ARRIVAL_DOT_CLASS[af.value]}
+            />
+          ))}
+        </FilterGroup>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                写真
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                審査状況
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                商品到着
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                商品名
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                企業名
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                カテゴリ
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">
-                受賞
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {entries.map((entry) => {
-              const activeStatuses = entry.reviewStatus
-                ? entry.reviewStatus.split(",").filter(Boolean)
-                : [];
-              return (
-                <tr key={entry.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    {entry.images[0] ? (
-                      <img
-                        src={`/api/images/${entry.images[0].id}`}
-                        alt=""
-                        className="w-12 h-12 object-cover rounded-lg"
-                      />
+      <Table>
+        <thead>
+          <tr>
+            <Th width="w-16">写真</Th>
+            <Th>審査状況</Th>
+            <Th>商品到着</Th>
+            <Th>商品名</Th>
+            <Th>企業名</Th>
+            <Th>カテゴリ</Th>
+            <Th>受賞</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => {
+            const activeStatuses = entry.reviewStatus
+              ? entry.reviewStatus.split(",").filter(Boolean)
+              : [];
+            return (
+              <Tr key={entry.id}>
+                <Td>
+                  <Thumb
+                    src={entry.images[0] ? `/api/images/${entry.images[0].id}` : undefined}
+                    alt=""
+                  />
+                </Td>
+                <Td>
+                  <div className="flex flex-wrap gap-1">
+                    {activeStatuses.map((s) =>
+                      isReviewStatus(s) ? (
+                        <Badge
+                          key={s}
+                          tone="custom"
+                          className={REVIEW_BADGE_CLASS[s]}
+                          icon={s === "rejected" ? <Ban /> : <CircleCheck />}
+                        >
+                          {REVIEW_LABELS[s]}
+                        </Badge>
+                      ) : (
+                        // 未知の値は neutral ＋ 生文字列で落とさない
+                        <Badge key={s} tone="neutral">
+                          {s}
+                        </Badge>
+                      ),
+                    )}
+                  </div>
+                </Td>
+                <Td>
+                  <ItemArrivalBadge status={entry.itemArrivalStatus} />
+                </Td>
+                <Td primary>
+                  <Link
+                    href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
+                    className={LINK_CLASS}
+                  >
+                    {entry.productName}
+                  </Link>
+                </Td>
+                <Td>{entry.companyName}</Td>
+                <Td>
+                  <Badge tone="neutral">{entry.productCategory || "未分類"}</Badge>
+                </Td>
+                <Td>
+                  {/* 受賞があるときだけ。賞ごとの色にし、未知の賞名は neutral で見せる */}
+                  {entry.prizeLevel &&
+                    (isPrizeLevel(entry.prizeLevel) ? (
+                      <PrizeBadge prizeLevel={entry.prizeLevel} />
                     ) : (
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
-                        No img
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1 flex-wrap">
-                      {activeStatuses.map((s) => {
-                        const rs = REVIEW_STATUSES.find((r) => r.value === s);
-                        const colors = REVIEW_COLORS[s] || {
-                          bg: "bg-gray-50",
-                          text: "text-gray-600",
-                          border: "border-gray-300",
-                        };
-                        return (
-                          <span
-                            key={s}
-                            className={`inline-block px-3 py-1 ${colors.bg} ${colors.text} border ${colors.border} text-xs font-bold rounded-full`}
-                          >
-                            {rs?.icon} {rs?.label}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <ItemArrivalBadge status={entry.itemArrivalStatus} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {entry.productName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {entry.companyName}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                      {entry.productCategory || "未分類"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {entry.prizeLevel && (
-                      <span className="inline-block px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-300 text-xs font-bold rounded-full">
-                        🏆 {entry.prizeLevel}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {entries.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                  審査通過エントリーがありません
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                      <Badge tone="neutral">{entry.prizeLevel}</Badge>
+                    ))}
+                </Td>
+              </Tr>
+            );
+          })}
+          {entries.length === 0 && (
+            <EmptyState
+              colSpan={7}
+              icon={ClipboardCheck}
+              title="審査通過エントリーがありません"
+              description={
+                arrivalFilter
+                  ? "絞り込み条件に該当するエントリーはありません。到着タイルをもう一度押すと解除できます"
+                  : "エントリー詳細の審査状況欄で設定すると、ここに表示されます"
+              }
+            />
+          )}
+        </tbody>
+      </Table>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {page > 1 && (
-            <Link
-              href={`/reviews?status=${encodeURIComponent(statusFilter)}&page=${page - 1}${arrivalFilter ? `&arrival=${arrivalFilter}` : ""}${yearParam}`}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              前へ
-            </Link>
-          )}
-          <span className="px-3 py-2 text-sm text-gray-600">
-            {page} / {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link
-              href={`/reviews?status=${encodeURIComponent(statusFilter)}&page=${page + 1}${arrivalFilter ? `&arrival=${arrivalFilter}` : ""}${yearParam}`}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              次へ
-            </Link>
-          )}
-        </div>
-      )}
-    </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        pageSize={PAGE_SIZE}
+        hrefFor={(n) =>
+          `/reviews?status=${encodeURIComponent(statusFilter)}&page=${n}${arrivalFilter ? `&arrival=${arrivalFilter}` : ""}${yearParam}`
+        }
+      />
+    </PageContainer>
   );
 }

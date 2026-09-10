@@ -3,6 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRole } from "@/lib/role-context";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { NoPermission } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field } from "@/components/ui/field";
+import { Input, Textarea } from "@/components/ui/field-controls";
+import { ListPlus, Plus, Trash2 } from "@/components/ui/icons";
+import { Modal } from "@/components/ui/modal";
+import { PageContainer, PageHeader } from "@/components/ui/page";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { Table, Td, Th, Tr } from "@/components/ui/table";
 
 interface ContactListRow {
   id: number;
@@ -11,6 +22,10 @@ interface ContactListRow {
   createdAt: string;
   _count: { memberships: number };
 }
+
+// 表内の文字リンク型ボタン（「編集」）。青はリンク専用色
+const LINK_BUTTON_CLASS =
+  "rounded-sm text-sm text-accent whitespace-nowrap hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
 
 export default function ContactListsPage() {
   const { permissions } = useRole();
@@ -33,86 +48,82 @@ export default function ContactListsPage() {
   // Part of the contacts feature — gated the same way as /contacts.
   if (!permissions.canManageContacts) {
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">閲覧権限がありません</p>
-        </div>
-      </div>
+      <PageContainer>
+        <NoPermission message="閲覧権限がありません" />
+      </PageContainer>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Link href="/contacts" className="text-sm text-gray-500 hover:text-gray-700">
-            ← 連絡先一覧
-          </Link>
-        </div>
-      </div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          リスト管理
-          <span className="text-base font-normal text-gray-500 ml-3">
-            {lists.length}件
-          </span>
-        </h2>
-        {permissions.canEdit && (
-          <button
-            onClick={() => { setEditingList(null); setShowForm(true); }}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium
-              hover:bg-blue-700 transition-colors"
-          >
-            + リスト追加
-          </button>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="リスト管理"
+        count={lists.length}
+        backHref="/contacts"
+        backLabel="連絡先一覧"
+        actions={
+          permissions.canEdit && (
+            <Button
+              variant="primary"
+              icon={<Plus />}
+              onClick={() => { setEditingList(null); setShowForm(true); }}
+            >
+              リスト追加
+            </Button>
+          )
+        }
+      />
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">読み込み中...</div>
+        <TableSkeleton cols={4} />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">リスト名</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">説明</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">件数</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {lists.map((list) => (
-                <tr key={list.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    <Link href={`/contacts?listId=${list.id}`} className="text-blue-600 hover:underline">
-                      {list.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{list.description}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{list._count.memberships}件</td>
-                  <td className="px-4 py-3">
-                    {permissions.canEdit && (
-                      <button
-                        onClick={() => { setEditingList(list); setShowForm(true); }}
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                      >
-                        編集
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {lists.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
-                    リストがありません
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <thead>
+            <tr>
+              <Th>リスト名</Th>
+              <Th>説明</Th>
+              <Th align="right">件数</Th>
+              <Th>操作</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {lists.map((list) => (
+              <Tr key={list.id}>
+                <Td primary>
+                  <Link
+                    href={`/contacts?listId=${list.id}`}
+                    className="rounded-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    {list.name}
+                  </Link>
+                </Td>
+                <Td>{list.description}</Td>
+                <Td numeric>{list._count.memberships}件</Td>
+                <Td>
+                  {permissions.canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditingList(list); setShowForm(true); }}
+                      className={LINK_BUTTON_CLASS}
+                    >
+                      編集
+                    </button>
+                  )}
+                </Td>
+              </Tr>
+            ))}
+            {lists.length === 0 && (
+              <EmptyState
+                colSpan={4}
+                icon={ListPlus}
+                title="リストがありません"
+                description={
+                  permissions.canEdit ? "「リスト追加」から作成すると、ここに表示されます" : undefined
+                }
+              />
+            )}
+          </tbody>
+        </Table>
       )}
 
       {showForm && (
@@ -122,7 +133,7 @@ export default function ContactListsPage() {
           onSaved={fetchLists}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
 
@@ -191,75 +202,55 @@ function ListFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {isEdit ? "リスト編集" : "リスト追加"}
-        </h3>
+    <Modal
+      open
+      onClose={onClose}
+      title={isEdit ? "リスト編集" : "リスト追加"}
+      size="md"
+      as="form"
+      onSubmit={handleSubmit}
+      // 削除は native confirm() のまま（置換対象外）
+      footerStart={
+        isEdit && permissions.canDelete && (
+          <Button
+            variant="dangerGhost"
+            icon={<Trash2 />}
+            onClick={handleDelete}
+            disabled={deleting}
+            loading={deleting}
+          >
+            {deleting ? "削除中..." : "リストを削除"}
+          </Button>
+        )
+      }
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            キャンセル
+          </Button>
+          <Button variant="primary" type="submit" disabled={saving} loading={saving}>
+            {saving ? "保存中..." : "保存"}
+          </Button>
+        </>
+      }
+    >
+      {error && <Alert tone="danger">{error}</Alert>}
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">リスト名</span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-gray-700">説明</span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </label>
-
-          <div className="flex items-center justify-between pt-2">
-            <div>
-              {isEdit && permissions.canDelete && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="text-sm text-red-600 hover:text-red-800 hover:underline disabled:opacity-50"
-                >
-                  {deleting ? "削除中..." : "リストを削除"}
-                </button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg
-                  hover:bg-gray-50 transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg font-medium
-                  hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {saving ? "保存中..." : "保存"}
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+      <Field label="リスト名">
+        <Input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </Field>
+      <Field label="説明">
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
+      </Field>
+    </Modal>
   );
 }

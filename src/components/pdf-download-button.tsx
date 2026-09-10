@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Download } from "@/components/ui/icons";
 
 export function PdfDownloadButton({ entryName }: { entryName: string }) {
   const [generating, setGenerating] = useState(false);
@@ -11,6 +13,8 @@ export function PdfDownloadButton({ entryName }: { entryName: string }) {
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
+      // 撮影範囲は #entry-detail だけ（見出し行の編集・PDF・削除ボタンと
+      // 編集中の保存バーは entry-detail.tsx でこの外に置いてある）
       const content = document.getElementById("entry-detail");
       if (!content) return;
 
@@ -62,13 +66,14 @@ export function PdfDownloadButton({ entryName }: { entryName: string }) {
   }
 
   return (
-    <button
+    <Button
+      variant="secondary"
+      icon={<Download />}
       onClick={handleDownload}
       disabled={generating}
-      className="px-3 py-1.5 border border-gray-300 text-gray-700 text-sm rounded-lg
-        hover:bg-gray-50 disabled:opacity-50 transition-colors"
+      loading={generating}
     >
-      {generating ? "PDF生成中..." : "📄 PDF"}
-    </button>
+      {generating ? "PDF生成中..." : "PDF"}
+    </Button>
   );
 }

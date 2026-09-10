@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Send } from "@/components/ui/icons";
 
 interface Props {
   statusFilter: string;
@@ -42,25 +44,17 @@ export function ReviewNotifyButton({ statusFilter, statusLabel, entryIds }: Prop
 
   return (
     <div className="flex items-center gap-3">
-      <button
-        onClick={handleSend}
+      <Button
+        variant="primary"
+        icon={<Send />}
+        loading={sending}
         disabled={sending}
-        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+        onClick={handleSend}
       >
-        {sending ? (
-          <>
-            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            送信中...
-          </>
-        ) : (
-          <>✉️ {statusLabel}通過通知を送信</>
-        )}
-      </button>
+        {sending ? "送信中..." : `${statusLabel}通過通知を送信`}
+      </Button>
       {result && (
-        <span className="text-sm text-green-700">
+        <span className="text-sm text-success-ink">
           {result.sent}件送信完了{result.failed > 0 ? ` (${result.failed}件失敗)` : ""}
         </span>
       )}
