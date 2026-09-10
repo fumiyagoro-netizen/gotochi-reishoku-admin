@@ -13,11 +13,15 @@ export type InlineConfirmProps = {
   message: string;
   /** 「削除する」「実行する」 */
   confirmLabel: string;
+  /** loading 中の確認ボタン文言（「削除中...」等）。省略時は confirmLabel のまま */
+  loadingLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   /** 既存の deleting / submitting */
   loading?: boolean;
   tone?: InlineConfirmTone;
+  /** 外枠に足すクラス（表のセル内で w-full にする等） */
+  className?: string;
 };
 
 /**
@@ -27,10 +31,12 @@ export type InlineConfirmProps = {
 export function InlineConfirm({
   message,
   confirmLabel,
+  loadingLabel,
   onConfirm,
   onCancel,
   loading = false,
   tone = "danger",
+  className,
 }: InlineConfirmProps) {
   return (
     <div
@@ -38,6 +44,7 @@ export function InlineConfirm({
       className={cn(
         "inline-flex flex-wrap items-center gap-2 rounded-md border px-3 py-1.5 text-caption",
         TONE[tone],
+        className,
       )}
     >
       <span>{message}</span>
@@ -50,7 +57,7 @@ export function InlineConfirm({
         disabled={loading}
         onClick={onConfirm}
       >
-        {confirmLabel}
+        {loading ? (loadingLabel ?? confirmLabel) : confirmLabel}
       </Button>
       <Button variant="ghost" size="sm" onClick={onCancel}>
         キャンセル

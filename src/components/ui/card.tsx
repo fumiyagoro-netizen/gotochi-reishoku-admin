@@ -5,6 +5,8 @@ import { Lock } from "./icons";
 
 export type CardPadding = "none" | "sm" | "md";
 export type CardTone = "default" | "active";
+/** 見出しレベル。ページ内で h2 の下に置くカードは h3 にする */
+export type CardTitleTag = "h2" | "h3";
 
 const PADDING: Record<CardPadding, string> = {
   none: "p-0",
@@ -46,8 +48,15 @@ export function Card({
   );
 }
 
-export function CardTitle({ children, className }: { children: ReactNode; className?: string }) {
-  return <h2 className={cn("text-sm font-semibold text-ink", className)}>{children}</h2>;
+export type CardTitleProps = {
+  /** 既定 h2。見出し階層に合わせて h3 にできる */
+  as?: CardTitleTag;
+  className?: string;
+  children: ReactNode;
+};
+
+export function CardTitle({ as: Tag = "h2", className, children }: CardTitleProps) {
+  return <Tag className={cn("text-sm font-semibold text-ink", className)}>{children}</Tag>;
 }
 
 export function CardDescription({ children, className }: { children: ReactNode; className?: string }) {
@@ -58,14 +67,16 @@ export type CardHeaderProps = {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
+  /** CardTitle の見出しレベル（既定 h2） */
+  as?: CardTitleTag;
 };
 
 /** Card padding="none" の先頭に置く見出し行 */
-export function CardHeader({ title, description, actions }: CardHeaderProps) {
+export function CardHeader({ title, description, actions, as }: CardHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
       <div className="min-w-0">
-        <CardTitle>{title}</CardTitle>
+        <CardTitle as={as}>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -73,10 +84,18 @@ export function CardHeader({ title, description, actions }: CardHeaderProps) {
   );
 }
 
+export type CardFooterProps = {
+  /** 左スロット（削除・状態メッセージ）。children は右寄せのまま */
+  start?: ReactNode;
+  children: ReactNode;
+};
+
 /** Card padding="none" の末尾に置く右寄せのボタン行 */
-export function CardFooter({ children }: { children: ReactNode }) {
+export function CardFooter({ start, children }: CardFooterProps) {
   return (
     <div className="flex items-center justify-end gap-2 rounded-b-lg border-t border-line bg-surface-muted/40 px-5 py-3">
+      {/* start があるときだけ左寄せの箱を挟む。無いときは children を直接置き、呼び出し側の mr-auto 運用（settings）を壊さない */}
+      {start && <div className="mr-auto flex min-w-0 items-center gap-2">{start}</div>}
       {children}
     </div>
   );

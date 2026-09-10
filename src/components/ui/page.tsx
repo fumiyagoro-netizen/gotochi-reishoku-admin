@@ -74,7 +74,9 @@ export function PageHeader({
         </BackLink>
       )}
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        {/* 見出し側を flex-1（basis 0）にすると、余った幅は見出しが取り、actions は自分の幅がページ幅を
+            超えたときだけ縮んで折り返す。長い件名（email-logs 明細）は従来どおり先に truncate される */}
+        <div className="min-w-0 flex-1">
           <h1 className="flex min-w-0 items-baseline gap-2 text-xl font-semibold tracking-tight text-ink">
             {/* 長い件名（email-logs 明細）は切って title で全文を確認できるようにする */}
             <span className="truncate" title={typeof title === "string" ? title : undefined}>
@@ -90,7 +92,7 @@ export function PageHeader({
           </h1>
           {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
         </div>
-        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>}
       </div>
       {children && <div className="mt-5">{children}</div>}
     </div>

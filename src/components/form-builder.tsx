@@ -2,9 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-// Heading / Text / Image は ui/icons.ts の対応表に無いので lucide から直接取る
-//（表示専用ブロックの目印にだけ使う。対応表に入り次第 ./ui/icons に寄せる）
-import { HeadingIcon, TextIcon, ImageIcon } from "lucide-react";
 import { isDisplayField } from "@/lib/form-shared";
 import type { DisplayFieldType, FieldType, FormField } from "@/lib/form-shared";
 import { Alert } from "@/components/ui/alert";
@@ -19,8 +16,12 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
+  // 表示専用ブロックの目印。Image / Text は DOM のグローバル名と被るので *Icon 別名で取る
+  HeadingIcon,
+  ImageIcon,
   Loader2,
   Plus,
+  TextIcon,
   Trash2,
   type LucideIcon,
 } from "@/components/ui/icons";

@@ -11,7 +11,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle, NoPermission } from "@/components/ui/card";
 import { CheckPill } from "@/components/ui/check-pill";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Field } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Checkbox, Input, Radio, Select, Textarea } from "@/components/ui/field-controls";
 import { BookUser, ListPlus, Mail, Plus, Search, Send, Upload, X } from "@/components/ui/icons";
 import { InlineConfirm } from "@/components/ui/inline-confirm";
@@ -37,13 +37,6 @@ interface Contact {
   createdAt: string;
   memberships: { list: ContactList }[];
 }
-
-// 表内の文字リンク型ボタン（「編集」「配信を再開」）。青はリンク専用色
-const LINK_BUTTON_CLASS =
-  "rounded-sm text-sm text-accent whitespace-nowrap hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
-
-// CheckPill は label 要素なので Field（label で包む）は使えない。ピル群の見出しはこれで揃える
-const GROUP_LABEL = "mb-1.5 block text-sm font-medium text-ink";
 
 // Reads ?listId= from the URL so that opening a list from リスト管理
 // (src/app/contacts/lists/page.tsx links to /contacts?listId=N) actually
@@ -253,7 +246,7 @@ function ContactsPageInner() {
           <thead>
             <tr>
               {canSelect && (
-                <Th width="w-10" srLabel="選択">
+                <Th width="w-10" srLabel="選択" compact>
                   <Checkbox
                     checked={contacts.length > 0 && selected.size === contacts.length}
                     onChange={toggleAll}
@@ -306,13 +299,12 @@ function ContactsPageInner() {
                 {permissions.canEdit && (
                   <Td top>
                     <div className="flex flex-col items-start gap-1">
-                      <button
-                        type="button"
+                      <Button
+                        variant="link"
                         onClick={() => { setEditingContact(contact); setShowForm(true); }}
-                        className={LINK_BUTTON_CLASS}
                       >
                         編集
-                      </button>
+                      </Button>
                       {/* 配信を再開できるのは管理者のみ（API側でも role === "admin"
                           で弾いている）。代表者・編集者には出さない。 */}
                       {role === "admin" && !contact.subscribed && (
@@ -1004,8 +996,9 @@ function ContactFormModal({
         />
       </Field>
 
+      {/* CheckPill は label 要素なので Field（label で包む）ではなく FieldLabel */}
       <div>
-        <span className={GROUP_LABEL}>リスト</span>
+        <FieldLabel>リスト</FieldLabel>
         {lists.length === 0 ? (
           <p className="text-sm text-ink-subtle">リストがありません</p>
         ) : (
@@ -1176,7 +1169,8 @@ function ResubscribeModal({
           <InlineConfirm
             tone="warning"
             message={`${contact.email} 宛への配信を再開します。よろしいですか？`}
-            confirmLabel={submitting ? "実行中..." : "実行する"}
+            confirmLabel="実行する"
+            loadingLabel="実行中..."
             onConfirm={handleConfirm}
             onCancel={() => setConfirming(false)}
             loading={submitting}

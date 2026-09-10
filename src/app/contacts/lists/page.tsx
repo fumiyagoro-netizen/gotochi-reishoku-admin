@@ -23,10 +23,6 @@ interface ContactListRow {
   _count: { memberships: number };
 }
 
-// 表内の文字リンク型ボタン（「編集」）。青はリンク専用色
-const LINK_BUTTON_CLASS =
-  "rounded-sm text-sm text-accent whitespace-nowrap hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40";
-
 export default function ContactListsPage() {
   const { permissions } = useRole();
   const [lists, setLists] = useState<ContactListRow[]>([]);
@@ -101,13 +97,12 @@ export default function ContactListsPage() {
                 <Td numeric>{list._count.memberships}件</Td>
                 <Td>
                   {permissions.canEdit && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="link"
                       onClick={() => { setEditingList(list); setShowForm(true); }}
-                      className={LINK_BUTTON_CLASS}
                     >
                       編集
-                    </button>
+                    </Button>
                   )}
                 </Td>
               </Tr>

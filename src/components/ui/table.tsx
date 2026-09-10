@@ -46,14 +46,17 @@ export type ThProps = Omit<ThHTMLAttributes<HTMLTableCellElement>, "align"> & {
   width?: string;
   /** 見出し文字を出さない列（チェック列・削除列）の sr-only 見出し */
   srLabel?: string;
+  /** チェック列用。左右余白を px-2 に詰める */
+  compact?: boolean;
 };
 
-export function Th({ align = "left", width, srLabel, className, children, ...rest }: ThProps) {
+export function Th({ align = "left", width, srLabel, compact, className, children, ...rest }: ThProps) {
   return (
     <th
       scope="col"
       className={cn(
-        "h-9 px-3 text-caption font-medium text-ink-subtle bg-surface-muted/60 border-b border-line whitespace-nowrap align-middle first:pl-4 last:pr-4",
+        "h-9 text-caption font-medium text-ink-subtle bg-surface-muted/60 border-b border-line whitespace-nowrap align-middle first:pl-4 last:pr-4",
+        compact ? "px-2" : "px-3",
         ALIGN[align],
         width,
         className,
@@ -66,9 +69,13 @@ export function Th({ align = "left", width, srLabel, className, children, ...res
   );
 }
 
+export type TdTone = "ink";
+
 export type TdProps = Omit<TdHTMLAttributes<HTMLTableCellElement>, "align"> & {
   /** 主キー列（商品名など） */
   primary?: boolean;
+  /** ink は本文色（text-ink）だが font-medium にしない列。primary との違いは太さだけ */
+  tone?: TdTone;
   muted?: boolean;
   subtle?: boolean;
   /** 数値列: 右寄せ・等幅数字・折り返さない */
@@ -82,6 +89,7 @@ export type TdProps = Omit<TdHTMLAttributes<HTMLTableCellElement>, "align"> & {
 
 export function Td({
   primary,
+  tone,
   muted,
   subtle,
   numeric,
@@ -99,8 +107,15 @@ export function Td({
       className={cn(
         "px-3 py-2.5 first:pl-4 last:pr-4",
         top ? "align-top" : "align-middle",
-        primary ? "font-medium text-ink" : subtle ? "text-ink-subtle" : "text-ink-muted",
-        muted && !primary && !subtle && "text-ink-muted",
+        // 文字色は1つだけ出す（既定の text-ink-muted は tone 未指定のときだけ付け、tone="ink" と重ねない）
+        primary
+          ? "font-medium text-ink"
+          : tone === "ink"
+            ? "text-ink"
+            : subtle
+              ? "text-ink-subtle"
+              : "text-ink-muted",
+        muted && !primary && !subtle && !tone && "text-ink-muted",
         numeric && "text-right tabular-nums whitespace-nowrap",
         nowrap && "whitespace-nowrap",
         truncate !== undefined && "max-w-0 truncate",

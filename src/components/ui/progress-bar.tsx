@@ -12,7 +12,7 @@ export type ProgressBarProps = {
 /** 件数をバーの外に出し、細い幅でも見切れないようにした横棒 */
 export function ProgressBar({ percent, label, value, fillClassName = "bg-ink/70" }: ProgressBarProps) {
   return (
-    <div className="grid grid-cols-[7rem_1fr_3rem] items-center gap-3">
+    <div className="grid grid-cols-[12rem_1fr_3rem] items-center gap-3">
       <span className="text-sm text-ink-muted truncate" title={label}>
         {label}
       </span>

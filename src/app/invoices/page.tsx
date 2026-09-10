@@ -194,7 +194,8 @@ function InvoicesPageInner() {
                   </Link>
                 </Td>
                 <Td primary>{inv.recipientName} 様</Td>
-                <Td numeric>{formatYen(inv.totalAmount)}</Td>
+                {/* 金額は主要な数値なので補助色ではなく本文色（太字にはしない） */}
+                <Td numeric tone="ink">{formatYen(inv.totalAmount)}</Td>
                 <Td subtle nowrap>{formatJstDate(inv.issueDate)}</Td>
                 <Td subtle nowrap>{formatJstDate(inv.dueDate)}</Td>
                 <Td nowrap>

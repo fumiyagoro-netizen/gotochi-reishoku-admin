@@ -9,8 +9,8 @@
 // calls for one shared source used from both client components and server
 // routes.
 export const ITEM_ARRIVAL_STATUSES = [
-  { value: "second_arrived", label: "2次審査商品到着", icon: "📦" },
-  { value: "final_arrived", label: "最終審査商品到着", icon: "📦" },
+  { value: "second_arrived", label: "2次審査商品到着" },
+  { value: "final_arrived", label: "最終審査商品到着" },
 ] as const;
 
 export type ItemArrivalStatus = (typeof ITEM_ARRIVAL_STATUSES)[number]["value"];
@@ -34,16 +34,6 @@ export const ITEM_ARRIVAL_BADGE_CLASS: Record<ItemArrivalStatus, string> = {
 export const ITEM_ARRIVAL_PILL_CLASS: Record<ItemArrivalStatus, string> = {
   second_arrived: "bg-sky-50 text-sky-700 border-sky-300",
   final_arrived: "bg-purple-50 text-purple-700 border-purple-300",
-};
-
-// 旧セレクタ（item-arrival-selector.tsx）が `border ${colors.border}` で結合して
-// いるため据え置き。TogglePill / ui/badge.tsx への置換が終わったら削除する。
-export const ITEM_ARRIVAL_COLORS: Record<
-  ItemArrivalStatus,
-  { bg: string; text: string; border: string }
-> = {
-  second_arrived: { bg: "bg-sky-50", text: "text-sky-700", border: "border-sky-300" },
-  final_arrived: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-300" },
 };
 
 export function parseItemArrivalStatuses(raw: string): string[] {

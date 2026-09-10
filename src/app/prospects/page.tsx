@@ -363,7 +363,7 @@ function ProspectsPageInner() {
       )}
 
       {/* Pagination */}
-      <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+      <Pagination page={page} totalPages={totalPages} onChange={setPage} total={total} />
 
       {showForm && (
         <ProspectFormModal
@@ -505,7 +505,8 @@ function ProspectFormModal({
           confirmingDelete ? (
             <InlineConfirm
               message="本当に削除しますか？"
-              confirmLabel={deleting ? "削除中..." : "削除する"}
+              confirmLabel="削除する"
+              loadingLabel="削除中..."
               onConfirm={handleDelete}
               onCancel={() => setConfirmingDelete(false)}
               loading={deleting}

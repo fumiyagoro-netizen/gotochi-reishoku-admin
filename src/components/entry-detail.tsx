@@ -11,7 +11,7 @@ import { EntryComments, type EntryCommentData } from "./entry-comments";
 import { useRole } from "@/lib/role-context";
 import { isPrizeLevel } from "@/lib/prize-shared";
 import { PageContainer, PageHeader } from "@/components/ui/page";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Badge, PrizeBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/field-controls";
@@ -385,10 +385,8 @@ export function EntryDetail({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Card padding="none" as="section">
-      {/* CardHeader は h2 固定なので、商品名 h2 の下位になる h3 を同じ見た目で手で組む */}
-      <div className="border-b border-line px-5 py-3.5">
-        <h3 className="text-sm font-semibold text-ink">{title}</h3>
-      </div>
+      {/* 商品名 h2 の下位になるので見出しは h3 */}
+      <CardHeader as="h3" title={title} />
       <div className="p-5">{children}</div>
     </Card>
   );
@@ -464,7 +462,8 @@ function EditableRow({
         : undefined;
 
   return (
-    <KeyValue label={label} editing={editing} link={link}>
+    // 編集中は h-8 の入力欄が行の高さになるので、ラベルを上端ではなく行の中央に置く
+    <KeyValue label={label} editing={editing} link={link} align={editing ? "center" : "start"}>
       {editing ? (
         <Input
           size="sm"

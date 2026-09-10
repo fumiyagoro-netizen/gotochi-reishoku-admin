@@ -35,8 +35,9 @@ export function DeleteEntryButton({ entryId }: { entryId: number }) {
     return (
       <InlineConfirm
         message="本当に削除しますか？"
-        // 実行中の文言は旧来の「削除中...」のまま（スピナーは InlineConfirm 側）
-        confirmLabel={deleting ? "削除中..." : "削除する"}
+        confirmLabel="削除する"
+        // 実行中の文言は旧来の「削除中...」のまま
+        loadingLabel="削除中..."
         onConfirm={handleDelete}
         onCancel={() => setConfirming(false)}
         loading={deleting}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRole } from "@/lib/role-context";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field-controls";
 import { Alert } from "@/components/ui/alert";
@@ -97,10 +97,8 @@ export function EntryComments({
 
   return (
     <Card padding="none" as="section">
-      {/* CardHeader は h2 固定なので、商品名 h2 の下位になる h3 を同じ見た目で手で組む */}
-      <div className="border-b border-line px-5 py-3.5">
-        <h3 className="text-sm font-semibold text-ink">審査コメント</h3>
-      </div>
+      {/* 商品名 h2 の下位になるので見出しは h3 */}
+      <CardHeader as="h3" title="審査コメント" />
 
       <div className="p-5">
         {canPost && (
@@ -151,16 +149,16 @@ export function EntryComments({
                     </div>
                     {canDelete &&
                       (confirmingId === comment.id ? (
-                        <div className="shrink-0">
-                          <InlineConfirm
-                            message="削除しますか？"
-                            // 実行中の文言は旧来の「削除中...」のまま（スピナーは InlineConfirm 側）
-                            confirmLabel={deletingId === comment.id ? "削除中..." : "削除する"}
-                            onConfirm={() => handleDelete(comment.id)}
-                            onCancel={() => setConfirmingId(null)}
-                            loading={deletingId === comment.id}
-                          />
-                        </div>
+                        <InlineConfirm
+                          className="shrink-0"
+                          message="削除しますか？"
+                          confirmLabel="削除する"
+                          // 実行中の文言は旧来の「削除中...」のまま
+                          loadingLabel="削除中..."
+                          onConfirm={() => handleDelete(comment.id)}
+                          onCancel={() => setConfirmingId(null)}
+                          loading={deletingId === comment.id}
+                        />
                       ) : (
                         <Button
                           variant="dangerGhost"

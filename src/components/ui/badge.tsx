@@ -118,6 +118,23 @@ export function ReviewBadge({ status, size }: { status: string; size?: BadgeSize
   );
 }
 
+// フォームの状態。文言・色は src/app/forms/page.tsx の定義を正として写したもの
+const FORM_STATUS: Record<string, { label: string; tone: BadgeTone }> = {
+  draft: { label: "下書き", tone: "neutral" },
+  published: { label: "公開", tone: "success" },
+  closed: { label: "受付終了", tone: "warning" },
+};
+
+/** forms 一覧・詳細の状態バッジ。未知の状態は neutral ＋ 生文字列 */
+export function FormStatusBadge({ status, size }: { status: string; size?: BadgeSize }) {
+  const meta = Object.prototype.hasOwnProperty.call(FORM_STATUS, status) ? FORM_STATUS[status] : undefined;
+  return (
+    <Badge tone={meta?.tone ?? "neutral"} size={size}>
+      {meta?.label ?? status}
+    </Badge>
+  );
+}
+
 export function ItemArrivalBadge({ status, size }: { status: string; size?: BadgeSize }) {
   const active = parseItemArrivalStatuses(status);
   if (active.length === 0) return null;

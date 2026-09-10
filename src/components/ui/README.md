@@ -33,4 +33,21 @@
 - Pagination は range が無いときも左の `<p>` を空で描画し、前へ／次への位置を固定する。
 - SegmentedControl の onChange は選択中の項目を押しても呼ぶ（upload の result リセット挙動を維持）。
 - Spinner はフラグメント（svg ＋ sr-only）。幅を固定したい場所では呼び出し側の span で包む。Button 内は自前で Loader2 を出すので Spinner は不要。
-- `src/app/_ui-preview/page.tsx` は開発時の目視用（.gitignore 済み・コミットしない）。middleware の認証対象なのでログイン後に開く。
+- `src/app/ui-preview/page.tsx` は開発時の目視用（.gitignore 済み・コミットしない）。middleware の認証対象なのでログイン後に `/ui-preview` を開く。
+
+## 画面置換の要望で追加したもの（既存 props・既定の見た目は不変）
+
+- Button / ButtonLink: variant `link`（text-accent）と `linkDanger`（text-danger）。hover:underline underline-offset-4、高さ・余白なしの inline-flex で行高 40px を崩さない。文字サイズだけ size に従う（md=`text-sm` / sm=`text-caption`）。表内の「編集」「配信を再開」「削除」等の文字ボタン用。フォーカスリングの色は variant 側（accent / danger）。
+- IconButton: size `xs`（`size-6`、アイコン `size-3.5`）。表の行内用。アイコン寸法は size 側に持ち base の `[&_svg]:size-4` は撤去（出力順に依存させない）。
+- TogglePill: `...rest`（ButtonHTMLAttributes、`type` / `className` / `children` を除く）を透過。`aria-expanded` / `aria-haspopup` を付けられる。rest は先に展開するので `type="button"` / `aria-pressed` / `aria-busy` は上書きされない。
+- CardTitle / CardHeader: `as?: "h2" | "h3"`（既定 h2）。CardFooter: `start?`（左スロット）。`start` があるときだけ `mr-auto` の箱を挟み、無いときは children を直接置く（settings の `mr-auto` 運用を壊さない）。
+- InlineConfirm: `className`（外枠に追加）と `loadingLabel`（loading 中の確認ボタン文言。既定は confirmLabel）。
+- PageHeader: 見出し側を `flex-1`（basis 0）にし、actions は `flex-wrap justify-end`。actions は自分の幅がページ幅を超えたときだけ縮んで折り返し、長い件名は従来どおり先に truncate される。
+- Field: `className`（inline ではラベル行、それ以外は外側要素）と `labelHint`（ラベル横の薄字補足 `text-caption text-ink-subtle font-normal`。labelAddon の前）。新規 `FieldLabel`（label 要素を使わない見出しだけ。`hint` / `addon` / `id` / `className`）。CheckPill 群・FileInput のように子が自前の label を持つ場合に使い、二重の label を作らない。
+- Pagination: `total` だけでも左に「{total}件」を出す（`pageSize` が無ければ範囲は出さない）。
+- icons.ts: `Heading` / `Text` / `Image` と、DOM のグローバル名と被らない別名 `HeadingIcon` / `TextIcon` / `ImageIcon`。
+- badge.tsx: `FormStatusBadge`（draft=neutral「下書き」/ published=success「公開」/ closed=warning「受付終了」。文言は forms/page.tsx の定義を正としたもの。未知は neutral ＋ 生文字列）。
+- Td: `tone="ink"`（text-ink だが font-medium ではない）。文字色は1つだけ出し、既定の text-ink-muted は tone 未指定時だけ付ける。Th: `compact`（チェック列用 px-2。`first:pl-4` はそのまま）。
+- ModalFooter: `flex-wrap` と `note?`（basis-full の確認文スロット。ボタン行の上に出る）。右のボタン列は `ml-auto` で折り返し後も右寄せ。Modal にも `footerNote?` を通した。
+- KeyValue: `align?: "start" | "center"`（既定 start）。center は dt / dd を `self-center` にし、編集中の入力欄（h-8）と dt が中央で揃う。
+- src/lib/item-arrival-shared.ts: `ITEM_ARRIVAL_COLORS` と絵文字の `icon` を削除（参照なしを確認済み）。

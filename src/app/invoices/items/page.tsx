@@ -267,7 +267,8 @@ function InvoiceItemFormModal({
           confirmingDelete ? (
             <InlineConfirm
               message="削除しますか？"
-              confirmLabel={deleting ? "削除中..." : "削除する"}
+              confirmLabel="削除する"
+              loadingLabel="削除中..."
               loading={deleting}
               onConfirm={handleDelete}
               onCancel={() => setConfirmingDelete(false)}
@@ -301,7 +302,7 @@ function InvoiceItemFormModal({
         />
       </Field>
 
-      <Field label="単価（税別）" hint="マイナス可（割引など）">
+      <Field label="単価（税別）" labelHint="マイナス可（割引など）">
         <Input
           type="number"
           value={unitPrice}

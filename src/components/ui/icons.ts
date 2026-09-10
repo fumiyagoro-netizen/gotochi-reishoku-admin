@@ -53,6 +53,14 @@ export {
   PlayCircle,
   PauseCircle,
   Settings2,
+  // form-builder の表示専用ブロック（見出し・本文・画像）。
+  // Image / Text は DOM のグローバル名と被るので、同名を持つファイルでは *Icon 別名を使う
+  Heading,
+  HeadingIcon,
+  Text,
+  TextIcon,
+  Image,
+  ImageIcon,
   // 状態
   ImageOff,
   Inbox,

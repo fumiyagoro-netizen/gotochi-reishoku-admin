@@ -1,17 +1,20 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { cn } from "@/lib/cn";
 
-export type IconButtonSize = "sm" | "md";
+export type IconButtonSize = "xs" | "sm" | "md";
 export type IconButtonTone = "neutral" | "danger";
 
 const BASE =
   "inline-flex items-center justify-center rounded-md text-ink-subtle transition-colors " +
   "disabled:opacity-40 disabled:cursor-not-allowed " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 [&_svg]:size-4 [&_svg]:shrink-0";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 [&_svg]:shrink-0";
 
+// アイコン寸法は size 側に持つ（同じ [&_svg]:size-* を base と重ねると CSS の出力順に依存するため）。
+// xs は表の行内用で、行高 40px を崩さない
 const SIZE: Record<IconButtonSize, string> = {
-  sm: "size-7",
-  md: "size-8",
+  xs: "size-6 [&_svg]:size-3.5",
+  sm: "size-7 [&_svg]:size-4",
+  md: "size-8 [&_svg]:size-4",
 };
 
 // hover 色は tone ごとに持つ（同じ hover: 変数を base と tone で重ねると CSS の出力順に依存するため）
@@ -23,7 +26,7 @@ const TONE: Record<IconButtonTone, string> = {
 export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
   /** aria-label と title の両方に入れる（『上へ』『下へ』『削除』など既存 title をそのまま渡す） */
   label: string;
-  /** lucide アイコン（16px に自動調整） */
+  /** lucide アイコン（md / sm は 16px、xs は 14px に自動調整） */
   icon: ReactNode;
   size?: IconButtonSize;
   tone?: IconButtonTone;

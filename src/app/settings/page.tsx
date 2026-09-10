@@ -181,11 +181,14 @@ export default function SettingsPage() {
                 </Field>
               </div>
               {/* 保存結果は保存ボタンの横に出す（バナーとボタンが離れないように） */}
-              <CardFooter>
-                <div className="mr-auto min-w-0">
-                  {error && <Alert tone="danger" compact>{error}</Alert>}
-                  {saved && <Alert tone="success" compact>保存しました</Alert>}
-                </div>
+              <CardFooter
+                start={
+                  <>
+                    {error && <Alert tone="danger" compact>{error}</Alert>}
+                    {saved && <Alert tone="success" compact>保存しました</Alert>}
+                  </>
+                }
+              >
                 <Button variant="primary" type="submit" disabled={saving} loading={saving}>
                   {saving ? "保存中..." : "保存する"}
                 </Button>
@@ -243,11 +246,14 @@ export default function SettingsPage() {
                   />
                 </Field>
               </div>
-              <CardFooter>
-                <div className="mr-auto min-w-0">
-                  {invoiceError && <Alert tone="danger" compact>{invoiceError}</Alert>}
-                  {invoiceSaved && <Alert tone="success" compact>保存しました</Alert>}
-                </div>
+              <CardFooter
+                start={
+                  <>
+                    {invoiceError && <Alert tone="danger" compact>{invoiceError}</Alert>}
+                    {invoiceSaved && <Alert tone="success" compact>保存しました</Alert>}
+                  </>
+                }
+              >
                 <Button variant="primary" type="submit" disabled={invoiceSaving} loading={invoiceSaving}>
                   {invoiceSaving ? "保存中..." : "保存する"}
                 </Button>

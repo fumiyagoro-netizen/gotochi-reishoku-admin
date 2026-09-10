@@ -3,7 +3,14 @@ import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode, Ref } from 
 import { cn } from "@/lib/cn";
 import { Loader2 } from "./icons";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "dangerGhost";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "dangerGhost"
+  | "link"
+  | "linkDanger";
 export type ButtonSize = "md" | "sm";
 
 const BASE =
@@ -17,6 +24,18 @@ const SIZE: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-caption",
 };
 
+// link / linkDanger は表内の「編集」「配信を再開」「削除」等の文字リンク型。
+// 高さ・余白を持たず行高 40px を崩さない。フォーカスリングの色は variant 側に持つ
+const LINK_BASE =
+  "inline-flex items-center gap-1 rounded-sm whitespace-nowrap transition-colors select-none " +
+  "hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 " +
+  "disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:size-4 [&_svg]:shrink-0";
+
+const LINK_SIZE: Record<ButtonSize, string> = {
+  md: "text-sm",
+  sm: "text-caption",
+};
+
 const VARIANT: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-fg hover:bg-primary-hover",
   secondary: "bg-surface text-ink border border-line-strong shadow-xs hover:bg-surface-muted",
@@ -25,7 +44,14 @@ const VARIANT: Record<ButtonVariant, string> = {
   danger: "bg-danger text-white hover:bg-danger-ink",
   // 初期の「削除」「取り消す」など
   dangerGhost: "text-danger hover:bg-danger-soft",
+  // 文字リンク型（LINK_BASE と組む）
+  link: "text-accent focus-visible:ring-accent/40",
+  linkDanger: "text-danger focus-visible:ring-danger/40",
 };
+
+function isLinkVariant(variant: ButtonVariant): boolean {
+  return variant === "link" || variant === "linkDanger";
+}
 
 export function buttonClassName({
   variant = "secondary",
@@ -36,6 +62,9 @@ export function buttonClassName({
   size?: ButtonSize;
   className?: string;
 } = {}): string {
+  if (isLinkVariant(variant)) {
+    return cn(LINK_BASE, LINK_SIZE[size], VARIANT[variant], className);
+  }
   return cn(BASE, SIZE[size], VARIANT[variant], className);
 }
 

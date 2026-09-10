@@ -10,7 +10,7 @@ export type PaginationProps = {
   hrefFor?: (page: number) => string;
   /** button 版（invoices の setPage） */
   onChange?: (page: number) => void;
-  /** total と pageSize の両方があれば左に「{from}–{to} / {total}件」を出す */
+  /** total と pageSize の両方があれば左に「{from}–{to} / {total}件」、total だけなら「{total}件」を出す */
   total?: number;
   pageSize?: number;
 };
@@ -18,10 +18,13 @@ export type PaginationProps = {
 export function Pagination({ page, totalPages, hrefFor, onChange, total, pageSize }: PaginationProps) {
   if (totalPages <= 1) return null;
 
+  // pageSize が無ければ範囲は計算できないので件数だけ出す
   const range =
-    total !== undefined && pageSize !== undefined
-      ? `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} / ${total}件`
-      : null;
+    total === undefined
+      ? null
+      : pageSize === undefined
+        ? `${total}件`
+        : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} / ${total}件`;
 
   return (
     <nav aria-label="ページ送り" className="mt-4 flex items-center justify-between">

@@ -460,7 +460,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                 required
               />
             </Field>
-            <Field label="支払期限" hint="（既定: 発行月の翌月末）">
+            <Field label="支払期限" labelHint="（既定: 発行月の翌月末）">
               <Input
                 type="date"
                 value={dueDate}
@@ -471,7 +471,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                 required
               />
             </Field>
-            <Field label="書類番号" hint="（空欄なら自動採番）">
+            <Field label="書類番号" labelHint="（空欄なら自動採番）">
               <Input
                 type="text"
                 value={invoiceNo}
@@ -582,7 +582,8 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
                       required
                     />
                   </Td>
-                  <Td numeric>
+                  {/* 金額は行の主要な数値なので補助色ではなく本文色 */}
+                  <Td numeric tone="ink">
                     {formatYen(toNum(line.quantity) * toNum(line.unitPrice))}
                   </Td>
                   <Td>
@@ -675,7 +676,8 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
             confirmingDelete ? (
               <InlineConfirm
                 message="本当に削除しますか？"
-                confirmLabel={deleting ? "削除中..." : "削除する"}
+                confirmLabel="削除する"
+                loadingLabel="削除中..."
                 loading={deleting}
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmingDelete(false)}

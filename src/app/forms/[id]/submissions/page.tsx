@@ -6,16 +6,12 @@ import type { FormField, FormAnswers } from "@/lib/form-shared";
 import { useRole } from "@/lib/role-context";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { NoPermission } from "@/components/ui/card";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Table, Th, Td, Tr } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { Alert } from "@/components/ui/alert";
-import { Download, Loader2 } from "@/components/ui/icons";
-
-// 表内の「削除」。他の一覧と同じ文字ボタン型にして行高を増やさない（危険色）
-const DANGER_BUTTON_CLASS =
-  "inline-flex items-center gap-1 rounded-sm text-sm text-danger whitespace-nowrap hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 disabled:opacity-50 disabled:cursor-not-allowed";
+import { Download } from "@/components/ui/icons";
 
 interface FormInfo {
   id: number;
@@ -193,18 +189,15 @@ export default function FormSubmissionsPage({ params }: { params: Promise<{ id: 
                 ))}
                 {permissions.canDelete && (
                   <Td nowrap className="text-right">
-                    <button
-                      type="button"
+                    {/* loading で先頭にスピナーと aria-busy が付く。disabled は従来どおり呼び出し側の式 */}
+                    <Button
+                      variant="linkDanger"
                       onClick={() => handleDelete(submission.id)}
                       disabled={deletingId === submission.id}
-                      aria-busy={deletingId === submission.id || undefined}
-                      className={DANGER_BUTTON_CLASS}
+                      loading={deletingId === submission.id}
                     >
-                      {deletingId === submission.id && (
-                        <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-                      )}
                       {deletingId === submission.id ? "削除中..." : "削除"}
-                    </button>
+                    </Button>
                   </Td>
                 )}
               </Tr>

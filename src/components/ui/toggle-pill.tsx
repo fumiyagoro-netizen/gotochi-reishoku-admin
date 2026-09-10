@@ -1,4 +1,4 @@
-import type { MouseEventHandler, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Check, Plus } from "./icons";
 import { Spinner } from "./skeleton";
@@ -13,12 +13,13 @@ const BASE =
 const UNPRESSED =
   "border-dashed border-line-strong bg-surface text-ink-muted hover:border-ink hover:text-ink";
 
-export type TogglePillProps = {
+export type TogglePillProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "className" | "children"
+> & {
   pressed: boolean;
-  onClick?: MouseEventHandler<HTMLButtonElement>;
   /** 押した1つだけ true にする（呼び出し側: pending={saving && pendingValue === value}） */
   pending?: boolean;
-  disabled?: boolean;
   /** pressed 時の完全クラス文字列（*-shared.ts の *_PILL_CLASS） */
   toneClassName?: string;
   /** Trophy など。先頭スロット（Check / Plus / Spinner）の後ろに出る */
@@ -26,22 +27,24 @@ export type TogglePillProps = {
   children?: ReactNode;
 };
 
+/** onClick / disabled / aria-expanded / aria-haspopup 等の native 属性は ...rest で透過する */
 export function TogglePill({
   pressed,
-  onClick,
   pending = false,
   disabled,
   toneClassName,
   icon,
   children,
+  ...rest
 }: TogglePillProps) {
   return (
     <button
+      // rest を先に展開し、type / aria-pressed / aria-busy は呼び出し側から上書きできないようにする
+      {...rest}
       type="button"
       aria-pressed={pressed}
       aria-busy={pending || undefined}
       disabled={disabled}
-      onClick={onClick}
       className={cn(
         BASE,
         pressed ? cn("border-solid", toneClassName) : UNPRESSED,

@@ -7,6 +7,8 @@ export function KeyValueList({ children }: { children: ReactNode }) {
   return <dl className="grid grid-cols-[9rem_minmax(0,1fr)] gap-x-4 gap-y-3">{children}</dl>;
 }
 
+export type KeyValueAlign = "start" | "center";
+
 export type KeyValueProps = {
   label: ReactNode;
   children?: ReactNode;
@@ -16,11 +18,14 @@ export type KeyValueProps = {
   link?: string;
   /** 編集中。children に Input size="sm" を入れる */
   editing?: boolean;
+  /** center は編集中（children が h-8 の入力欄）に dt を上下中央へ揃える。既定 start は本文の1行目に揃える */
+  align?: KeyValueAlign;
 };
 
-export function KeyValue({ label, children, masked, link, editing }: KeyValueProps) {
+export function KeyValue({ label, children, masked, link, editing, align = "start" }: KeyValueProps) {
   const isMasked = masked && !editing;
   const isMailto = link?.startsWith("mailto:");
+  const centered = align === "center";
 
   let value: ReactNode = children;
   if (!editing && isMasked) {
@@ -47,10 +52,14 @@ export function KeyValue({ label, children, masked, link, editing }: KeyValuePro
 
   return (
     <>
-      <dt className="text-caption text-ink-subtle pt-1 leading-5">{label}</dt>
+      {/* start の pt-1 は text-sm 本文と text-caption ラベルの1行目を揃えるため。center では行の中央に置く */}
+      <dt className={cn("text-caption text-ink-subtle leading-5", centered ? "self-center" : "pt-1")}>
+        {label}
+      </dt>
       <dd
         className={cn(
           "text-sm min-w-0 break-words",
+          centered && "self-center",
           isMasked ? "text-ink-faint italic" : "text-ink",
         )}
       >

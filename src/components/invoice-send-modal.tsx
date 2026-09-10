@@ -231,20 +231,21 @@ export function InvoiceSendModal({
           閉じる
         </Button>
       }
+      // 長い確認文はボタン行の上に全幅で出す（宛名・メール・CC を含むと 1 行に収まらないため）
+      footerNote={
+        confirmingSend && (
+          <>
+            {recipientName} 様（{to}）
+            {ccRecipients.length > 0 ? `／CC: ${ccRecipients.join("、")}` : ""}
+            に{sentAt ? "再送" : "送信"}します。よろしいですか？
+          </>
+        )
+      }
       footer={
         confirmingSend ? (
-          <div
-            role="group"
-            className="inline-flex flex-wrap items-center justify-end gap-2 rounded-md border border-accent-line bg-accent-soft px-3 py-1.5 text-sm text-ink"
-          >
-            <span>
-              {recipientName} 様（{to}）
-              {ccRecipients.length > 0 ? `／CC: ${ccRecipients.join("、")}` : ""}
-              に{sentAt ? "再送" : "送信"}します。よろしいですか？
-            </span>
+          <>
             <Button
               variant="primary"
-              size="sm"
               icon={<Send />}
               onClick={handleSend}
               disabled={sending}
@@ -254,13 +255,12 @@ export function InvoiceSendModal({
             </Button>
             <Button
               variant="ghost"
-              size="sm"
               onClick={() => setConfirmingSend(false)}
               disabled={sending}
             >
               キャンセル
             </Button>
-          </div>
+          </>
         ) : (
           <Button
             variant="primary"

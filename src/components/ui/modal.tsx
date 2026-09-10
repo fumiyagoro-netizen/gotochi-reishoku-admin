@@ -37,6 +37,8 @@ export type ModalProps = {
   footer?: ReactNode;
   /** フッタ左（削除・閉じる・InlineConfirm） */
   footerStart?: ReactNode;
+  /** ボタン行の上に全幅で出す確認文（ModalFooter の note） */
+  footerNote?: ReactNode;
   /** 開いたときにフォーカスする要素。既定は最初の入力欄 */
   initialFocusRef?: RefObject<HTMLElement | null>;
   children: ReactNode;
@@ -54,6 +56,7 @@ export function Modal({
   onSubmit,
   footer,
   footerStart,
+  footerNote,
   initialFocusRef,
   children,
 }: ModalProps) {
@@ -123,7 +126,11 @@ export function Modal({
         {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
       </div>
       <div className="px-6 py-4 space-y-5 overflow-y-auto min-h-0 flex-1">{children}</div>
-      {(footer || footerStart) && <ModalFooter start={footerStart}>{footer}</ModalFooter>}
+      {(footer || footerStart || footerNote) && (
+        <ModalFooter start={footerStart} note={footerNote}>
+          {footer}
+        </ModalFooter>
+      )}
     </>
   );
 
@@ -143,12 +150,24 @@ export function Modal({
   );
 }
 
+export type ModalFooterProps = {
+  /** 左（削除・閉じる・InlineConfirm） */
+  start?: ReactNode;
+  /** ボタン行の上に全幅で出す確認文（「この操作は取り消せません」等）。Alert compact も置ける */
+  note?: ReactNode;
+  /** 右（主ボタン） */
+  children?: ReactNode;
+};
+
 /** モーダル下部の固定フッタ。start は左（削除・閉じる）、children は右（主ボタン） */
-export function ModalFooter({ start, children }: { start?: ReactNode; children?: ReactNode }) {
+export function ModalFooter({ start, note, children }: ModalFooterProps) {
   return (
-    <div className="px-6 py-4 border-t border-line flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2">{start}</div>
-      <div className="flex items-center justify-end gap-2">{children}</div>
+    <div className="px-6 py-4 border-t border-line flex flex-wrap items-center justify-between gap-2">
+      {/* note は basis-full で 1 行目を占め、ボタン列を 2 行目へ送る */}
+      {note && <div className="basis-full mb-1 text-sm text-ink-muted">{note}</div>}
+      <div className="flex flex-wrap items-center gap-2">{start}</div>
+      {/* ml-auto: ボタン列が折り返して単独行になっても右寄せのまま */}
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{children}</div>
     </div>
   );
 }

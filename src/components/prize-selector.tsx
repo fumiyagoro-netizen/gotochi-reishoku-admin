@@ -68,7 +68,14 @@ export function PrizeSelector({
           </Button>
         </div>
       ) : (
-        <TogglePill pressed={false} icon={<Trophy />} onClick={() => setOpen(!open)}>
+        // 「変更」ボタンと同じくメニューのトリガーなので aria-expanded / aria-haspopup を揃える
+        <TogglePill
+          pressed={false}
+          icon={<Trophy />}
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+        >
           受賞を設定
         </TogglePill>
       )}

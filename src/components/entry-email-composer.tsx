@@ -6,7 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { CheckPill } from "@/components/ui/check-pill";
-import { Field } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/field-controls";
 import { Send } from "@/components/ui/icons";
 
@@ -37,9 +37,6 @@ function toggleInSet<T>(set: Set<T>, value: T): Set<T> {
   else next.add(value);
   return next;
 }
-
-// ピル群の見出し。CheckPill は label 要素なので Field（label で包む）は使えない
-const GROUP_LABEL = "mb-1.5 block text-sm font-medium text-ink";
 
 export function EntryEmailComposer({ awards }: { awards: Award[] }) {
   const [selectedAwardIds, setSelectedAwardIds] = useState<Set<number>>(new Set());
@@ -277,8 +274,9 @@ export function EntryEmailComposer({ awards }: { awards: Award[] }) {
         {/* Segment filter */}
         <Card>
           <div className="space-y-5">
+            {/* CheckPill は label 要素なので Field（label で包む）ではなく FieldLabel */}
             <div>
-              <span className={GROUP_LABEL}>年度（必須・複数選択可）</span>
+              <FieldLabel>年度（必須・複数選択可）</FieldLabel>
               <div className="flex flex-wrap gap-2">
                 {awards.map((award) => (
                   <CheckPill
@@ -296,7 +294,7 @@ export function EntryEmailComposer({ awards }: { awards: Award[] }) {
             </div>
 
             <div>
-              <span className={GROUP_LABEL}>審査状況（未選択＝絞り込まない）</span>
+              <FieldLabel>審査状況（未選択＝絞り込まない）</FieldLabel>
               <div className="flex flex-wrap gap-2">
                 {REVIEW_STATUS_OPTIONS.map((opt) => (
                   <CheckPill
@@ -314,7 +312,7 @@ export function EntryEmailComposer({ awards }: { awards: Award[] }) {
             </div>
 
             <div>
-              <span className={GROUP_LABEL}>受賞枠（未選択＝絞り込まない）</span>
+              <FieldLabel>受賞枠（未選択＝絞り込まない）</FieldLabel>
               <div className="flex flex-wrap gap-2">
                 {PRIZE_LEVEL_OPTIONS.map((opt) => (
                   <CheckPill

@@ -162,8 +162,9 @@ async function Dashboard({ searchParams }: Props) {
                         const catTotal = Object.values(prizes).reduce((s, n) => s + n, 0);
                         return (
                           <div key={cat.productCategory} className="flex items-center gap-3">
+                            {/* 「その他: 具付き冷凍ラーメン」程度のカテゴリ名が切れない幅（12rem）。それより長いときだけ切り詰めて title で読める */}
                             <span
-                              className="w-28 shrink-0 truncate text-sm text-ink-muted"
+                              className="w-48 shrink-0 truncate text-sm text-ink-muted"
                               title={cat.productCategory || "未分類"}
                             >
                               {cat.productCategory || "未分類"}
