@@ -463,12 +463,24 @@ export async function sendFormAutoReply({ to, subject, body, name, company }: Se
   const values: MergeTagValues = { name, company, email: to };
   const rendered = renderForRecipient(subject, body, values);
 
+  // 差出人の名称・住所・問い合わせ先を末尾に出す。設定画面の値を使うので、
+  // 一斉配信メールと同じ内容になる。
+  //
+  // 配信停止リンクは付けない: これは回答者自身の送信に対する控えであって
+  // 広告・宣伝メールではないため、特定電子メール法のオプトアウト表示の対象外。
+  // むしろ控えに「配信停止」を出すと、購読していない相手に購読しているかの
+  // ような誤解を与える（フォーム由来の連絡先は明示同意がない限り
+  // subscribed: false のまま — src/lib/form.ts 参照）。一斉配信の
+  // sendMarketingEmail 側だけが footerHtml に加えて停止リンクを出している。
+  const footerHtml = buildFooterHtml(await getFooterSettingsShared());
+
   return sendEmail({
     to,
     subject: rendered.subject,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         ${rendered.html}
+        ${footerHtml}
       </div>
     `,
   });
