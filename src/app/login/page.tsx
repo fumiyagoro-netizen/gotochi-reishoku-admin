@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Brand } from "@/components/ui/brand";
+import { Card } from "@/components/ui/card";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/field-controls";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -36,65 +42,64 @@ export default function LoginPage() {
     }
   }
 
+  // API はどの欄の誤りか返さないので、エラー時は両方の欄を invalid にする
+  const invalid = Boolean(error);
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="admin-shell min-h-screen bg-canvas flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            ご当地冷凍食品大賞
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">管理システム</p>
+        <div className="mb-8 flex justify-center">
+          <Brand size="lg" />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm"
-        >
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">ログイン</h2>
+        <Card padding="none" className="p-8">
+          <form onSubmit={handleSubmit}>
+            <h2 className="mb-5 text-sm font-medium text-ink-subtle">ログイン</h2>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-              {error}
+            {error && (
+              <div className="mb-4">
+                <Alert tone="danger">{error}</Alert>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <Field label="メールアドレス">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="example@email.com"
+                  invalid={invalid}
+                />
+              </Field>
+
+              <Field label="パスワード">
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  placeholder="パスワードを入力"
+                  invalid={invalid}
+                />
+              </Field>
             </div>
-          )}
 
-          <label className="block mb-4">
-            <span className="text-sm font-medium text-gray-700">メールアドレス</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className="mt-1.5 block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="example@email.com"
-            />
-          </label>
-
-          <label className="block mb-6">
-            <span className="text-sm font-medium text-gray-700">パスワード</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="mt-1.5 block w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="パスワードを入力"
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg font-medium text-sm
-              hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? "ログイン中..." : "ログイン"}
-          </button>
-        </form>
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              className="mt-6 w-full"
+              loading={loading}
+              disabled={loading}
+            >
+              {loading ? "ログイン中..." : "ログイン"}
+            </Button>
+          </form>
+        </Card>
       </div>
     </div>
   );

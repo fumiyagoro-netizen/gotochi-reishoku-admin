@@ -2,8 +2,101 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { Children, type ReactNode } from "react";
 import type { Role } from "@/lib/role-shared";
-import { ROLE_LABELS, PERMISSIONS } from "@/lib/role-shared";
+import { PERMISSIONS } from "@/lib/role-shared";
+import { cn } from "@/lib/cn";
+import { Brand } from "@/components/ui/brand";
+import { Avatar } from "@/components/ui/avatar";
+import { RoleBadge } from "@/components/ui/role-badge";
+import { Button } from "@/components/ui/button";
+import { Select, type SelectProps } from "@/components/ui/field-controls";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Trophy,
+  ClipboardCheck,
+  BookUser,
+  Target,
+  FileText,
+  Receipt,
+  MailCheck,
+  CalendarDays,
+  Users,
+  Settings,
+  History,
+  LogOut,
+  type LucideIcon,
+} from "@/components/ui/icons";
+
+/* ------------------------------------------------------------ 小部品 */
+/* ui/ には置かない（サイドバー以外で使わないため）。 */
+
+type NavGroupKey = "daily" | "outreach" | "admin";
+
+// 描画順。navItems 配列の順は維持したまま、group ごとに拾って見出し付きで並べる
+const GROUPS: [NavGroupKey, string][] = [
+  ["daily", "日常業務"],
+  ["outreach", "配信・営業"],
+  ["admin", "管理"],
+];
+
+/** 年度セレクト。全画面に効く切替なので通常の入力欄より一段強く（太字＋CalendarDays） */
+function YearSelect(props: SelectProps) {
+  return (
+    <Select
+      leadingIcon={<CalendarDays aria-hidden="true" />}
+      className="font-semibold"
+      {...props}
+    />
+  );
+}
+
+/** ナビの見出し。可視項目が 0 のグループは見出しごと出さない */
+function NavGroup({ label, children }: { label: string; children: ReactNode }) {
+  if (Children.toArray(children).length === 0) return null;
+  return (
+    <div className="mt-5 first:mt-0">
+      <p className="px-3 mb-1 text-caption font-medium text-ink-subtle">{label}</p>
+      <div className="space-y-0.5">{children}</div>
+    </div>
+  );
+}
+
+/** ナビ項目。アクティブは白い面＋影＋太字＋アイコン黒＋aria-current で示す（青は使わない） */
+function NavItem({
+  href,
+  label,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex h-9 items-center gap-2.5 rounded-md px-3 text-sm transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+        active
+          ? "bg-surface text-ink font-medium shadow-xs"
+          : "text-ink-muted hover:bg-surface hover:text-ink",
+      )}
+    >
+      <Icon
+        className={cn("size-4 shrink-0", active ? "text-ink" : "text-ink-subtle")}
+        aria-hidden="true"
+      />
+      <span className="truncate">{label}</span>
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------ Sidebar */
 
 export function Sidebar({
   awards,
@@ -38,108 +131,104 @@ export function Sidebar({
     return currentYear ? `${href}?year=${currentYear}` : href;
   }
 
-  const navItems = [
-    { href: "/", label: "ダッシュボード", icon: "📊", show: true },
-    { href: "/entries", label: "エントリー一覧", icon: "📋", show: true },
-    { href: "/awards", label: "受賞一覧", icon: "🏆", show: true },
-    { href: "/reviews", label: "審査状況", icon: "✅", show: true },
-    { href: "/contacts", label: "メール配信リスト", icon: "📇", show: perms.canManageContacts },
-    { href: "/prospects", label: "追客リスト", icon: "🎯", show: perms.canManageProspects },
-    { href: "/forms", label: "フォーム", icon: "📝", show: perms.canManageForms },
-    { href: "/invoices", label: "請求書", icon: "🧾", show: perms.canManageInvoices },
-    { href: "/email-logs", label: "配信履歴", icon: "📬", show: role === "admin" },
-    { href: "/award-settings", label: "年度管理", icon: "📅", show: role === "admin" },
-    { href: "/users", label: "ユーザー管理", icon: "👥", show: role === "admin" },
-    { href: "/settings", label: "設定", icon: "⚙️", show: role === "admin" },
-    { href: "/logs", label: "操作ログ", icon: "📝", show: role === "admin" },
+  const navItems: {
+    href: string;
+    label: string;
+    icon: LucideIcon;
+    show: boolean;
+    group: NavGroupKey;
+  }[] = [
+    { href: "/", label: "ダッシュボード", icon: LayoutDashboard, show: true, group: "daily" },
+    { href: "/entries", label: "エントリー一覧", icon: ClipboardList, show: true, group: "daily" },
+    { href: "/awards", label: "受賞一覧", icon: Trophy, show: true, group: "daily" },
+    { href: "/reviews", label: "審査状況", icon: ClipboardCheck, show: true, group: "daily" },
+    { href: "/contacts", label: "メール配信リスト", icon: BookUser, show: perms.canManageContacts, group: "outreach" },
+    { href: "/prospects", label: "追客リスト", icon: Target, show: perms.canManageProspects, group: "outreach" },
+    { href: "/forms", label: "フォーム", icon: FileText, show: perms.canManageForms, group: "outreach" },
+    { href: "/invoices", label: "請求書", icon: Receipt, show: perms.canManageInvoices, group: "outreach" },
+    { href: "/email-logs", label: "配信履歴", icon: MailCheck, show: role === "admin", group: "admin" },
+    { href: "/award-settings", label: "年度管理", icon: CalendarDays, show: role === "admin", group: "admin" },
+    { href: "/users", label: "ユーザー管理", icon: Users, show: role === "admin", group: "admin" },
+    { href: "/settings", label: "設定", icon: Settings, show: role === "admin", group: "admin" },
+    { href: "/logs", label: "操作ログ", icon: History, show: role === "admin", group: "admin" },
   ];
 
-  const roleColors: Record<Role, string> = {
-    admin: "bg-red-100 text-red-700",
-    representative: "bg-purple-100 text-purple-700",
-    editor: "bg-blue-100 text-blue-700",
-    viewer: "bg-gray-100 text-gray-600",
-    judge: "bg-green-100 text-green-700",
-  };
-
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-lg font-bold text-gray-900 leading-tight">
-          ご当地冷凍食品大賞
-        </h1>
-        <p className="text-xs text-gray-500 mt-1">管理システム</p>
+    <aside className="fixed inset-y-0 left-0 flex w-sidebar flex-col border-r border-line bg-surface-muted">
+      {/* Brand（リンクにはしない。ダッシュボード遷移はナビ項目が担う） */}
+      <div className="px-4 pt-5 pb-3">
+        <Brand size="sm" />
       </div>
 
       {/* Year Selector */}
       {awards.length > 0 && (
-        <div className="px-4 pt-4 pb-2">
-          <label className="block text-xs text-gray-500 mb-1.5">開催年度</label>
-          <select
-            value={currentYear}
-            onChange={handleYearChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white
-              focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+        <div className="px-4 pb-4">
+          <label
+            htmlFor="sidebar-year"
+            className="mb-1.5 flex items-center gap-1 text-caption font-medium text-ink-subtle"
           >
+            開催年度
+          </label>
+          <YearSelect id="sidebar-year" value={currentYear} onChange={handleYearChange}>
             {awards.map((award) => (
               <option key={award.year} value={award.year}>
                 {award.year}年度
               </option>
             ))}
-          </select>
+          </YearSelect>
         </div>
       )}
+      <div className="mx-4 h-px bg-line" />
 
       {/* Only the nav scrolls, so the user/logout block below stays reachable
           however many items are shown or however short the window is.
           min-h-0 is required: a flex item defaults to min-height:auto, which
           would let the nav outgrow the fixed h-screen aside and push the
           logout button off-screen instead of scrolling. */}
-      <nav className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1">
-        {navItems
-          .filter((item) => item.show)
-          .map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={hrefWithYear(item.href)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? "bg-blue-50 text-blue-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+      <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3">
+        {GROUPS.map(([group, label]) => (
+          <NavGroup key={group} label={label}>
+            {navItems
+              .filter((item) => item.group === group && item.show)
+              .map((item) => {
+                const isActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href);
+                return (
+                  <NavItem
+                    key={item.href}
+                    href={hrefWithYear(item.href)}
+                    label={item.label}
+                    icon={item.icon}
+                    active={isActive}
+                  />
+                );
+              })}
+          </NavGroup>
+        ))}
       </nav>
 
       {/* User Info & Logout */}
-      <div className="shrink-0 p-4 border-t border-gray-200">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
-            {userName.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-900 truncate">{userName}</p>
-            <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${roleColors[role]}`}>
-              {ROLE_LABELS[role]}
-            </span>
+      <div className="shrink-0 border-t border-line p-3">
+        <div className="flex items-center gap-2.5 px-2 py-1.5 min-w-0">
+          <Avatar initial={userName.charAt(0).toUpperCase()} title={userName} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm text-ink" title={userName}>
+              {userName}
+            </p>
+            <RoleBadge role={role} size="sm" />
           </div>
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-1 w-full justify-start"
+          icon={<LogOut aria-hidden="true" />}
           onClick={handleLogout}
-          className="w-full px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg
-            hover:bg-gray-50 hover:text-gray-900 transition-colors"
         >
           ログアウト
-        </button>
+        </Button>
       </div>
     </aside>
   );

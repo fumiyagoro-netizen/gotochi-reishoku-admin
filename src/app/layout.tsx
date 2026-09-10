@@ -3,15 +3,21 @@ import "./globals.css";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getCachedCurrentUser } from "@/lib/auth";
-import { getPermissions } from "@/lib/role-shared";
 import { RoleProvider } from "@/lib/role-context";
 import { SidebarWrapper } from "@/components/sidebar-wrapper";
 import { isPublicPagePath } from "@/lib/public-paths";
 
 export const metadata: Metadata = {
-  title: "ご当地冷凍食品大賞 管理システム",
+  title: {
+    default: "ご当地冷凍食品大賞 管理システム",
+    template: "%s | ご当地冷凍食品大賞",
+  },
   description: "エントリー管理・請求書発行・入金管理",
 };
+
+// 公開ページ（(public) 配下）にも効くので値は変えない。管理画面の見た目は
+// RoleProvider 直下の .admin-shell（globals.css）が担う。
+const BODY_CLASS = "bg-gray-50 min-h-screen";
 
 export default async function RootLayout({
   children,
@@ -29,7 +35,7 @@ export default async function RootLayout({
   if (isPublicPagePath(pathname) || !user) {
     return (
       <html lang="ja">
-        <body className="bg-gray-50 min-h-screen">{children}</body>
+        <body className={BODY_CLASS}>{children}</body>
       </html>
     );
   }
@@ -41,11 +47,13 @@ export default async function RootLayout({
 
   return (
     <html lang="ja">
-      <body className="bg-gray-50 min-h-screen">
+      <body className={BODY_CLASS}>
         <RoleProvider role={user.role}>
-          <div className="flex min-h-screen">
+          <div className="admin-shell flex min-h-screen">
             <SidebarWrapper awards={awards} role={user.role} userName={user.email} />
-            <main className="flex-1 ml-64">{children}</main>
+            {/* サイドバーは fixed なので、幅 spacing.sidebar と同じ pl-sidebar で本文を逃がす。
+                min-w-0 は幅広テーブルで main が横にはみ出さないため */}
+            <main className="flex-1 pl-sidebar min-w-0">{children}</main>
           </div>
         </RoleProvider>
       </body>

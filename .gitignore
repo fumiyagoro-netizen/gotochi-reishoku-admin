@@ -45,4 +45,4 @@ public/uploads/
 .env*
 
 # ui parts preview (dev only, not committed)
-src/app/_ui-preview/
+src/app/ui-preview/
