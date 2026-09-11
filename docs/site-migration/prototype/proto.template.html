@@ -1,0 +1,1287 @@
+<title>日本全国！ご当地冷凍食品大賞 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Manrope:wght@500;700;800&display=swap">
+<style>
+:root{
+  --ink:#0B2545; --ink-2:#1F3A5F; --mute:#5B6B7F; --line:#D9E3EE; --line-2:#EAF0F6;
+  --ground:#F3F7FB; --paper:#FFFFFF; --ice:#E7F1F9; --ice-2:#D6E8F4;
+  --blue:#0A4F8F; --blue-deep:#063A6B; --cyan:#19B4D7; --cyan-soft:#BFE9F4;
+  --gold:#C9A227; --gold-2:#E8C95A; --gold-soft:#F7EDCB;
+  --silver-soft:#EDF0F4; --bronze-soft:#F4E4DA;
+  --disp:"Zen Kaku Gothic New","Noto Sans JP",system-ui,sans-serif;
+  --body:"Noto Sans JP",system-ui,-apple-system,"Hiragino Sans",sans-serif;
+  --num:"Manrope","Noto Sans JP",system-ui,sans-serif;
+  --wrap:1200px; --gutter:clamp(16px,5vw,48px);
+  --r-card:18px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.9;-webkit-font-smoothing:antialiased;overflow-x:clip}
+h1,h2,h3{margin:0}
+a{color:var(--blue)}
+.btn:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.wrap{max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gutter)}
+.sec{padding-block:clamp(72px,9vw,128px)}
+.eyebrow{font-family:var(--num);font-weight:700;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:22px;height:2px;background:var(--cyan);flex:none}
+.h2{font-family:var(--disp);font-weight:700;font-size:clamp(1.75rem,3.4vw,2.6rem);line-height:1.25;letter-spacing:.01em;text-wrap:balance}
+.lead{color:var(--ink-2);max-width:36em;margin:18px 0 0}
+.sec-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px 32px;margin-bottom:clamp(28px,4vw,44px)}
+.link-more{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:700;font-size:.9rem;color:var(--ink);text-decoration:none}
+.link-more .chev{transition:transform .35s var(--ease)}
+.link-more:hover .chev{transform:translateX(4px)}
+.chev{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:inline-grid;place-items:center;color:var(--ink);flex:none;transition:transform .35s var(--ease),background .3s,color .3s}
+.chev svg{width:14px;height:14px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5em;font-family:var(--disp);font-weight:700;font-size:.95rem;line-height:1;padding:.95em 1.6em;border-radius:999px;text-decoration:none;border:1.5px solid transparent;cursor:pointer;white-space:nowrap;transition:background .25s var(--ease),color .25s,border-color .25s,box-shadow .35s var(--ease),transform .5s var(--ease)}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 10px 26px -12px rgba(10,79,143,.6)}
+.btn-primary:hover{background:var(--blue-deep);box-shadow:0 18px 34px -12px rgba(10,79,143,.7)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--ink);background:var(--paper)}
+.btn-light{background:#fff;color:var(--ink)}
+.btn-light:hover{background:var(--cyan-soft)}
+.btn-outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.btn-outline:hover{border-color:#fff;background:rgba(255,255,255,.06)}
+.btn-lg{font-size:1.05rem;padding:1.05em 1.9em}
+.btn-sm{font-size:.85rem;padding:.7em 1.2em}
+
+/* banner */
+.banner{background:var(--ink);color:#fff;font-size:.875rem;animation:bannerIn .9s var(--ease) both}
+@keyframes bannerIn{from{transform:translateY(-100%);opacity:0}to{transform:none;opacity:1}}
+.banner-in{display:flex;align-items:center;gap:14px;padding-block:10px;min-height:44px}
+.banner-tag{font-family:var(--num);font-weight:800;font-size:.66rem;letter-spacing:.14em;background:var(--cyan);color:var(--ink);padding:4px 8px;border-radius:4px;white-space:nowrap}
+.banner p{margin:0;flex:1;min-width:0;line-height:1.5}
+.banner-link{color:#fff;font-weight:700;white-space:nowrap;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.4)}
+.banner-x{background:none;border:0;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;padding:2px 6px;opacity:.7}
+.banner-x:hover{opacity:1}
+@media(max-width:640px){.banner-tag{display:none}.banner p{font-size:.8rem}}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:60;border-bottom:1px solid transparent;transition:background .35s,border-color .35s}
+.nav.is-scrolled{background:rgba(255,255,255,.74);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border-color:var(--line-2)}
+.nav-in{display:flex;align-items:center;gap:28px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--disp);font-weight:900;font-size:1rem;letter-spacing:.02em;white-space:nowrap}
+.mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--cyan));position:relative;flex:none}
+.mark::after{content:"";position:absolute;inset:9px;background:#fff;transform:rotate(45deg);border-radius:2px;opacity:.95}
+.brand small{font-family:var(--num);font-weight:800;color:var(--blue);margin-left:6px;font-size:.8rem}
+.nav-links{display:flex;gap:26px;margin-left:auto}
+.nav-links a{color:var(--ink-2);text-decoration:none;font-size:.9rem;font-weight:500;position:relative;padding-block:6px;white-space:nowrap}
+.nav-links a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
+.nav-links a:hover::after,.nav-links a.is-active::after{transform:scaleX(1)}
+.nav-burger{display:none;width:42px;height:42px;border:1px solid var(--line);background:var(--paper);border-radius:50%;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.nav-burger span{display:block;width:16px;height:2px;background:var(--ink);transition:transform .3s}
+.nav-burger[aria-expanded="true"] span:first-child{transform:translateY(3.5px) rotate(45deg)}
+.nav-burger[aria-expanded="true"] span:last-child{transform:translateY(-3.5px) rotate(-45deg)}
+.nav-mobile{background:var(--paper);border-top:1px solid var(--line-2);padding:10px var(--gutter) 22px;display:grid;gap:2px}
+.nav-mobile a{padding:13px 4px;border-bottom:1px solid var(--line-2);color:var(--ink);text-decoration:none;font-family:var(--disp);font-weight:700}
+@media(max-width:900px){.nav-links{display:none}.nav-cta{margin-left:auto}.nav-burger{display:inline-flex}.nav-in{gap:14px}}
+@media(max-width:560px){.brand small{display:none}.brand{font-size:.95rem}}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding-top:clamp(36px,6vw,80px)}
+.frost{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.hero-in{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(24px,5vw,64px);align-items:center;padding-bottom:clamp(48px,6vw,84px)}
+.hero-eyebrow span{background:var(--ink);color:#fff;padding:3px 8px;border-radius:4px;letter-spacing:.1em}
+.hero-year{font-family:var(--num);font-weight:800;font-size:clamp(5.5rem,15vw,11rem);line-height:.9;letter-spacing:-.04em;background:linear-gradient(100deg,var(--blue) 10%,var(--cyan) 90%);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 10px -.04em;font-variant-numeric:tabular-nums}
+.hero-h{font-family:var(--disp);font-weight:900;font-size:clamp(1.55rem,3.6vw,2.7rem);line-height:1.38;letter-spacing:.02em;margin:0 0 20px;text-wrap:balance}
+.hero-lead{max-width:34em;color:var(--ink-2);margin:0 0 22px}
+.hero-chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
+.chip{display:inline-flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 6px;font-size:.85rem;font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.chip b{font-family:var(--disp);font-size:.72rem;background:var(--ice-2);color:var(--blue);padding:5px 9px;border-radius:999px;font-weight:700;letter-spacing:.04em}
+.chip i{font-style:normal;color:var(--mute);font-weight:500;font-family:var(--body);font-size:.74rem}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:38px}
+.stats{display:flex;flex-wrap:wrap;gap:clamp(20px,4vw,48px);margin:0;padding-top:22px;border-top:1px solid var(--line)}
+.stats div{display:grid;gap:2px}
+.stats dt{font-size:.74rem;color:var(--mute);letter-spacing:.06em}
+.stats dd{margin:0;font-family:var(--num);font-weight:800;font-size:clamp(1.7rem,3vw,2.4rem);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:4px}
+.stats small{font-family:var(--disp);font-weight:700;font-size:.85rem;color:var(--mute)}
+.hero-r{position:relative;min-height:560px}
+.tile{position:absolute;width:min(44%,220px)}
+.tile-in{background:var(--paper);border-radius:var(--r-card);overflow:hidden;box-shadow:0 30px 60px -30px rgba(11,37,69,.35);animation:float 7s ease-in-out infinite}
+.t1{left:0;top:0}.t2{right:0;top:12%}.t3{left:8%;bottom:0}.t4{right:4%;bottom:7%}
+.t2 .tile-in{animation-duration:8.5s;animation-delay:-2s}.t3 .tile-in{animation-duration:9s;animation-delay:-4s}.t4 .tile-in{animation-duration:7.5s;animation-delay:-1s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.tile .ph{aspect-ratio:4/3}
+.tile-b{padding:12px 14px 14px;display:grid;gap:5px;justify-items:start}
+.tile-b strong{font-family:var(--disp);font-size:.95rem;line-height:1.3}
+.tile-b small{color:var(--mute);font-size:.72rem;line-height:1.4}
+.hero-tate{position:absolute;right:0;top:0;writing-mode:vertical-rl;font-family:var(--disp);font-weight:500;letter-spacing:.3em;color:var(--mute);font-size:.78rem;margin:0}
+@media(min-width:1181px){.hero-in{padding-right:48px}}
+@media(max-width:1180px){.hero-tate{display:none}}
+@media(max-width:900px){.hero-in{grid-template-columns:1fr}.hero-r{min-height:300px;margin-top:8px}.tile{width:min(48%,220px)}.t2{top:10%}.t3,.t4{display:none}}
+@media(max-width:560px){.hero-year{font-size:clamp(4.6rem,24vw,7rem)}.stats{gap:18px 28px}.stats dd{font-size:1.6rem}.hero-r{min-height:280px}}
+
+/* marquee */
+.marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.6);backdrop-filter:blur(6px);overflow:hidden;position:relative}
+.marquee-track{display:flex;width:max-content;animation:marq 80s linear infinite;padding-block:12px}
+.marquee:hover .marquee-track{animation-play-state:paused}
+.mq{font-family:var(--disp);font-weight:700;font-size:.85rem;color:var(--ink-2);white-space:nowrap;padding-inline:22px;position:relative}
+.mq::after{content:"";position:absolute;right:-3px;top:50%;width:6px;height:6px;border-radius:50%;background:var(--cyan);transform:translateY(-50%)}
+@keyframes marq{to{transform:translateX(-50%)}}
+
+/* placeholder photo */
+.ph{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--ph-a,#9CC5DD),var(--ph-b,#E4F0F8))}
+.ph::before{content:"";position:absolute;inset:0;opacity:.28;mix-blend-mode:multiply;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.ph::after{content:"";position:absolute;width:64%;aspect-ratio:1;border-radius:50%;left:50%;top:52%;transform:translate(-50%,-50%);background:radial-gradient(circle at 36% 30%,rgba(255,255,255,.95),rgba(255,255,255,.4) 55%,rgba(255,255,255,0) 72%)}
+.ph-l{position:absolute;left:12px;bottom:10px;z-index:1;font-family:var(--num);font-weight:800;font-size:.58rem;letter-spacing:.22em;color:rgba(11,37,69,.42)}
+.ph-0{--ph-a:#7FB7D6;--ph-b:#DCEEF7}.ph-1{--ph-a:#8AA0C0;--ph-b:#E3EAF3}.ph-2{--ph-a:#8FB8A8;--ph-b:#E1F0EA}.ph-3{--ph-a:#A48CB8;--ph-b:#EDE4F2}.ph-4{--ph-a:#C9B07A;--ph-b:#F3ECD8}.ph-5{--ph-a:#D08C7C;--ph-b:#F6E3DE}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--disp);font-weight:700;font-size:.68rem;letter-spacing:.06em;padding:4px 9px;border-radius:6px;line-height:1;white-space:nowrap}
+.b-top{background:linear-gradient(135deg,#F1D77A,#C9A227 60%,#E8C95A);color:#3B2E05}
+.b-gold{background:var(--gold-soft);color:#7A5E0E}
+.b-silver{background:var(--silver-soft);color:#4B5866}
+.b-bronze{background:var(--bronze-soft);color:#7C4520}
+.b-gp{background:var(--ink);color:var(--gold-2)}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px}
+
+/* concept */
+.grid-2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(28px,6vw,80px);align-items:start}
+.concept{background:var(--paper)}
+.concept-body p{margin:0 0 1.2em;max-width:38em;color:var(--ink-2)}
+.org{display:grid;gap:10px;margin:28px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+.org div{display:grid;grid-template-columns:56px 1fr;gap:12px;font-size:.9rem}
+.org dt{font-family:var(--disp);font-weight:700;color:var(--blue)}
+.org dd{margin:0;color:var(--ink-2)}
+@media(max-width:800px){.grid-2{grid-template-columns:1fr}}
+
+/* news */
+.news-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.news-list li a{display:grid;grid-template-columns:210px minmax(0,1fr) 28px;align-items:center;gap:18px;padding:22px 6px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);transition:background .3s,padding-left .35s var(--ease)}
+.news-list li a:hover{background:var(--paper);padding-left:14px}
+.nm{display:flex;align-items:center;gap:12px}
+.news-list time{font-family:var(--num);font-weight:700;font-size:.85rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.tag{font-family:var(--disp);font-size:.68rem;font-weight:700;padding:4px 9px;border-radius:6px;background:var(--ice-2);color:var(--blue);white-space:nowrap}
+.tag-gold{background:var(--gold-soft);color:#7A5E0E}
+.nt{font-weight:500;line-height:1.6}
+.news-list li a:hover .chev{background:var(--ink);color:#fff;transform:translateX(4px)}
+@media(max-width:720px){.news-list li a{grid-template-columns:minmax(0,1fr) 28px;gap:8px 12px}.news-list .nm{grid-column:1;grid-row:1}.news-list .nt{grid-column:1;grid-row:2}.news-list .chev{grid-column:2;grid-row:1/3}}
+
+/* overview */
+.overview{background:var(--paper)}
+.ov-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.ov{background:var(--ground);border-radius:var(--r-card);padding:26px 26px 28px;display:grid;align-content:start;gap:8px}
+.ov h3{font-family:var(--disp);font-size:.78rem;letter-spacing:.16em;color:var(--blue);font-weight:700}
+.ov p{margin:0;font-size:.92rem;color:var(--ink-2);line-height:1.8}
+.ov p strong{color:var(--ink)}
+.ov-num{font-family:var(--num);font-weight:800;font-size:2rem;color:var(--ink);letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.ov-num span{font-family:var(--disp);font-size:1rem;margin-inline:.15em;color:var(--mute);font-weight:700}
+.ov-cta{background:var(--ink);gap:12px}
+.ov-cta p{color:rgba(255,255,255,.8)}
+.ov-cta .btn{justify-self:start;color:#fff;border-color:rgba(255,255,255,.35)}
+.ov-cta .btn:hover{background:rgba(255,255,255,.08);border-color:#fff}
+@media(max-width:900px){.ov-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ov-grid{grid-template-columns:1fr}}
+.timeline{--p:0;position:relative;margin-top:clamp(44px,6vw,76px);padding-top:36px}
+.tl-track{position:absolute;left:0;right:0;top:8px;height:2px;background:var(--line)}
+.tl-line{position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transform:scaleX(var(--p));transform-origin:left}
+.tl-items{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
+.tl-items li{position:relative;display:grid;gap:3px;padding-right:12px;align-content:start}
+.tl-items li::before{content:"";position:absolute;left:0;top:-36px;width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--line);transition:border-color .4s,background .4s,box-shadow .4s}
+.tl-items li.is-on::before{border-color:var(--blue);background:var(--blue);box-shadow:0 0 0 5px rgba(25,180,215,.22)}
+.tl-items time{font-family:var(--num);font-weight:800;font-size:.85rem;color:var(--blue);font-variant-numeric:tabular-nums}
+.tl-items b{font-family:var(--disp);font-size:1rem;line-height:1.4}
+.tl-items span{font-size:.78rem;color:var(--mute);line-height:1.6}
+@media(max-width:820px){.timeline{padding-top:0;padding-left:30px}.tl-track{left:6px;top:4px;bottom:4px;right:auto;width:2px;height:auto}.tl-line{transform:scaleY(var(--p));transform-origin:top}.tl-items{grid-template-columns:1fr;gap:26px}.tl-items li::before{left:-30px;top:8px}}
+
+/* ladder */
+.ladder{background:var(--ground)}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:end;height:300px}
+.st{display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:14px 8px;border-radius:12px 12px 6px 6px;font-family:var(--disp);font-weight:700;transition:transform .5s var(--ease)}
+.st:hover{transform:translateY(-6px)}
+.st-n{font-size:.92rem;white-space:nowrap}
+.st-e{font-family:var(--num);font-size:.6rem;letter-spacing:.18em;opacity:.7}
+.st-bronze{height:38%;background:var(--bronze-soft);color:#7C4520}
+.st-silver{height:52%;background:var(--silver-soft);color:#4B5866}
+.st-gold{height:66%;background:var(--gold-soft);color:#7A5E0E}
+.st-top{height:82%;background:linear-gradient(160deg,#F5DF8A,#C9A227);color:#3B2E05}
+.st-gp{height:100%;background:var(--ink);color:var(--gold-2)}
+.st-gp::before{content:"";width:22px;height:22px;background:currentColor;clip-path:polygon(50% 0,63% 32%,98% 35%,71% 57%,79% 91%,50% 72%,21% 91%,29% 57%,2% 35%,37% 32%);margin-bottom:auto}
+@media(max-width:560px){.steps{height:230px;gap:4px}.st{padding:10px 4px}.st-n{font-size:.72rem;letter-spacing:-.02em}.st-e{display:none}}
+
+/* winners */
+.winners{background:var(--paper)}
+.tabs{display:flex;gap:4px;background:var(--ground);padding:5px;border-radius:999px;flex-wrap:wrap}
+.tab{border:0;background:transparent;font-family:var(--disp);font-weight:700;font-size:.85rem;padding:9px 16px;border-radius:999px;color:var(--mute);cursor:pointer;transition:background .3s,color .3s,box-shadow .3s;white-space:nowrap}
+.tab.is-on{background:var(--paper);color:var(--ink);box-shadow:0 4px 14px -6px rgba(11,37,69,.3)}
+.win-grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start}
+.jmap{position:sticky;top:92px}
+.jmap-t{font-family:var(--disp);font-weight:700;font-size:.85rem;margin:0 0 12px}
+.jmap-tiles{position:relative;aspect-ratio:1/1.05}
+.jt{position:absolute;border:0;border-radius:14px;background:var(--ground);color:var(--ink);font-family:var(--disp);font-weight:700;font-size:.74rem;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:2px;padding:10px;cursor:pointer;text-align:left;transition:background .3s,color .3s,transform .4s var(--ease),box-shadow .4s}
+.jt small{font-family:var(--num);font-weight:800;font-size:.9rem;opacity:.7}
+.jt:hover{transform:translateY(-3px);box-shadow:0 14px 28px -16px rgba(11,37,69,.4);background:var(--ice)}
+.jt.is-on{background:var(--blue);color:#fff}
+.jt.is-on small{opacity:.9}
+.jmap-reset{margin-top:14px;border:0;background:none;padding:0;font-family:var(--disp);font-weight:700;font-size:.82rem;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+.jmap-note{font-size:.72rem;color:var(--mute);margin:18px 0 0;line-height:1.7}
+.win-count{font-family:var(--num);font-weight:800;color:var(--mute);font-size:.85rem;margin:0 0 14px;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{background:var(--paper);border:1px solid var(--line-2);border-radius:var(--r-card);overflow:hidden;transition:transform .5s var(--ease),box-shadow .5s var(--ease),border-color .3s}
+.card:hover{transform:translateY(-5px);box-shadow:0 26px 40px -24px rgba(11,37,69,.35);border-color:transparent}
+.card .ph{aspect-ratio:1;transition:transform .8s var(--ease)}
+.card:hover .ph{transform:scale(1.04)}
+.card-b{padding:14px 16px 16px;display:grid;gap:7px;justify-items:start}
+.card h3{font-family:var(--disp);font-size:.95rem;line-height:1.45;font-weight:700}
+.card p{margin:0;font-size:.74rem;color:var(--mute)}
+.more-wrap{display:flex;justify-content:center;margin-top:28px}
+@media(max-width:900px){.win-grid{grid-template-columns:1fr}.jmap{position:static}.jmap-tiles{position:static;aspect-ratio:auto;display:flex;flex-wrap:wrap;gap:8px}.jt{position:static!important;width:auto!important;height:auto!important;flex-direction:row;align-items:center;padding:8px 12px;gap:8px}}
+@media(max-width:560px){.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card-b{padding:12px}}
+
+/* voices */
+.voices{background:var(--ground);overflow:hidden}
+.scroller-nav{display:flex;gap:8px}
+.scroller-nav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:grid;place-items:center;color:var(--ink);transition:background .3s,color .3s}
+.scroller-nav button:hover{background:var(--ink);color:#fff}
+.scroller-nav svg{width:16px;height:16px}
+.scroller{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 0 24px;padding-inline:max(var(--gutter),calc((100% - var(--wrap)) / 2 + var(--gutter)));scrollbar-width:none;cursor:grab}
+.scroller{scroll-padding-inline:max(var(--gutter),calc((100% - var(--wrap)) / 2 + var(--gutter)))}
+.scroller::-webkit-scrollbar{display:none}
+.scroller.drag{scroll-snap-type:none;cursor:grabbing}
+.voice{flex:0 0 min(82vw,420px);scroll-snap-align:start;background:var(--paper);border-radius:var(--r-card);padding:28px 26px 24px;display:flex;flex-direction:column;gap:18px;user-select:none;position:relative}
+.voice > .badge{align-self:flex-start}
+.voice::before{content:"“";position:absolute;right:22px;top:4px;font-family:var(--num);font-weight:800;font-size:5.5rem;line-height:1;color:var(--ice-2)}
+.voice blockquote{margin:0;font-family:var(--disp);font-weight:500;font-size:1rem;line-height:1.9;color:var(--ink);flex:1;position:relative}
+.voice footer{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--line-2)}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--ice-2),var(--cyan-soft));display:grid;place-items:center;font-family:var(--disp);font-weight:900;color:var(--blue);flex:none}
+.voice footer b{font-family:var(--disp);font-size:.92rem;display:block;line-height:1.4}
+.voice footer small{color:var(--mute);font-size:.75rem}
+
+/* media */
+.media{background:var(--paper)}
+.videos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.video{text-decoration:none;color:var(--ink);display:grid;gap:12px}
+.video .ph{aspect-ratio:16/9;border-radius:14px;--ph-a:#1F3A5F;--ph-b:#0B2545}
+.video .ph::after{display:none}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;transition:transform .4s var(--ease),background .3s;z-index:1}
+.play::after{content:"";width:0;height:0;border-left:16px solid var(--ink);border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
+.video:hover .play{transform:translate(-50%,-50%) scale(1.1);background:var(--cyan)}
+.video p{margin:0;font-family:var(--disp);font-weight:700;font-size:.95rem;display:grid;gap:2px}
+.video small{color:var(--mute);font-weight:500;font-size:.75rem;font-family:var(--body)}
+.media-list{margin:32px 0 0;color:var(--ink-2);font-size:.92rem;max-width:48em}
+.media-list b{color:var(--ink)}
+@media(max-width:700px){.videos{grid-template-columns:1fr}}
+
+/* partners */
+.partners{background:var(--ground);padding-bottom:0}
+.partners .sec-head{margin-bottom:24px}
+.logos{overflow:hidden;border-top:1px solid var(--line);background:var(--paper)}
+.logos-track{display:flex;width:max-content;animation:marq 55s linear infinite}
+.logos:hover .logos-track{animation-play-state:paused}
+.logo{padding:30px 44px;font-family:var(--num);font-weight:800;font-size:1.05rem;letter-spacing:.06em;color:var(--mute);white-space:nowrap;display:flex;align-items:center;gap:12px}
+.logo i{width:10px;height:10px;border-radius:2px;background:var(--ice-2);transform:rotate(45deg);flex:none}
+.logo.jp{font-family:var(--disp);font-weight:900;letter-spacing:.02em}
+.logos-note{font-size:.72rem;color:var(--mute);margin:0;padding-block:10px 0}
+
+/* cta */
+.cta{position:relative;overflow:hidden;background:var(--ink);color:#fff;padding-block:clamp(84px,11vw,150px)}
+.cta::before{content:"";position:absolute;inset:-20%;background:radial-gradient(55% 50% at 72% 38%,rgba(25,180,215,.5),transparent 62%),radial-gradient(40% 40% at 18% 82%,rgba(10,79,143,.85),transparent 62%);animation:glow 16s ease-in-out infinite alternate}
+@keyframes glow{from{transform:translate(0,0) rotate(0)}to{transform:translate(-4%,3%) rotate(6deg)}}
+.cta-in{position:relative;text-align:center;display:grid;justify-items:center;gap:18px}
+.cta .eyebrow{justify-content:center;color:var(--cyan)}
+.cta-h{font-family:var(--disp);font-weight:900;font-size:clamp(1.8rem,4.6vw,3.4rem);line-height:1.3;text-wrap:balance}
+.cta-p{margin:0;color:rgba(255,255,255,.8)}
+.cta-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:8px}
+.cta-sub{font-size:.85rem;color:rgba(255,255,255,.65);margin:8px 0 0}
+.cta-sub a{color:#fff}
+
+/* footer */
+.foot{background:var(--paper);border-top:1px solid var(--line)}
+.foot-in{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px 40px;padding-block:44px 28px}
+.foot-org{font-size:.82rem;color:var(--mute);margin:14px 0 0;line-height:1.8}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 22px;align-content:start}
+.foot-links a{color:var(--ink-2);text-decoration:none;font-size:.88rem;font-weight:500}
+.foot-links a:hover{color:var(--blue)}
+.foot-b{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;padding-block:16px 30px;border-top:1px solid var(--line-2);font-size:.75rem;color:var(--mute)}
+
+
+/* ===== v2: logo / photos ===== */
+.brand img{height:54px;width:auto;display:block}
+.nav-in{height:76px}
+.foot .brand img{height:66px}
+@media(max-width:560px){.brand img{height:42px}.nav-in{height:64px}}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
+.ph.has-img::before,.ph.has-img::after,.ph.has-img .ph-l{display:none}
+.hero-top{display:flex;align-items:center;gap:clamp(16px,3vw,36px);margin:6px 0 10px}
+.hero-top .hero-year{margin:0 0 0 -.04em}
+.hero-seal-wrap{display:block;flex:none;animation:float 8s ease-in-out infinite;animation-delay:-3s}
+.hero-seal{display:block;width:clamp(88px,10vw,124px);height:auto;filter:drop-shadow(0 16px 24px rgba(11,37,69,.22))}
+@media(max-width:560px){.hero-top{gap:14px}.hero-seal{width:88px}}
+
+/* concept strip */
+.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:30px}
+.strip .ph{aspect-ratio:4/3;border-radius:14px}
+.strip .ph:nth-child(2){transform:translateY(14px)}
+.strip-cap{font-size:.72rem;color:var(--mute);margin:24px 0 0}
+
+/* latest (seasonal winners block) */
+.latest{background:var(--ink);color:#fff;position:relative;overflow:hidden}
+.latest::before{content:"";position:absolute;inset:-30% -10%;background:radial-gradient(40% 45% at 85% 20%,rgba(201,162,39,.35),transparent 60%),radial-gradient(45% 50% at 10% 90%,rgba(25,180,215,.35),transparent 60%);pointer-events:none}
+.latest .wrap{position:relative}
+.latest .eyebrow{color:var(--gold-2)}.latest .eyebrow::before{background:var(--gold-2)}
+.latest .h2{color:#fff}.latest .lead{color:rgba(255,255,255,.75)}
+.latest-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px 32px;margin-bottom:clamp(28px,4vw,44px)}
+.latest-ctl{display:grid;gap:8px;justify-items:end}
+.latest-period{font-size:.74rem;color:rgba(255,255,255,.6);font-family:var(--num);font-weight:700;letter-spacing:.04em}
+.latest .btn-ghost{color:#fff;border-color:rgba(255,255,255,.35)}.latest .btn-ghost:hover{background:rgba(255,255,255,.08);border-color:#fff}
+.latest-grid{display:grid;grid-template-columns:minmax(0,1.25fr) repeat(2,minmax(0,.65fr));grid-template-rows:auto auto;gap:16px}
+.gp-card{grid-row:1/3;background:var(--paper);color:var(--ink);border-radius:var(--r-card);overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.gp-card .ph{aspect-ratio:16/10}
+.gp-body{padding:22px 24px 26px;display:grid;gap:10px;justify-items:start;align-content:start;position:relative}
+.gp-body h3{font-family:var(--disp);font-size:clamp(1.3rem,2.2vw,1.7rem);line-height:1.3}
+.gp-body p{margin:0;color:var(--mute);font-size:.85rem}
+.gp-body .gp-txt{color:var(--ink-2);font-size:.9rem;line-height:1.8;margin-top:4px;max-width:34em}
+.gp-body .emblem{position:absolute;right:18px;top:-44px;width:104px;height:auto;z-index:2;filter:drop-shadow(0 8px 14px rgba(11,37,69,.25))}
+.top-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r-card);overflow:hidden;display:grid;grid-template-columns:44% 1fr;transition:background .3s,transform .5s var(--ease)}
+.top-card:hover{background:rgba(255,255,255,.1);transform:translateY(-4px)}
+.top-card .ph{min-height:150px}
+.top-body{padding:16px 16px 18px;display:grid;gap:6px;align-content:start;justify-items:start}
+.top-body h3{font-family:var(--disp);font-size:1rem;line-height:1.4;color:#fff}
+.top-body p{margin:0;font-size:.74rem;color:rgba(255,255,255,.65)}
+.latest-foot{margin-top:24px;display:flex;justify-content:flex-end}
+.latest-foot .link-more{color:#fff}.latest-foot .chev{border-color:rgba(255,255,255,.35);color:#fff}
+.latest-off{background:var(--ice);border-bottom:1px solid var(--line);font-size:.85rem;color:var(--ink-2)}
+.latest-off .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;padding-block:14px}
+.latest-off button{border:0;background:none;font-family:var(--disp);font-weight:700;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:4px;padding:0}
+@media(max-width:900px){.latest-grid{grid-template-columns:1fr 1fr}.gp-card{grid-column:1/3;grid-row:auto}}
+@media(max-width:560px){.latest-grid{grid-template-columns:1fr}.gp-card{grid-column:auto}.top-card{grid-template-columns:38% 1fr}.latest-ctl{justify-items:start}.gp-body .emblem{width:84px;top:-36px;right:12px}}
+
+/* overview v2 */
+.ov-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:clamp(24px,4vw,56px);align-items:start}
+.spec{margin:0;border-top:1px solid var(--line)}
+.spec > div{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 20px;padding:18px 4px;border-bottom:1px solid var(--line)}
+.spec dt{font-family:var(--disp);font-weight:700;color:var(--blue);font-size:.88rem;letter-spacing:.04em;padding-top:2px}
+.spec dd{margin:0;color:var(--ink-2);font-size:.95rem;line-height:1.8}
+.spec dd b{color:var(--ink);font-family:var(--disp)}
+.spec dd small{display:block;font-size:.78rem;color:var(--mute);line-height:1.6;margin-top:3px}
+.spec dd .steps3{margin-bottom:4px}
+.spec .num-l{font-family:var(--num);font-weight:800;font-size:1.5rem;letter-spacing:-.01em;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2}
+.steps3{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:.9rem;color:var(--mute)}
+.steps3 span{background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-family:var(--disp);font-weight:700;font-size:.8rem;color:var(--ink);display:inline-flex;gap:6px;align-items:center}
+.steps3 i{font-style:normal;color:var(--cyan);font-family:var(--num);font-weight:800}
+.fee-card{position:sticky;top:92px;background:var(--ground);border-radius:var(--r-card);padding:26px 24px 24px;display:grid;gap:14px}
+.fee-card h3{font-family:var(--disp);font-size:.78rem;letter-spacing:.16em;color:var(--blue);font-weight:700}
+.fee-note{margin:0;font-size:.82rem;color:var(--ink-2);line-height:1.7}
+.fee-note b{color:var(--ink)}
+.fee-steps{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.fee-steps li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;background:var(--paper);border:1.5px solid var(--line-2);border-radius:12px;padding:10px 14px;transition:border-color .3s,box-shadow .3s}
+.fee-steps li.is-now{border-color:var(--blue);box-shadow:0 10px 24px -16px rgba(10,79,143,.5)}
+.f-tag{font-family:var(--disp);font-weight:700;font-size:.8rem;color:var(--ink);display:inline-flex;align-items:center;gap:8px}
+.is-now .f-tag::after{content:"現在";font-size:.6rem;background:var(--blue);color:#fff;border-radius:4px;padding:2px 6px;letter-spacing:.06em;font-family:var(--disp)}
+.f-when{font-family:var(--num);font-weight:700;font-size:.76rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.f-amt{font-family:var(--num);font-weight:800;font-size:1.35rem;color:var(--ink);letter-spacing:-.02em;text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+.f-amt small{font-family:var(--disp);font-size:.72rem;margin-left:2px;color:var(--mute);font-weight:700}
+.fee-count{display:flex;align-items:baseline;gap:8px;padding:12px 4px 2px;border-top:1px solid var(--line);font-size:.8rem;color:var(--mute)}
+.fee-count b{font-family:var(--num);font-weight:800;font-size:2rem;color:var(--ink);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.fee-card .btn{justify-self:stretch}
+.flow{list-style:none;margin:clamp(36px,5vw,56px) 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;counter-reset:flow}
+.flow li{position:relative;background:var(--ground);border-radius:var(--r-card);padding:22px;display:grid;gap:6px;align-content:start}
+.flow li::before{counter-increment:flow;content:"STEP 0" counter(flow);font-family:var(--num);font-weight:800;font-size:.72rem;letter-spacing:.16em;color:var(--cyan)}
+.flow b{font-family:var(--disp);font-size:1.05rem;line-height:1.4}
+.flow p{margin:0;font-size:.85rem;color:var(--ink-2);line-height:1.7}
+.flow .free{display:inline-block;font-family:var(--disp);font-size:.68rem;font-weight:700;background:var(--cyan-soft);color:var(--blue);padding:3px 8px;border-radius:6px;justify-self:start;margin-top:2px}
+.flow li:not(:last-child)::after{content:"";position:absolute;right:-13px;top:50%;width:12px;height:12px;border-top:2px solid var(--line);border-right:2px solid var(--line);transform:translateY(-50%) rotate(45deg)}
+@media(max-width:900px){.ov-layout{grid-template-columns:1fr}.fee-card{position:static}}
+@media(max-width:700px){.flow{grid-template-columns:1fr}.flow li:not(:last-child)::after{right:auto;left:50%;top:auto;bottom:-13px;transform:translateX(-50%) rotate(135deg)}}
+@media(max-width:560px){.spec > div{grid-template-columns:1fr;gap:4px}.spec dt{font-size:.78rem}}
+
+/* judges */
+.judges{background:var(--ground)}
+.judge-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px}
+.judge{background:var(--paper);border-radius:var(--r-card);padding:22px 14px 20px;display:grid;justify-items:center;text-align:center;gap:6px;align-content:start;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.judge:hover{transform:translateY(-5px);box-shadow:0 26px 40px -24px rgba(11,37,69,.35)}
+.judge-ph{width:112px;height:112px;border-radius:50%;margin-bottom:8px;box-shadow:0 0 0 4px var(--paper),0 0 0 5px var(--line)}
+.judge-ph::after{width:70%}
+.judge b{font-family:var(--disp);font-size:.98rem;line-height:1.3}
+.judge small{font-size:.72rem;color:var(--mute);line-height:1.5}
+.judge .role{font-family:var(--disp);font-size:.64rem;font-weight:700;background:var(--gold-soft);color:#7A5E0E;padding:3px 8px;border-radius:6px}
+.judge-ph.ph-init{display:grid;place-items:center;font-family:var(--disp);font-weight:900;font-size:1.6rem;color:var(--blue)}
+.judge-ph.ph-init::after{display:none}
+@media(max-width:1000px){.judge-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.judge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.judge-ph{width:92px;height:92px}}
+
+/* award emblems */
+.emblems{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;padding-top:22px;border-top:1px solid var(--line);align-items:center}
+.emblems .emblem{width:84px;height:75px;background-image:var(--sprite2);background-size:336px auto;background-position:calc(var(--i,0) * -84px) 0;background-repeat:no-repeat}
+.emblems-cap{width:100%;font-size:.72rem;color:var(--mute);margin:4px 0 0;line-height:1.7}
+
+/* ===== v3 ===== */
+.judge-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.judge-ph{width:150px;height:150px}
+@media(max-width:1000px){.judge-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.judge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.judge-ph{width:120px;height:120px}}
+
+.steps{height:392px;padding-top:92px}
+.st{position:relative}
+.st-emblem{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:82px;height:auto;filter:drop-shadow(0 10px 16px rgba(11,37,69,.18))}
+@media(max-width:700px){.steps{height:330px;padding-top:80px}.st-emblem{width:62px;bottom:calc(100% + 4px)}}
+@media(max-width:560px){.steps{height:300px;padding-top:66px;gap:4px}.st-emblem{width:52px}}
+
+.latest-more{margin-top:22px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.14)}
+.latest-counts{display:flex;flex-wrap:wrap;gap:6px 16px;font-family:var(--num);font-weight:700;font-size:.84rem;color:rgba(255,255,255,.7)}
+.latest-counts b{color:#fff;font-size:1.05rem;margin-left:2px}
+.gp-card,.top-card,.card{cursor:pointer}
+.gp-card:focus-visible,.top-card:focus-visible,.card:focus-visible,.voice:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+
+.voice{padding:0 0 22px;cursor:pointer;overflow:hidden;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.voice:hover{transform:translateY(-4px);box-shadow:0 26px 40px -24px rgba(11,37,69,.35)}
+.voice::before{display:none}
+.voice-ph{aspect-ratio:16/9}
+.voice > .badge{margin:2px 24px 0}
+.voice blockquote{margin:0 24px;font-size:.95rem;line-height:1.85;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;flex:none}
+.voice footer{margin:0 24px}
+.voice-more{margin:-6px 24px 0;font-family:var(--disp);font-weight:700;font-size:.8rem;color:var(--blue)}
+
+html.is-locked,html.is-locked body{overflow:hidden}
+.modal{position:fixed;inset:0;z-index:300;display:grid;place-items:center;padding:16px}
+.modal-back{position:absolute;inset:0;background:rgba(11,37,69,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-box{position:relative;width:min(940px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;background:var(--paper);border-radius:22px;box-shadow:0 40px 80px -30px rgba(11,37,69,.5)}
+.modal-x{position:absolute;right:12px;top:12px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--ink);font-size:1.5rem;line-height:1;cursor:pointer;box-shadow:0 4px 14px -6px rgba(11,37,69,.4)}
+.pm,.vm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
+.pm > *,.vm > *{min-width:0}
+.pm-ph,.vm-ph{height:100%;min-height:420px;aspect-ratio:auto}
+.pm-body,.vm-body{padding:34px 32px 28px;display:grid;gap:12px;align-content:start;justify-items:start}
+.pm-h{font-family:var(--disp);font-size:clamp(1.3rem,2.4vw,1.7rem);line-height:1.3;font-weight:700}
+.pm-meta{margin:0;color:var(--mute);font-size:.9rem}
+.pm-dl{margin:6px 0 0;display:grid;gap:12px;width:100%}
+.pm-dl div{display:grid;gap:4px}
+.pm-dl dt{font-family:var(--disp);font-size:.72rem;letter-spacing:.14em;color:var(--blue);font-weight:700}
+.pm-dl dd{margin:0;font-size:.92rem;color:var(--ink-2);line-height:1.8}
+.pm-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pm-note{font-size:.72rem;color:var(--mute);margin:4px 0 0;line-height:1.7}
+.vm-body blockquote{margin:0;font-family:var(--disp);font-weight:500;font-size:1rem;line-height:1.95;color:var(--ink)}
+.vm-body footer{display:flex;align-items:center;gap:12px;padding-top:16px;border-top:1px solid var(--line-2);width:100%}
+.vm-body footer b{font-family:var(--disp);font-size:.92rem;display:block;line-height:1.4}
+.vm-body footer small{color:var(--mute);font-size:.75rem}
+@media(max-width:760px){.pm,.vm{grid-template-columns:1fr}.pm-ph,.vm-ph{aspect-ratio:16/10;height:auto;min-height:0}.pm-body,.vm-body{padding:22px 20px 24px}}
+
+.yp{position:fixed;inset:0;z-index:250;background:var(--ground);overflow:auto;-webkit-overflow-scrolling:touch}
+.yp-top{position:sticky;top:0;z-index:2;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line-2)}
+.yp-top .wrap{display:flex;align-items:center;gap:16px;height:64px}
+.yp-back{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 14px;font-family:var(--disp);font-weight:700;font-size:.85rem;cursor:pointer;color:var(--ink);white-space:nowrap}
+.yp-back:hover{border-color:var(--ink)}
+.yp-title{font-family:var(--disp);font-weight:700;font-size:.92rem;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.yp-head{padding-block:clamp(40px,6vw,72px) 8px}
+.yp-nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.yp-nav a{text-decoration:none;font-family:var(--disp);font-weight:700;font-size:.82rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px;display:inline-flex;gap:6px;align-items:center}
+.yp-nav a small{font-family:var(--num);color:var(--mute)}
+.yp-nav a:hover{border-color:var(--ink)}
+.yp-group{padding-block:26px 30px;scroll-margin-top:80px}
+.yp-gh{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.yp-gh h3{font-family:var(--disp);font-size:1.35rem;font-weight:700}
+.yp-gh small{font-family:var(--num);font-weight:700;color:var(--mute)}
+.emblem5{display:block;width:60px;height:auto;flex:none}
+.yp .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.yp .cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.yp .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.yp-title{display:none}}
+.yp-note{font-size:.74rem;color:var(--mute);padding-block:10px 50px;line-height:1.7}
+
+/* ===== v4: logos / movie ===== */
+.orgs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:28px}
+.org-card{margin:0;background:var(--ground);border:1px solid var(--line-2);border-radius:var(--r-card);padding:18px 18px 14px;display:grid;gap:8px;justify-items:center;text-align:center;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+.org-card:hover{transform:translateY(-4px);box-shadow:0 20px 34px -22px rgba(11,37,69,.3)}
+.org-card img{width:min(100%,220px);height:auto;display:block}
+.org-card figcaption{font-family:var(--num);font-size:.66rem;letter-spacing:.2em;color:var(--blue);font-weight:800}
+
+.hero-cta{align-items:center}
+.hero-movie{display:inline-flex;align-items:center;gap:10px;font-family:var(--disp);font-weight:700;font-size:.9rem;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;margin-left:4px}
+.play-mini{width:38px;height:38px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none;transition:transform .35s var(--ease),background .3s;box-shadow:0 10px 20px -10px rgba(11,37,69,.6)}
+.play-mini::after{content:"";width:0;height:0;border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px}
+.hero-movie:hover .play-mini{transform:scale(1.1);background:var(--blue)}
+
+.movie{background:var(--ink);color:#fff;position:relative;overflow:hidden;padding-block:clamp(60px,8vw,110px)}
+.movie::before{content:"";position:absolute;inset:-30% -10%;background:radial-gradient(45% 50% at 80% 30%,rgba(25,180,215,.32),transparent 60%),radial-gradient(40% 45% at 15% 85%,rgba(10,79,143,.7),transparent 62%);pointer-events:none}
+.movie-in{position:relative;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.25fr);gap:clamp(24px,5vw,64px);align-items:center}
+.movie .eyebrow{color:var(--cyan)}.movie .h2{color:#fff}.movie .lead{color:rgba(255,255,255,.75);margin-top:0}
+.movie-txt{display:grid;gap:14px;justify-items:start}
+.movie-txt .btn{margin-top:6px}
+.movie-note{margin:0;font-size:.72rem;color:rgba(255,255,255,.5);font-family:var(--num);font-weight:700;letter-spacing:.04em}
+.play-ic{width:0;height:0;border-left:10px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent;display:inline-block}
+.movie-frame{position:relative;display:block;width:100%;aspect-ratio:16/9;border:0;padding:0;border-radius:22px;overflow:hidden;background:#000;cursor:pointer;box-shadow:0 40px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.08);text-align:left;font:inherit;color:#fff}
+.movie-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--ease)}
+.movie-frame:hover img{transform:scale(1.04)}
+.movie-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,37,69,0) 40%,rgba(11,37,69,.78))}
+.play-big{position:absolute;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);display:grid;place-items:center}
+.play-ring{position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 20px 40px -12px rgba(0,0,0,.5);transition:transform .4s var(--ease),background .3s}
+.play-ring::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(255,255,255,.55);animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.8);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+.play-tri{position:relative;width:0;height:0;border-left:26px solid var(--ink);border-top:15px solid transparent;border-bottom:15px solid transparent;margin-left:8px}
+.movie-frame:hover .play-ring{transform:scale(1.08);background:var(--cyan)}
+.movie-cap{position:absolute;left:24px;bottom:22px;display:grid;gap:2px}
+.movie-cap b{font-family:var(--num);font-weight:800;letter-spacing:.2em;font-size:.7rem;color:var(--cyan)}
+.movie-cap small{font-family:var(--disp);font-weight:700;font-size:.95rem}
+.movie-frame:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
+@media(max-width:900px){.movie-in{grid-template-columns:1fr}.movie-frame{order:-1}.play-big{width:72px;height:72px}.play-tri{border-left-width:20px;border-top-width:12px;border-bottom-width:12px}}
+.video{border:0;background:none;padding:0;text-align:left;cursor:pointer;font:inherit;width:100%}
+.mm-frame{aspect-ratio:16/9;background:#000;border-radius:22px 22px 0 0;overflow:hidden}
+.mm-frame iframe{width:100%;height:100%;border:0;display:block}
+.mm-foot{padding:14px 20px 18px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:center}
+.mm-foot b{font-family:var(--disp);font-size:.95rem;padding-right:40px}
+.mm-foot a{font-size:.82rem;font-weight:700}
+
+/* ===== v5: slideshow ===== */
+.ss{position:relative;overflow:hidden;background:var(--ice);touch-action:pan-y;user-select:none}
+.ss-track{display:flex;height:100%;transition:transform .6s var(--ease)}
+.ss-slide{flex:0 0 100%;height:100%;position:relative}
+.ss .ph{aspect-ratio:auto}
+.ss-slide .ph-l{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);font-size:.66rem;background:rgba(255,255,255,.7);padding:6px 10px;border-radius:999px;color:var(--ink-2)}
+.ss-btn{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--ink);font-size:1.5rem;line-height:1;cursor:pointer;z-index:2;box-shadow:0 6px 16px -6px rgba(11,37,69,.4);display:grid;place-items:center;padding:0 0 3px;transition:transform .3s,background .3s}
+.ss-btn:hover{background:var(--cyan);transform:translateY(-50%) scale(1.06)}
+.ss-prev{left:12px}.ss-next{right:12px}
+.ss-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px;z-index:2}
+.ss-dot{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:rgba(255,255,255,.6);cursor:pointer;transition:transform .3s,background .3s;box-shadow:0 1px 3px rgba(11,37,69,.3)}
+.ss-dot.is-on{background:#fff;transform:scale(1.4)}
+.ss-count{position:absolute;right:12px;top:12px;z-index:2;background:rgba(11,37,69,.6);color:#fff;font-family:var(--num);font-weight:700;font-size:.7rem;padding:3px 9px;border-radius:999px}
+.ss-count b{font-size:.8rem}
+@media(max-width:760px){.ss.pm-ph,.ss.vm-ph{aspect-ratio:16/10;height:auto;min-height:0}}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .marquee-track,.logos-track{animation:none}
+  .timeline{--p:1}
+}
+</style>
+
+<div class="banner" id="banner">
+  <div class="wrap banner-in">
+    <span class="banner-tag">INFO</span>
+    <p>9月17日（木）16:00 エントリー検討中のメーカー向けオンライン説明会を開催します</p>
+    <a class="banner-link" href="#cta">参加申込</a>
+    <button class="banner-x" id="bannerClose" aria-label="お知らせを閉じる">×</button>
+  </div>
+</div>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><img data-photo="logo_blue" alt="日本全国！ご当地冷凍食品大賞 2027"></a>
+    <nav class="nav-links" aria-label="サイト内">
+      <a href="#overview">開催概要</a>
+      <a href="#judges">審査員</a>
+      <a href="#winners">受賞商品</a>
+      <a href="#voices">受賞者の声</a>
+      <a href="#news">お知らせ</a>
+    </nav>
+    <a class="btn btn-primary btn-sm nav-cta" href="#cta">エントリー</a>
+    <button class="nav-burger" id="burger" aria-label="メニュー" aria-expanded="false" aria-controls="navMobile"><span></span><span></span></button>
+  </div>
+  <div class="nav-mobile" id="navMobile" hidden>
+    <a href="#overview">開催概要</a>
+    <a href="#judges">審査員</a>
+    <a href="#winners">受賞商品</a>
+    <a href="#voices">受賞者の声</a>
+    <a href="#news">お知らせ</a>
+    <a href="#partners">パートナー</a>
+    <a href="#cta">お問い合わせ</a>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <canvas class="frost" id="frost" aria-hidden="true"></canvas>
+  <div class="wrap hero-in">
+    <div class="hero-l">
+      <p class="eyebrow hero-eyebrow"><span>第3回</span>日本全国！ご当地冷凍食品大賞</p>
+      <div class="hero-top"><div class="hero-year" aria-hidden="true">2027</div><span class="hero-seal-wrap"><img class="hero-seal" data-photo="em_gp" alt="日本全国！ご当地冷凍食品大賞 受賞ロゴ"></span></div>
+      <h1 class="hero-h">「ご当地食」に光をあてて、<br>「冷凍」で全国に届ける。</h1>
+      <p class="hero-lead">全国から集まったご当地冷凍食品を、審査員が一品一品試食して評価するアワード。銅賞・銀賞・金賞・最高金賞を選出し、最高金賞の中からグランプリを決定します。</p>
+      <div class="hero-chips">
+        <span class="chip"><b>募集期間</b>2026.08.01 – 11.15</span>
+        <span class="chip"><b>エントリー費</b>3万円（税抜）<i>書類選考は無料</i></span>
+      </div>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg magnet" href="#cta">エントリーはこちら</a>
+        <a class="btn btn-ghost btn-lg" href="#overview">開催概要を見る</a>
+      </div>
+      <dl class="stats">
+        <div><dt>エントリー累計</dt><dd><span class="num" data-count="187">187</span><small>品</small></dd></div>
+        <div><dt>参加都道府県</dt><dd><span class="num" data-count="47">47</span><small>/ 47</small></dd></div>
+        <div><dt>受賞商品</dt><dd><span class="num" data-count="114">114</span><small>品</small></dd></div>
+      </dl>
+    </div>
+    <div class="hero-r" aria-hidden="true">
+      <div class="tile t1"><div class="tile-in"><div class="ph ph-0"><img data-photo="torimeshi" alt=""><span class="ph-l">PHOTO</span></div><div class="tile-b"><span class="badge b-gp">グランプリ</span><strong>あきたと鶏めし</strong><small>秋田県｜第2回 グランプリ・最高金賞</small></div></div></div>
+      <div class="tile t2"><div class="tile-in"><div class="ph ph-2"><img data-photo="kawarasoba" alt=""><span class="ph-l">PHOTO</span></div><div class="tile-b"><span class="badge b-top">最高金賞</span><strong>冷凍瓦そば</strong><small>奈良県｜第2回</small></div></div></div>
+      <div class="tile t3"><div class="tile-in"><div class="ph ph-1"><img data-photo="cheese_plain" alt=""><span class="ph-l">PHOTO</span></div><div class="tile-b"><span class="badge b-top">最高金賞</span><strong>niigata plane cream cheese cake</strong><small>新潟県｜第2回</small></div></div></div>
+      <div class="tile t4"><div class="tile-in"><div class="ph ph-4"><img data-photo="taimeshi" alt=""><span class="ph-l">PHOTO</span></div><div class="tile-b"><span class="badge b-top">最高金賞</span><strong>宇和島鯛めし</strong><small>愛媛県｜第2回</small></div></div></div>
+    </div>
+    <p class="hero-tate" aria-hidden="true">日本全国のご当地の味を、冷凍で未来の食卓へ。</p>
+  </div>
+  <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+</section>
+
+<section class="sec movie" id="movie">
+  <div class="wrap movie-in">
+    <div class="movie-txt" data-reveal>
+      <p class="eyebrow">Digest Movie</p>
+      <h2 class="h2">会場の熱気を、<br>ダイジェストで。</h2>
+      <p class="lead">最終審査会・表彰式の様子と受賞商品を、ダイジェストムービーでご覧いただけます。</p>
+      <button class="btn btn-light magnet" type="button" data-yt="4go8UZUDwWA" data-yt-title="ご当地冷凍食品大賞ダイジェストムービー"><span class="play-ic" aria-hidden="true"></span>ムービーを再生</button>
+      <p class="movie-note">YouTube｜日本全国！ご当地冷凍食品大賞 公式</p>
+    </div>
+    <button class="movie-frame" type="button" data-reveal data-yt="4go8UZUDwWA" data-yt-title="ご当地冷凍食品大賞ダイジェストムービー" aria-label="ダイジェストムービーを再生">
+      <img data-photo="movie_poster" alt="">
+      <span class="movie-shade" aria-hidden="true"></span>
+      <span class="play-big" aria-hidden="true"><span class="play-ring"></span><span class="play-tri"></span></span>
+      <span class="movie-cap" aria-hidden="true"><b>DIGEST MOVIE</b><small>第2回 最終審査会・表彰式のダイジェスト</small></span>
+    </button>
+  </div>
+</section>
+
+<section class="sec concept" id="concept">
+  <div class="wrap grid-2">
+    <div data-reveal>
+      <p class="eyebrow">Concept</p>
+      <h2 class="h2">ご当地の味を、<br>冷凍で未来の食卓へ。</h2>
+    </div>
+    <div class="concept-body" data-reveal>
+      <p>地域で長く愛されてきた味は、冷凍という技術によって全国どこへでも届けられる時代になりました。日本全国！ご当地冷凍食品大賞は、そんなご当地冷凍食品を発掘し、優れた商品に光をあてるためのアワードです。</p>
+      <p>大企業でも個人企業でも、規模に関係なく、エントリーされた商品を一品一品公平に試食して評価します。受賞商品はスーパーマーケット・トレードショーでの展示や、テレビ・新聞などのメディア露出を通じて、全国のバイヤーと消費者に届きます。</p>
+      <dl class="org">
+        <div><dt>主催</dt><dd>一般社団法人未来の食卓</dd></div>
+        <div><dt>後援</dt><dd>冷凍食品PR連盟</dd></div>
+        <div><dt>協力</dt><dd>一般社団法人全国スーパーマーケット協会／松屋銀座「ギンザフローズングルメ」</dd></div>
+      </dl>
+      <div class="orgs" data-reveal-group>
+        <figure class="org-card"><img data-photo="logo_fta" alt="一般社団法人未来の食卓"><figcaption>主催</figcaption></figure>
+        <figure class="org-card"><img data-photo="logo_pr" alt="冷凍食品PR連盟"><figcaption>後援</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec latest" id="latest">
+  <div class="wrap">
+    <div class="latest-head" data-reveal>
+      <div>
+        <p class="eyebrow">Result 2025–2026</p>
+        <h2 class="h2">第2回 受賞商品を発表しました</h2>
+        <p class="lead">2026年1月22日の最終審査会・表彰式で、最高金賞4社5品の中からグランプリが決定しました。ここではグランプリと最高金賞をピックアップし、全受賞商品は一覧ページで公開します。</p>
+      </div>
+      <div class="latest-ctl">
+        <span class="latest-period">表示期間：1月下旬 〜 6月末（管理画面のスイッチで切替）</span>
+        <button class="btn btn-ghost btn-sm" id="latestToggle" type="button">この枠を非表示にした状態を見る</button>
+      </div>
+    </div>
+    <div class="latest-grid" data-reveal-group>
+      <article class="gp-card" data-name="あきたと鶏めし" role="button" tabindex="0" aria-haspopup="dialog">
+        <div class="ph ph-0"><img data-photo="torimeshi" alt=""><span class="ph-l">PHOTO</span></div>
+        <div class="gp-body">
+          <img class="emblem" data-photo="em_gp" alt="グランプリ受賞ロゴ">
+          <div class="card-tags"><span class="badge b-gp">グランプリ</span><span class="badge b-top">最高金賞</span></div>
+          <h3>あきたと鶏めし</h3>
+          <p>株式会社花善｜秋田県</p>
+          <p class="gp-txt">大館駅の駅弁として長く愛されてきた「鶏めし」を、冷凍でそのままの味わいに。第2回の最高金賞、そしてグランプリに選ばれました。</p>
+        </div>
+      </article>
+      <article class="top-card" data-name="冷凍瓦そば" role="button" tabindex="0" aria-haspopup="dialog"><div class="ph ph-3"><img data-photo="kawarasoba" alt=""><span class="ph-l">PHOTO</span></div><div class="top-body"><span class="badge b-top">最高金賞</span><h3>冷凍瓦そば</h3><p>株式会社はしもと商店｜奈良県</p></div></article>
+      <article class="top-card" data-name="宇和島鯛めし" role="button" tabindex="0" aria-haspopup="dialog"><div class="ph ph-2"><img data-photo="taimeshi" alt=""><span class="ph-l">PHOTO</span></div><div class="top-body"><span class="badge b-top">最高金賞</span><h3>宇和島鯛めし</h3><p>老舗かどや｜愛媛県</p></div></article>
+      <article class="top-card" data-name="niigata plane cream cheese cake" role="button" tabindex="0" aria-haspopup="dialog"><div class="ph ph-1"><img data-photo="cheese_plain" alt=""><span class="ph-l">PHOTO</span></div><div class="top-body"><span class="badge b-top">最高金賞</span><h3>niigata plane cream cheese cake</h3><p>新潟県</p></div></article>
+      <article class="top-card" data-name="niigata murakami tea cream cheese cake" role="button" tabindex="0" aria-haspopup="dialog"><div class="ph ph-4"><img data-photo="cheese_tea" alt=""><span class="ph-l">PHOTO</span></div><div class="top-body"><span class="badge b-top">最高金賞</span><h3>niigata murakami tea cream cheese cake</h3><p>新潟県</p></div></article>
+    </div>
+    <div class="latest-more" data-reveal>
+      <div class="latest-counts" id="latestCounts"></div>
+      <button class="btn btn-light" type="button" id="yearOpen">第2回の受賞商品をすべて見る</button>
+    </div>
+  </div>
+</section>
+<div class="latest-off" id="latestOff" hidden><div class="wrap"><span>受賞発表の特別枠は現在「非表示」の状態です（7月〜1月の見え方）。第2回の商品は下の「過去の受賞商品」に移っています。</span><button type="button" id="latestOn">特別枠を表示に戻す</button></div></div>
+
+<section class="sec news" id="news">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><p class="eyebrow">News</p><h2 class="h2">お知らせ</h2></div>
+      <a class="link-more" href="#news">お知らせ一覧<span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a>
+    </div>
+    <ol class="news-list" data-reveal-group>
+      <li><a href="#news"><div class="nm"><time datetime="2026-07-24">2026.07.24</time><span class="tag">開催情報</span></div><span class="nt">第3回 日本全国！ご当地冷凍食品大賞 2027の開催が決定。8月1日よりエントリー開始</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a></li>
+      <li><a href="#news"><div class="nm"><time datetime="2026-01-22">2026.01.22</time><span class="tag tag-gold">結果発表</span></div><span class="nt">第2回 グランプリは秋田県のご当地冷凍食品「あきたと鶏めし」（株式会社花善）に決定</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a></li>
+      <li><a href="#news"><div class="nm"><time datetime="2025-12-18">2025.12.18</time><span class="tag tag-gold">結果発表</span></div><span class="nt">第2回 全受賞商品を発表。最高金賞4社（5品）の中からグランプリを決める最終審査会・表彰式は1月22日</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></a></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec overview" id="overview">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><p class="eyebrow">Overview</p><h2 class="h2">開催概要・募集要項</h2></div>
+      <p class="lead" style="margin:0;max-width:30em">第3回（2026–2027）のエントリー要項です。<b>書類選考は無料</b>。費用がかかるのは、書類審査を通過して試食審査に進む商品だけです。</p>
+    </div>
+    <div class="ov-layout">
+      <dl class="spec" data-reveal-group>
+        <div><dt>名称</dt><dd><b>第3回 日本全国！ご当地冷凍食品大賞 2027</b><small>主催：一般社団法人未来の食卓／後援：冷凍食品PR連盟</small></dd></div>
+        <div><dt>対象商品</dt><dd><b>一般消費者向けに、すでに販売されている冷凍食品</b><small>業務用・試作品・未発売の商品は対象外です</small></dd></div>
+        <div><dt>応募資格</dt><dd>企業規模は問いません。大手メーカーから個人事業者まで、同じ基準で審査します。</dd></div>
+        <div><dt>募集期間</dt><dd><span class="num-l">2026.08.01 – 11.15</span><small>締切：11月15日。書類審査の結果は順次ご連絡します</small></dd></div>
+        <div><dt>審査の流れ</dt><dd><div class="steps3"><span><i>1</i>書類審査（無料）</span>→<span><i>2</i>審査員による試食審査</span>→<span><i>3</i>最終審査会でグランプリ決定</span></div><small>審査員が一品一品を実際に試食して評価します</small></dd></div>
+        <div><dt>賞</dt><dd><b>銅賞・銀賞・金賞・最高金賞</b>を選出し、最高金賞の中から<b>グランプリ</b>を決定<small>審査員特別賞などの特別賞は、いずれかの賞を獲得した商品の中から選ばれます</small></dd></div>
+        <div><dt>受賞発表</dt><dd><b>2027年1月下旬</b>　プレス向け発表会・表彰式（予定）<small>受賞商品は本サイトとプレスリリースで発表します</small></dd></div>
+        <div><dt>受賞特典</dt><dd>受賞ロゴの使用／第61回スーパーマーケット・トレードショー2027（2月17日〜19日）での展示／メディア向け発表／松屋銀座「ギンザフローズングルメ」等での販売機会</dd></div>
+      </dl>
+      <aside class="fee-card" data-reveal>
+        <h3>エントリー費（税抜）</h3>
+        <p class="fee-note">書類選考は<b>無料</b>です。書類審査を通過した商品にのみ、エントリー時期に応じた費用が発生します。</p>
+        <ol class="fee-steps" id="feeSteps">
+          <li data-from="2026-08-01" data-to="2026-08-15"><span class="f-tag">早期割引</span><span class="f-when">8/1 – 8/15</span><span class="f-amt">2.5<small>万円</small></span></li>
+          <li data-from="2026-08-16" data-to="2026-10-31"><span class="f-tag">通常</span><span class="f-when">8/16 – 10/31</span><span class="f-amt">3<small>万円</small></span></li>
+          <li data-from="2026-11-01" data-to="2026-11-15"><span class="f-tag">割増</span><span class="f-when">11/1 – 11/15</span><span class="f-amt">3.5<small>万円</small></span></li>
+        </ol>
+        <div class="fee-count"><span>エントリー締切まで</span><b id="cd">–</b><span id="cdUnit">日</span></div>
+        <a class="btn btn-primary magnet" href="#cta">エントリーする</a>
+        <a class="btn btn-ghost btn-sm" href="#cta">募集要項リーフレット（PDF）</a>
+      </aside>
+    </div>
+    <ol class="flow" data-reveal-group>
+      <li><b>エントリー（書類選考）</b><p>フォームから商品情報・写真・こだわりを登録。この段階では費用はかかりません。</p><span class="free">無料</span></li>
+      <li><b>試食審査</b><p>書類審査を通過した商品を、審査員が実際に試食して評価します。エントリー費はこの段階で発生します。</p></li>
+      <li><b>受賞発表・展示</b><p>1月下旬に受賞商品とグランプリを発表。2月のスーパーマーケット・トレードショーで受賞商品を展示します。</p></li>
+    </ol>
+    <div class="timeline" id="timeline" data-reveal>
+      <div class="tl-track"><div class="tl-line"></div></div>
+      <ol class="tl-items">
+        <li><time>2026.08.01</time><b>エントリー開始</b><span>早期割引 8月1日〜15日</span></li>
+        <li><time>2026.11.15</time><b>エントリー締切</b><span>割増期間 11月1日〜15日</span></li>
+        <li><time>2026.11 – 12</time><b>書類審査・試食審査</b><span>審査員が一品ずつ試食して評価</span></li>
+        <li><time>2027.01.28</time><b>プレス向け発表会</b><span>受賞商品とグランプリを発表（予定）</span></li>
+        <li><time>2027.02.17 – 19</time><b>SMTS2027 展示</b><span>第61回スーパーマーケット・トレードショー</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="sec judges" id="judges">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><p class="eyebrow">Judges</p><h2 class="h2">審査員</h2></div>
+      <p class="lead" style="margin:0;max-width:30em">冷凍食品・流通・食の専門家が、エントリー商品を一品一品試食して評価します。</p>
+    </div>
+    <ul class="judge-grid" data-reveal-group>
+      <li class="judge"><div class="ph judge-ph"><img data-photo="takemura" alt=""></div><span class="role">審査員代表・発起人</span><b>タケムラダイ</b><small>冷凍食品専門家（冷凍王子）</small></li>
+      <li class="judge"><div class="ph judge-ph"><img data-photo="murata" alt=""></div><b>村田 恵</b><small>フードジャーナリスト</small></li>
+      <li class="judge"><div class="ph judge-ph"><img data-photo="suzuki" alt=""></div><b>鈴木 健太</b><small>スーパーマーケット バイヤー</small></li>
+      <li class="judge"><div class="ph judge-ph ph-init ph-1">佐</div><b>佐藤 美咲</b><small>料理研究家</small></li>
+      <li class="judge"><div class="ph judge-ph ph-init ph-2">山</div><b>山本 大輔</b><small>フードコーディネーター</small></li>
+    </ul>
+    <p class="jmap-note">氏名・肩書きは仮テキストです（写真3名分は提供データ、残り2名はプレースホルダー）。管理画面から年度ごとに審査員を登録・並び替えできる想定です。</p>
+  </div>
+</section>
+
+<section class="sec ladder" id="awards">
+  <div class="wrap grid-2">
+    <div data-reveal>
+      <p class="eyebrow">Awards</p>
+      <h2 class="h2">4つの賞と、<br>その先のグランプリ。</h2>
+      <p class="lead">エントリー商品の中から銅賞・銀賞・金賞・最高金賞を選出し、最高金賞の中からグランプリを決定します。審査員特別賞などの特別賞も、いずれかの賞を獲得した商品の中から選ばれます。</p>
+    </div>
+    <ol class="steps" data-reveal-group>
+      <li class="st st-bronze"><img class="st-emblem" data-photo="em_bronze" alt="銅賞 受賞ロゴ"><span class="st-n">銅賞</span><span class="st-e">BRONZE</span></li>
+      <li class="st st-silver"><img class="st-emblem" data-photo="em_silver" alt="銀賞 受賞ロゴ"><span class="st-n">銀賞</span><span class="st-e">SILVER</span></li>
+      <li class="st st-gold"><img class="st-emblem" data-photo="em_gold" alt="金賞 受賞ロゴ"><span class="st-n">金賞</span><span class="st-e">GOLD</span></li>
+      <li class="st st-top"><img class="st-emblem" data-photo="em_top" alt="最高金賞 受賞ロゴ"><span class="st-n">最高金賞</span><span class="st-e">TOP GOLD</span></li>
+      <li class="st st-gp"><img class="st-emblem" data-photo="em_gp" alt="グランプリ 受賞ロゴ"><span class="st-n">グランプリ</span><span class="st-e">GRAND PRIX</span></li>
+    </ol>
+  </div>
+</section>
+
+<section class="sec winners" id="winners">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><p class="eyebrow">Archive</p><h2 class="h2">過去の受賞商品</h2><p class="lead" style="margin-top:10px;max-width:40em">最新回の結果は上の特別枠で公開し、翌年度の更新時にこのアーカイブへ移ります。商品をクリックすると詳細が開きます。</p></div>
+      <div class="tabs" id="editionTabs" role="tablist" aria-label="開催回"></div>
+    </div>
+    <div class="win-grid">
+      <aside class="jmap" data-reveal>
+        <p class="jmap-t">地域で絞り込む</p>
+        <div class="jmap-tiles" id="regionTiles"></div>
+        <button class="jmap-reset" id="regionReset" hidden>すべての地域を表示</button>
+        <p class="jmap-note">商品名・地域・開催回は現行サイトの実データ。写真は提供いただいた分のみ実データで、それ以外はプレースホルダー、賞の割り当ては仮です。</p>
+      </aside>
+      <div>
+        <p class="win-count" id="winCount"></p>
+        <div class="cards" id="cards"></div>
+        <div class="more-wrap"><button class="btn btn-ghost" id="more">もっと見る</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec voices" id="voices">
+  <div class="wrap sec-head" data-reveal>
+    <div><p class="eyebrow">Voices</p><h2 class="h2">受賞者の声</h2></div>
+    <div class="scroller-nav">
+      <button id="vPrev" aria-label="前へ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button id="vNext" aria-label="次へ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+  <div class="scroller" id="scroller">
+    <article class="voice" role="button" tabindex="0" aria-haspopup="dialog"><div class="voice-ph ph ph-0"><span class="ph-l">PHOTO</span></div><span class="badge b-gp">第1回 グランプリ・最高金賞</span><blockquote>余韻に浸る間もなく、その後は怒涛のメディア出演と注文の嵐。大変ありがたいことに約1年分の注文が一気に押し寄せました。「一枚一枚丁寧に心を込めて」、これからも美味しい冷凍桜えびかき揚げをお届けしていきます。</blockquote><footer><span class="avatar">望</span><div><b>贅沢桜えびのかき揚げ</b><small>有限会社望仙｜静岡県</small></div></footer><span class="voice-more">全文を読む →</span></article>
+    <article class="voice" role="button" tabindex="0" aria-haspopup="dialog"><div class="voice-ph ph ph-1"><img data-photo="torimeshi" alt=""></div><span class="badge b-gp">第2回 グランプリ</span><blockquote>グランプリ受賞を機に多くのメディアに取り上げていただき、大会後のスーパーマーケット・トレードショー出展では新たな商談にもつながりました。冷凍は、地域の記憶や文化を未来へ運ぶ方法だと考えています。</blockquote><footer><span class="avatar">花</span><div><b>あきたと鶏めし</b><small>株式会社花善｜秋田県</small></div></footer><span class="voice-more">全文を読む →</span></article>
+    <article class="voice" role="button" tabindex="0" aria-haspopup="dialog"><div class="voice-ph ph ph-2"><span class="ph-l">PHOTO</span></div><span class="badge b-top">第1回 最高金賞</span><blockquote>受賞後には多くのTVから取材を受けた事で認知が高まり販売量も伸びました。国内だけではなく、海外からも問い合わせがあったほどです。地方の冷凍食品がクローズアップされることは、これまであまりありませんでした。</blockquote><footer><span class="avatar">山</span><div><b>讃岐すき焼きうどん</b><small>株式会社山田家物流｜香川県</small></div></footer><span class="voice-more">全文を読む →</span></article>
+    <article class="voice" role="button" tabindex="0" aria-haspopup="dialog"><div class="voice-ph ph ph-3"><img data-photo="kawarasoba" alt=""></div><span class="badge b-top">第2回 最高金賞</span><blockquote>松屋銀座、大手通販会社などでの販売の機会をいただき、奈良の田舎でこじんまりと販売していた商品を、一気に日の目を浴びる舞台へと押し上げていただけました。今はパッケージに受賞マークを付け、胸を張って販売しています。</blockquote><footer><span class="avatar">は</span><div><b>瓦そば</b><small>株式会社はしもと商店｜奈良県</small></div></footer><span class="voice-more">全文を読む →</span></article>
+    <article class="voice" role="button" tabindex="0" aria-haspopup="dialog"><div class="voice-ph ph ph-4"><span class="ph-l">PHOTO</span></div><span class="badge b-top">第1回 最高金賞</span><blockquote>北海道から“冷凍だからこそ届けられるおいしさ”を追求したCHEESE WONDERにとって、味だけでなく取り組みや想いが伝わったようで、嬉しく思っております。受賞後は多くのメディアに取り上げていただきました。</blockquote><footer><span class="avatar">U</span><div><b>CHEESE WONDER</b><small>株式会社ユートピアアグリカルチャー｜北海道</small></div></footer><span class="voice-more">全文を読む →</span></article>
+    <article class="voice" role="button" tabindex="0" aria-haspopup="dialog"><div class="voice-ph ph ph-5"><span class="ph-l">PHOTO</span></div><span class="badge b-top">第1回 最高金賞</span><blockquote>受賞後はテレビ、新聞、雑誌等多くのマスコミからの取材申し込みがあり反響の大きさを実感しております。お客様からのご注文や新規のお取引先様からの問い合わせも多く頂戴しており、全国展開を目指して精進して参ります。</blockquote><footer><span class="avatar">凍</span><div><b>凍天（しみてん）</b><small>株式会社キノシタコーポレーション｜福島県</small></div></footer><span class="voice-more">全文を読む →</span></article>
+  </div>
+</section>
+
+<section class="sec media" id="media">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <div><p class="eyebrow">Media</p><h2 class="h2">主な掲載情報</h2></div>
+    </div>
+    <div class="videos" data-reveal-group>
+      <button class="video" type="button" data-yt="8oEpFNtEUkk" data-yt-title="スーパーJチャンネル（テレビ朝日）"><div class="ph"><span class="play" aria-hidden="true"></span></div><p>スーパーJチャンネル<small>テレビ朝日</small></p></button>
+      <button class="video" type="button" data-yt="HjrLDwMPR0g" data-yt-title="Nスタ（TBS）"><div class="ph"><span class="play" aria-hidden="true"></span></div><p>Nスタ<small>TBS</small></p></button>
+      <button class="video" type="button" data-yt="qwJdjcDyCks" data-yt-title="最高金賞4品を紹介（冷凍チャンネル）"><div class="ph"><span class="play" aria-hidden="true"></span></div><p>冷凍チャンネル<small>冷凍王子 冷凍専門家</small></p></button>
+    </div>
+    <p class="media-list" data-reveal>この他、<b>めざましテレビ</b>（フジテレビ）、<b>ひるおび</b>（TBS）、<b>シューイチ</b>（日本テレビ）、<b>グッド！モーニング</b>（テレビ朝日）、<b>ABEMAニュース</b>など多数のメディアに掲載されています。</p>
+  </div>
+</section>
+
+<section class="sec partners" id="partners">
+  <div class="wrap sec-head" data-reveal>
+    <div><p class="eyebrow">Partners</p><h2 class="h2">協賛・協力パートナー</h2></div>
+    <p class="logos-note">ロゴは実データに差し替え予定</p>
+  </div>
+  <div class="logos" aria-label="パートナー一覧"><div class="logos-track" id="logos"></div></div>
+</section>
+
+<section class="cta" id="cta">
+  <div class="wrap cta-in" data-reveal>
+    <p class="eyebrow">Entry 2027</p>
+    <h2 class="cta-h">あなたのご当地の味を、<br>全国の食卓へ。</h2>
+    <p class="cta-p">エントリー受付：2026年8月1日 〜 11月15日。書類選考は無料です。</p>
+    <div class="cta-btns">
+      <a class="btn btn-light btn-lg magnet" href="#cta">エントリーはこちら</a>
+      <a class="btn btn-outline btn-lg" href="#cta">説明会に参加する</a>
+    </div>
+    <p class="cta-sub">ご質問は<a href="#cta">お問い合わせフォーム</a>からお気軽にどうぞ。</p>
+  </div>
+</section>
+</main>
+
+<div class="yp" id="yearPage" hidden data-lenis-prevent role="dialog" aria-modal="true" aria-label="第2回 受賞商品一覧">
+  <div class="yp-top"><div class="wrap"><button class="yp-back" type="button" id="yearClose">← トップに戻る</button><p class="yp-title">第2回 日本全国！ご当地冷凍食品大賞 2025–2026　受賞商品一覧</p></div></div>
+  <div class="wrap yp-head">
+    <p class="eyebrow">Winners 2025–2026</p>
+    <h2 class="h2">第2回 受賞商品一覧</h2>
+    <p class="lead">グランプリ・最高金賞・金賞・銀賞・銅賞、全<span id="ypTotal"></span>品。商品をクリックすると詳細が開きます。</p>
+    <nav class="yp-nav" id="ypNav" aria-label="賞で移動"></nav>
+  </div>
+  <div class="wrap" id="ypGroups"></div>
+  <p class="wrap yp-note">実装時はこの一覧を独立したページ（例：/winners/2026）として用意し、年度ごとに増やしていく想定です。金賞・銀賞・銅賞の割り当てはプロトタイプ用の仮データです。</p>
+</div>
+<div class="modal" id="modal" hidden>
+  <div class="modal-back" id="modalBack"></div>
+  <div class="modal-box" role="dialog" aria-modal="true" data-lenis-prevent><button class="modal-x" id="modalX" type="button" aria-label="閉じる">×</button><div id="modalBody"></div></div>
+</div>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div>
+      <a class="brand" href="#top"><img data-photo="logo_blue" alt="日本全国！ご当地冷凍食品大賞"></a>
+      <p class="foot-org">主催：一般社団法人未来の食卓<br>後援：冷凍食品PR連盟</p>
+    </div>
+    <nav class="foot-links" aria-label="フッター">
+      <a href="#overview">開催概要</a><a href="#winners">受賞商品</a><a href="#voices">受賞者の声</a><a href="#news">お知らせ</a><a href="#cta">お問い合わせ</a><a href="#top">プライバシーポリシー</a><a href="#top">Instagram</a>
+    </nav>
+  </div>
+  <div class="wrap foot-b">
+    <small>© 一般社団法人未来の食卓</small>
+    <small>デザインプロトタイプ v2｜ロゴ・受賞ロゴ・一部の商品写真は実データ、審査員の氏名/肩書き・お知らせ・賞の割り当てはダミーです</small>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+<script>
+(function(){
+  var WINNERS = __WINNERS__;
+  var REGIONS = ['北海道・東北','関東・甲信越','中部','近畿','中国・四国','九州'];
+  var TILES = [
+    {r:0,x:58,y:0,w:42,h:36},{r:1,x:52,y:40,w:38,h:22},{r:2,x:31,y:42,w:19,h:20},
+    {r:3,x:29,y:64,w:24,h:18},{r:4,x:0,y:60,w:27,h:22},{r:5,x:0,y:84,w:24,h:16}
+  ];
+  var PHOTOS = __PHOTOS__;
+  var PRODUCT_INFO = {
+    'あきたと鶏めし': { co: '株式会社花善', pref: '秋田県', ph: 'torimeshi' },
+    '冷凍瓦そば': { co: '株式会社はしもと商店', pref: '奈良県', ph: 'kawarasoba' },
+    '宇和島鯛めし': { co: '老舗かどや', pref: '愛媛県', ph: 'taimeshi' },
+    'niigata plane cream cheese cake': { pref: '新潟県', ph: 'cheese_plain' },
+    'niigata murakami tea cream cheese cake': { pref: '新潟県', ph: 'cheese_tea' },
+    '米粉のベイクドチーズケーキ': { ph: 'ricecheese' },
+    '本場盛岡冷麺2食入り': { ph: 'reimen' },
+    'タコシュウマイ': { ph: 'takoshumai' },
+    '贅沢桜えびかき揚げ': { co: '有限会社望仙', pref: '静岡県' },
+    '讃岐すき焼うどん': { co: '株式会社山田家物流', pref: '香川県' },
+    'CHEESE WONDER': { co: '株式会社ユートピアアグリカルチャー', pref: '北海道' },
+    '凍天（シミテン）': { co: '株式会社キノシタコーポレーション', pref: '福島県' }
+  };
+  var EDITION_LABEL = { 1: '2024-2025', 2: '2025-2026' };
+  function photoOf(n){ var i = PRODUCT_INFO[n]; return i && i.ph && PHOTOS[i.ph]; }
+  var KNOWN = {'あきたと鶏めし':'gp','贅沢桜えびかき揚げ':'gp','CHEESE WONDER':'top','凍天（シミテン）':'top','讃岐すき焼うどん':'top','宇和島鯛めし':'top','niigata plane cream cheese cake':'top','niigata murakami tea cream cheese cake':'top','冷凍瓦そば':'top'};
+  var PRIZE = {gp:{l:'最高金賞',c:'b-top',gp:true,rank:0},top:{l:'最高金賞',c:'b-top',rank:1},gold:{l:'金賞',c:'b-gold',rank:2},silver:{l:'銀賞',c:'b-silver',rank:3},bronze:{l:'銅賞',c:'b-bronze',rank:4}};
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var hasGsap = typeof window.gsap !== 'undefined';
+  var hasST = hasGsap && typeof window.ScrollTrigger !== 'undefined';
+  if (hasST) gsap.registerPlugin(ScrollTrigger);
+
+  /* ---------- photos / logos (data URIs) ---------- */
+  document.querySelectorAll('img[data-photo]').forEach(function(im){
+    var k = im.getAttribute('data-photo');
+    if (!PHOTOS[k]) return;
+    im.src = PHOTOS[k];
+    var ph = im.closest('.ph'); if (ph) ph.classList.add('has-img');
+  });
+  var EM = { bronze: 'em_bronze', silver: 'em_silver', gold: 'em_gold', top: 'em_top', gp: 'em_gp' };
+
+  /* ---------- smooth scroll ---------- */
+  var lenis = null;
+  if (!reduce && typeof window.Lenis === 'function') {
+    try {
+      lenis = new Lenis({ lerp: 0.085, smoothWheel: true });
+      if (hasST) lenis.on('scroll', ScrollTrigger.update);
+      if (hasGsap) { gsap.ticker.add(function(t){ lenis.raf(t * 1000); }); gsap.ticker.lagSmoothing(0); }
+      else { var raf = function(t){ lenis.raf(t); requestAnimationFrame(raf); }; requestAnimationFrame(raf); }
+    } catch (e) { lenis = null; }
+  }
+  function scrollToEl(el){
+    var off = -76;
+    if (lenis) { lenis.scrollTo(el, { offset: off, duration: 1.25 }); return; }
+    var y = el.getBoundingClientRect().top + window.pageYOffset + off;
+    window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute('href');
+    e.preventDefault();
+    if (id.length < 2) return;
+    var el = document.querySelector(id);
+    if (!el) return;
+    var yp = document.getElementById('yearPage');
+    if (yp && !yp.hidden && yp.contains(a)) { el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); return; }
+    closeMobile(); scrollToEl(el);
+  });
+
+  /* ---------- nav ---------- */
+  var nav = document.getElementById('nav');
+  function onScroll(){ nav.classList.toggle('is-scrolled', window.pageYOffset > 24); }
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  var burger = document.getElementById('burger'), navMobile = document.getElementById('navMobile');
+  function closeMobile(){ navMobile.hidden = true; burger.setAttribute('aria-expanded', 'false'); }
+  burger.addEventListener('click', function(){ var open = navMobile.hidden; navMobile.hidden = !open; burger.setAttribute('aria-expanded', String(open)); if (hasST) ScrollTrigger.refresh(); });
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav-links a'));
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(en){ if (en.isIntersecting) links.forEach(function(a){ a.classList.toggle('is-active', a.getAttribute('href') === '#' + en.target.id); }); });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    ['overview','judges','winners','voices','news','partners'].forEach(function(id){ var s = document.getElementById(id); if (s) io.observe(s); });
+  }
+
+  /* ---------- banner ---------- */
+  var banner = document.getElementById('banner');
+  var closed = false; try { closed = sessionStorage.getItem('gr-banner') === '1'; } catch (e) {}
+  if (closed) banner.hidden = true;
+  document.getElementById('bannerClose').addEventListener('click', function(){
+    banner.hidden = true; try { sessionStorage.setItem('gr-banner', '1'); } catch (e) {}
+    if (hasST) ScrollTrigger.refresh();
+  });
+
+  /* ---------- hero frost canvas ---------- */
+  var cv = document.getElementById('frost'), ctx = cv.getContext('2d');
+  var W = 0, H = 0, parts = [], mx = 0, my = 0, tx = 0, ty = 0, running = false, rafId = 0;
+  function resize(){
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var r = cv.parentElement.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cv.width = W * dpr; cv.height = H * dpr;
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!parts.length || parts.W !== W) seed();
+  }
+  function seed(){
+    parts = []; parts.W = W;
+    var n = W < 720 ? 18 : 34;
+    for (var i = 0; i < n; i++) {
+      var blue = Math.random() < 0.35;
+      parts.push({ x: Math.random() * W, y: Math.random() * H, r: 40 + Math.random() * 150, a: 0.05 + Math.random() * 0.09,
+        vx: (Math.random() - 0.5) * 0.14, vy: (Math.random() - 0.5) * 0.09, d: 0.3 + Math.random() * 0.7, c: blue ? '10,79,143' : '25,180,215' });
+    }
+  }
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    tx += (mx - tx) * 0.04; ty += (my - ty) * 0.04;
+    var g = ctx.createRadialGradient(W * 0.74 + tx * 40, H * 0.3 + ty * 40, 0, W * 0.74 + tx * 40, H * 0.3 + ty * 40, Math.max(W, H) * 0.62);
+    g.addColorStop(0, 'rgba(25,180,215,.32)'); g.addColorStop(0.45, 'rgba(10,79,143,.10)'); g.addColorStop(1, 'rgba(243,247,251,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -p.r) p.x = W + p.r; if (p.x > W + p.r) p.x = -p.r;
+      if (p.y < -p.r) p.y = H + p.r; if (p.y > H + p.r) p.y = -p.r;
+      var px = p.x + tx * 50 * p.d, py = p.y + ty * 50 * p.d;
+      var rg = ctx.createRadialGradient(px, py, 0, px, py, p.r);
+      rg.addColorStop(0, 'rgba(' + p.c + ',' + p.a + ')'); rg.addColorStop(1, 'rgba(' + p.c + ',0)');
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(px, py, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  function loop(){ draw(); if (running) rafId = requestAnimationFrame(loop); }
+  function start(){ if (running || reduce) return; running = true; rafId = requestAnimationFrame(loop); }
+  function stop(){ running = false; cancelAnimationFrame(rafId); }
+  resize(); draw();
+  window.addEventListener('resize', function(){ resize(); if (reduce) draw(); }, { passive: true });
+  var hero = document.getElementById('top');
+  hero.addEventListener('pointermove', function(e){ var r = hero.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - 0.5; my = (e.clientY - r.top) / r.height - 0.5; });
+  if ('IntersectionObserver' in window) { new IntersectionObserver(function(es){ es[0].isIntersecting ? start() : stop(); }).observe(hero); } else { start(); }
+
+  /* ---------- counters ---------- */
+  function countUp(el){
+    var target = +el.getAttribute('data-count'), t0 = performance.now(), dur = 1500;
+    function step(t){ var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(target * e).toLocaleString('ja-JP'); if (p < 1) requestAnimationFrame(step); }
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- hero entrance ---------- */
+  if (hasGsap && !reduce) {
+    var tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.from('.hero-eyebrow', { y: 16, opacity: 0, duration: 0.7 })
+      .from('.hero-year', { y: 40, opacity: 0, duration: 1 }, '-=0.5')
+      .from('.hero-seal', { scale: 0.5, opacity: 0, rotate: -14, duration: 1.1, ease: 'back.out(1.7)' }, '-=0.6')
+      .from('.hero-h', { y: 28, opacity: 0, duration: 0.9 }, '-=0.7')
+      .from(['.hero-lead', '.hero-chips', '.hero-cta', '.stats'], { y: 22, opacity: 0, duration: 0.8, stagger: 0.09 }, '-=0.6')
+      .from('.tile', { y: 46, opacity: 0, scale: 0.96, duration: 1.1, stagger: 0.1 }, '-=1')
+      .from('.hero-tate', { opacity: 0, duration: 1 }, '-=0.8')
+      .from('.marquee', { opacity: 0, duration: 0.8 }, '-=0.9');
+    tl.call(function(){ document.querySelectorAll('.num').forEach(countUp); }, null, 0.6);
+  }
+
+  /* ---------- scroll reveals ---------- */
+  if (hasST && !reduce) {
+    gsap.utils.toArray('[data-reveal]').forEach(function(el){
+      gsap.from(el, { y: 28, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
+    });
+    gsap.utils.toArray('[data-reveal-group]').forEach(function(g){
+      gsap.from(g.children, { y: 26, opacity: 0, duration: 0.9, ease: 'power3.out', stagger: 0.08, scrollTrigger: { trigger: g, start: 'top 86%', once: true } });
+    });
+  }
+
+  /* ---------- timeline progress ---------- */
+  var tlEl = document.getElementById('timeline'), tlItems = Array.prototype.slice.call(tlEl.querySelectorAll('.tl-items li'));
+  function setProgress(p){
+    tlEl.style.setProperty('--p', p.toFixed(3));
+    tlItems.forEach(function(li, i){ li.classList.toggle('is-on', p >= i / (tlItems.length - 1) - 0.02); });
+  }
+  if (hasST && !reduce) {
+    ScrollTrigger.create({ trigger: tlEl, start: 'top 78%', end: 'bottom 45%', scrub: 0.6, onUpdate: function(s){ setProgress(s.progress); } });
+  } else { setProgress(1); }
+
+  /* ---------- winners ---------- */
+  var latestOn = true;
+  var state = { e: '1', r: null, shown: 12 };
+  function pastEditions(){ return latestOn ? [1] : [2, 1]; }
+  var cards = document.getElementById('cards'), count = document.getElementById('winCount'), more = document.getElementById('more');
+  var tilesEl = document.getElementById('regionTiles'), resetBtn = document.getElementById('regionReset');
+  function esc(s){ return s.replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function prizeKey(n){
+    if (KNOWN[n]) return KNOWN[n];
+    var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
+    var k = h % 10; return k < 2 ? 'gold' : k < 5 ? 'silver' : 'bronze';
+  }
+  if (!WINNERS.some(function(w){ return w.n === '冷凍瓦そば'; })) WINNERS.push({ n: '冷凍瓦そば', r: 3, e: 2 });
+  WINNERS.forEach(function(w, i){ w.p = prizeKey(w.n); w.i = i; });
+  function filtered(){
+    var eds = pastEditions();
+    return WINNERS.filter(function(w){ return eds.indexOf(w.e) >= 0 && (state.e === 'all' || w.e === +state.e) && (state.r === null || w.r === state.r); })
+      .sort(function(a, b){ return (PRIZE[a.p].rank - PRIZE[b.p].rank) || (a.i - b.i); });
+  }
+  function card(w){
+    var p = PRIZE[w.p];
+    var ph = photoOf(w.n);
+    return '<article class="card" data-i="' + w.i + '" role="button" tabindex="0" aria-haspopup="dialog"><div class="ph ph-' + w.r + (ph ? ' has-img' : '') + '">' + (ph ? '<img src="' + ph + '" alt="" loading="lazy">' : '') + '<span class="ph-l">PHOTO</span></div><div class="card-b"><div class="card-tags"><span class="badge ' + p.c + '">' + p.l + '</span>' + (p.gp ? '<span class="badge b-gp">グランプリ</span>' : '') + '</div><h3>' + esc(w.n) + '</h3><p>' + REGIONS[w.r] + '｜第' + w.e + '回</p></div></article>';
+  }
+  function renderTiles(){
+    var counts = [0,0,0,0,0,0];
+    var eds = pastEditions();
+    WINNERS.forEach(function(w){ if (eds.indexOf(w.e) >= 0 && (state.e === 'all' || w.e === +state.e)) counts[w.r]++; });
+    tilesEl.innerHTML = TILES.map(function(t){
+      return '<button class="jt' + (state.r === t.r ? ' is-on' : '') + '" data-r="' + t.r + '" style="left:' + t.x + '%;top:' + t.y + '%;width:' + t.w + '%;height:' + t.h + '%" aria-pressed="' + (state.r === t.r) + '"><span>' + REGIONS[t.r] + '</span><small>' + counts[t.r] + '</small></button>';
+    }).join('');
+    resetBtn.hidden = state.r === null;
+  }
+  function render(reset){
+    var list = filtered();
+    if (reset) state.shown = 12;
+    var before = reset ? 0 : cards.children.length;
+    cards.innerHTML = list.slice(0, state.shown).map(card).join('');
+    count.textContent = (state.r === null ? '全地域' : REGIONS[state.r]) + '｜' + list.length + '品';
+    more.hidden = state.shown >= list.length;
+    if (hasGsap && !reduce) {
+      var fresh = Array.prototype.slice.call(cards.children, before);
+      if (fresh.length) gsap.from(fresh, { y: 18, opacity: 0, duration: 0.6, stagger: 0.04, ease: 'power3.out', clearProps: 'all' });
+    }
+    renderTiles();
+    if (hasST) ScrollTrigger.refresh();
+  }
+  tilesEl.addEventListener('click', function(e){
+    var b = e.target.closest('.jt'); if (!b) return;
+    var r = +b.getAttribute('data-r');
+    state.r = state.r === r ? null : r; render(true);
+  });
+  resetBtn.addEventListener('click', function(){ state.r = null; render(true); });
+  document.getElementById('editionTabs').addEventListener('click', function(e){
+    var t = e.target.closest('.tab'); if (!t) return;
+    Array.prototype.forEach.call(e.currentTarget.children, function(x){ x.classList.toggle('is-on', x === t); x.setAttribute('aria-selected', String(x === t)); });
+    state.e = t.getAttribute('data-e'); render(true);
+  });
+  more.addEventListener('click', function(){ state.shown += 12; render(false); });
+  var tabsEl = document.getElementById('editionTabs');
+  function renderTabs(){
+    var eds = pastEditions();
+    tabsEl.innerHTML = (eds.length > 1 ? '<button class="tab' + (state.e === 'all' ? ' is-on' : '') + '" data-e="all" role="tab" aria-selected="' + (state.e === 'all') + '">すべて</button>' : '') +
+      eds.map(function(e){ var on = String(e) === String(state.e); return '<button class="tab' + (on ? ' is-on' : '') + '" data-e="' + e + '" role="tab" aria-selected="' + on + '">第' + e + '回 ' + EDITION_LABEL[e] + '</button>'; }).join('');
+  }
+  renderTabs();
+  render(true);
+
+  /* ---------- marquees ---------- */
+  var mq = document.getElementById('marquee');
+  var names = WINNERS.slice().sort(function(a, b){ return PRIZE[a.p].rank - PRIZE[b.p].rank; }).slice(0, 40).map(function(w){ return w.n; });
+  var half = names.map(function(n){ return '<span class="mq">' + esc(n) + '</span>'; }).join('');
+  mq.innerHTML = half + half;
+  var logos = [['SUPERMARKET TRADE SHOW 2027', false], ['松屋銀座 ギンザフローズングルメ', true], ['Rakuten', false], ['GALILEI', false], ['TECHNICAN', false], ['食文化', true], ['冷凍食品PR連盟', true], ['全国スーパーマーケット協会', true]];
+  var lh = logos.map(function(l){ return '<span class="logo' + (l[1] ? ' jp' : '') + '"><i></i>' + l[0] + '</span>'; }).join('');
+  document.getElementById('logos').innerHTML = lh + lh;
+
+  /* ---------- voices scroller ---------- */
+  var sc = document.getElementById('scroller');
+  function cardW(){ var c = sc.querySelector('.voice'); return c ? c.getBoundingClientRect().width + 18 : 400; }
+  document.getElementById('vNext').addEventListener('click', function(){ sc.scrollBy({ left: cardW(), behavior: reduce ? 'auto' : 'smooth' }); });
+  document.getElementById('vPrev').addEventListener('click', function(){ sc.scrollBy({ left: -cardW(), behavior: reduce ? 'auto' : 'smooth' }); });
+  var down = false, sx = 0, sl = 0, moved = false;
+  sc.addEventListener('pointerdown', function(e){ if (e.pointerType !== 'mouse') return; down = true; moved = false; sx = e.clientX; sl = sc.scrollLeft; sc.classList.add('drag'); });
+  sc.addEventListener('pointermove', function(e){ if (!down) return; var dx = e.clientX - sx; if (Math.abs(dx) > 3) moved = true; sc.scrollLeft = sl - dx; });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(ev){ sc.addEventListener(ev, function(){ if (!down) return; down = false; sc.classList.remove('drag'); }); });
+
+  /* ---------- magnetic buttons ---------- */
+  if (!reduce && fine) {
+    document.querySelectorAll('.magnet').forEach(function(b){
+      b.addEventListener('pointermove', function(e){ var r = b.getBoundingClientRect(); var x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2); b.style.transform = 'translate(' + (x * 0.18).toFixed(1) + 'px,' + (y * 0.22).toFixed(1) + 'px)'; });
+      b.addEventListener('pointerleave', function(){ b.style.transform = ''; });
+    });
+  }
+
+  /* ---------- seasonal winners block toggle ---------- */
+  var latest = document.getElementById('latest'), latestOff = document.getElementById('latestOff');
+  function setLatest(on){ latestOn = on; latest.hidden = !on; latestOff.hidden = on; state.e = on ? '1' : 'all'; state.r = null; renderTabs(); render(true); if (hasST) ScrollTrigger.refresh(); }
+  document.getElementById('latestToggle').addEventListener('click', function(){ setLatest(false); scrollToEl(latestOff); });
+  document.getElementById('latestOn').addEventListener('click', function(){ setLatest(true); scrollToEl(latest); });
+
+  /* ---------- entry fee period + countdown ---------- */
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  Array.prototype.forEach.call(document.querySelectorAll('#feeSteps li'), function(li){
+    var f = new Date(li.getAttribute('data-from') + 'T00:00:00'), t = new Date(li.getAttribute('data-to') + 'T23:59:59');
+    li.classList.toggle('is-now', now >= f && now <= t);
+  });
+  var deadline = new Date('2026-11-15T23:59:59'), left = Math.ceil((deadline.getTime() - today) / 864e5);
+  var cd = document.getElementById('cd');
+  if (left > 0) { cd.textContent = String(left); } else { cd.textContent = '受付終了'; cd.style.fontSize = '1.1rem'; document.getElementById('cdUnit').textContent = ''; }
+
+
+  /* ---------- modal (product / voice) ---------- */
+  var modal = document.getElementById('modal'), modalBody = document.getElementById('modalBody'), yearPage = document.getElementById('yearPage'), lastFocus = null;
+  function lockScroll(on){ if (lenis) { on ? lenis.stop() : lenis.start(); } document.documentElement.classList.toggle('is-locked', on); }
+  function openModal(html){
+    lastFocus = document.activeElement; modalBody.innerHTML = html; modal.hidden = false; lockScroll(true);
+    modal.querySelector('.modal-box').scrollTop = 0; document.getElementById('modalX').focus(); initSlides(modalBody);
+    if (hasGsap && !reduce) { gsap.fromTo('.modal-box', { y: 26, opacity: 0, scale: 0.98 }, { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }); gsap.fromTo('.modal-back', { opacity: 0 }, { opacity: 1, duration: 0.35 }); }
+  }
+  function closeModal(){ if (modal.hidden) return; modal.hidden = true; if (activeSS) { activeSS.stop(); activeSS = null; } modalBody.innerHTML = ''; lockScroll(!yearPage.hidden); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+  function movieModal(id, title){ return '<div class="mm"><div class="mm-frame"><iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0" title="' + esc(title) + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="mm-foot"><b>' + esc(title) + '</b><a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">再生できない場合はYouTubeで開く ↗</a></div></div>'; }
+  document.addEventListener('click', function(e){ var b = e.target.closest('[data-yt]'); if (b) openModal(movieModal(b.getAttribute('data-yt'), b.getAttribute('data-yt-title') || 'ムービー')); });
+  document.getElementById('modalX').addEventListener('click', closeModal);
+  document.getElementById('modalBack').addEventListener('click', closeModal);
+  function productByName(name){
+    var w = WINNERS.filter(function(x){ return x.n === name; })[0];
+    return w || { n: name, r: null, e: 2, p: KNOWN[name] || 'top', i: -1 };
+  }
+  function slidesHtml(slides, cls){
+    return '<div class="ss ' + cls + '" data-n="' + slides.length + '"><div class="ss-track">' +
+      slides.map(function(sl){ return '<div class="ss-slide ph ' + (sl.cls || 'ph-0') + (sl.src ? ' has-img' : '') + '">' + (sl.src ? '<img src="' + sl.src + '" alt="">' : '<span class="ph-l">' + esc(sl.label || 'PHOTO') + '</span>') + '</div>'; }).join('') + '</div>' +
+      (slides.length > 1 ? '<button class="ss-btn ss-prev" type="button" aria-label="前の写真">&#8249;</button><button class="ss-btn ss-next" type="button" aria-label="次の写真">&#8250;</button><div class="ss-dots">' + slides.map(function(_, i){ return '<button type="button" class="ss-dot' + (i ? '' : ' is-on') + '" aria-label="写真' + (i + 1) + '"></button>'; }).join('') + '</div><span class="ss-count"><b>1</b>/' + slides.length + '</span>' : '') + '</div>';
+  }
+  var activeSS = null;
+  function initSlides(root){
+    var ss = root.querySelector('.ss'); if (!ss) return;
+    var track = ss.querySelector('.ss-track'), n = +ss.getAttribute('data-n'), i = 0, timer = null;
+    var dots = Array.prototype.slice.call(ss.querySelectorAll('.ss-dot')), count = ss.querySelector('.ss-count b');
+    function go(k){ i = (k + n) % n; track.style.transform = 'translateX(' + (-i * 100) + '%)'; dots.forEach(function(d, j){ d.classList.toggle('is-on', j === i); }); if (count) count.textContent = i + 1; }
+    function auto(){ clearInterval(timer); if (n > 1 && !reduce) timer = setInterval(function(){ go(i + 1); }, 3500); }
+    ss.addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; if (b.classList.contains('ss-prev')) go(i - 1); else if (b.classList.contains('ss-next')) go(i + 1); else if (b.classList.contains('ss-dot')) go(dots.indexOf(b)); auto(); });
+    var sx = null;
+    ss.addEventListener('pointerdown', function(e){ sx = e.clientX; });
+    ss.addEventListener('pointerup', function(e){ if (sx === null) return; var dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) { go(i + (dx < 0 ? 1 : -1)); auto(); } });
+    auto(); activeSS = { stop: function(){ clearInterval(timer); } };
+  }
+  function productModal(w){
+    var info = PRODUCT_INFO[w.n] || {}, ph = photoOf(w.n), p = PRIZE[w.p], rc = 'ph-' + (w.r == null ? 0 : w.r);
+    var slides = [{ src: ph, cls: rc, label: 'メイン写真' }, { src: null, cls: 'ph-1', label: 'サブ写真 2' }, { src: null, cls: 'ph-3', label: 'サブ写真 3' }];
+    return '<div class="pm">' + slidesHtml(slides, 'pm-ph') +
+      '<div class="pm-body"><div class="card-tags"><span class="badge ' + p.c + '">' + p.l + '</span>' + (p.gp ? '<span class="badge b-gp">グランプリ</span>' : '') + '<span class="tag">第' + w.e + '回 ' + EDITION_LABEL[w.e] + '</span></div>' +
+      '<h3 class="pm-h">' + esc(w.n) + '</h3>' +
+      '<p class="pm-meta">' + esc(info.co || '社名（実データ差し替え）') + '｜' + esc(info.pref || (w.r != null ? REGIONS[w.r] : '')) + '</p>' +
+      '<dl class="pm-dl"><div><dt>ご当地のこだわり</dt><dd>' + esc(info.appeal || '地元で長く親しまれてきた味を、冷凍でも損なわないよう製法から見直しました。原料は地域の生産者から直接仕入れ、季節ごとの味わいを大切にしています。（サンプル文）') + '</dd></div></dl>' +
+      '<div class="pm-btns"><a class="btn btn-primary btn-sm" href="' + (info.url || '#official-site') + '"' + (info.url ? ' target="_blank" rel="noopener"' : '') + '>公式サイトを見る ↗</a></div>' +
+      '<p class="pm-note">※ 「ご当地のこだわり」はエントリー時に企業が入力した文章をそのまま自動表示します（事務局での編集なし）。「公式サイトを見る」はエントリー時の参考URLにリンクし、未入力の場合はボタンを出しません。写真はメイン＋サブ写真の最大3枚。</p></div></div>';
+  }
+  function voiceModal(v){
+    var ph = v.querySelector('.voice-ph'), badge = v.querySelector('.badge'), q = v.querySelector('blockquote'), f = v.querySelector('footer');
+    var img = ph.querySelector('img'), rc = (ph.className.match(/ph-\d/) || ['ph-0'])[0];
+    var slides = [{ src: img ? img.getAttribute('src') : null, cls: rc, label: '写真 1' }, { src: null, cls: 'ph-2', label: '写真 2' }, { src: null, cls: 'ph-4', label: '写真 3' }];
+    return '<div class="vm">' + slidesHtml(slides, 'vm-ph') + '<div class="vm-body">' + badge.outerHTML + '<blockquote>' + q.innerHTML + '</blockquote>' + f.outerHTML + '<p class="pm-note">※ 受賞者から提供いただいた商品写真・人物写真を複数枚スライド表示する想定（管理画面から登録）。本文は全文を表示します。</p></div></div>';
+  }
+  cards.addEventListener('click', function(e){ var c = e.target.closest('.card'); if (c) openModal(productModal(WINNERS[+c.getAttribute('data-i')])); });
+  latest.addEventListener('click', function(e){ var c = e.target.closest('[data-name]'); if (c) openModal(productModal(productByName(c.getAttribute('data-name')))); });
+  sc.addEventListener('click', function(e){ var v = e.target.closest('.voice'); if (!v || moved) return; openModal(voiceModal(v)); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') { if (!modal.hidden) closeModal(); else if (!yearPage.hidden) closeYear(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute && e.target.getAttribute('role') === 'button' && e.target.tagName !== 'BUTTON') { e.preventDefault(); e.target.click(); }
+  });
+
+  /* ---------- year winners page (separate page in production) ---------- */
+  var ypOrder = [['gp', 'グランプリ', 4], ['top', '最高金賞', 3], ['gold', '金賞', 2], ['silver', '銀賞', 1], ['bronze', '銅賞', 0]];
+  function renderYear(){
+    var yr = WINNERS.filter(function(w){ return w.e === 2; });
+    document.getElementById('ypTotal').textContent = yr.length;
+    document.getElementById('ypNav').innerHTML = ypOrder.map(function(o){ var n = yr.filter(function(w){ return w.p === o[0]; }).length; return n ? '<a href="#yp-' + o[0] + '">' + o[1] + '<small>' + n + '</small></a>' : ''; }).join('');
+    document.getElementById('ypGroups').innerHTML = ypOrder.map(function(o){
+      var list = yr.filter(function(w){ return w.p === o[0]; }).sort(function(a, b){ return a.i - b.i; });
+      if (!list.length) return '';
+      return '<section class="yp-group" id="yp-' + o[0] + '"><div class="yp-gh"><img class="emblem5" src="' + (PHOTOS[EM[o[0]]] || '') + '" alt=""><h3>' + o[1] + '</h3><small>' + list.length + '品</small></div><div class="cards">' + list.map(card).join('') + '</div></section>';
+    }).join('');
+  }
+  function openYear(){ renderYear(); yearPage.hidden = false; yearPage.scrollTop = 0; lockScroll(true); document.getElementById('yearClose').focus(); }
+  function closeYear(){ yearPage.hidden = true; lockScroll(false); document.getElementById('yearOpen').focus(); }
+  document.getElementById('yearOpen').addEventListener('click', openYear);
+  document.getElementById('yearClose').addEventListener('click', closeYear);
+  document.getElementById('ypGroups').addEventListener('click', function(e){ var c = e.target.closest('.card'); if (c) openModal(productModal(WINNERS[+c.getAttribute('data-i')])); });
+  (function(){
+    var yr = WINNERS.filter(function(w){ return w.e === 2; }), c = {};
+    yr.forEach(function(w){ c[w.p] = (c[w.p] || 0) + 1; });
+    document.getElementById('latestCounts').innerHTML = '<span>グランプリ<b>1</b></span><span>最高金賞<b>' + ((c.top || 0) + (c.gp || 0)) + '</b></span><span>金賞<b>' + (c.gold || 0) + '</b></span><span>銀賞<b>' + (c.silver || 0) + '</b></span><span>銅賞<b>' + (c.bronze || 0) + '</b></span><span>計<b>' + yr.length + '</b>品</span>';
+  })();
+
+  /* ---------- keep layout measurements fresh ---------- */
+  if (hasST) {
+    window.addEventListener('load', function(){ ScrollTrigger.refresh(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ ScrollTrigger.refresh(); });
+  }
+})();
+</script>
