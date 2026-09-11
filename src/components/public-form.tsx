@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { isDisplayField } from "@/lib/form-shared";
+import { formImageSrc, isDisplayField } from "@/lib/form-shared";
 import type { FormField, FormAnswers } from "@/lib/form-shared";
 
 export function PublicForm({
@@ -220,7 +220,7 @@ function FieldInput({
     return (
       <figure>
         <img
-          src={field.content}
+          src={formImageSrc(field.content)}
           alt={field.label || ""}
           className="w-full max-w-lg rounded-lg border border-gray-200"
         />
