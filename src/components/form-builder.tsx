@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { isDisplayField } from "@/lib/form-shared";
+import { formImageSrc, isDisplayField } from "@/lib/form-shared";
 import type { DisplayFieldType, FieldType, FormField } from "@/lib/form-shared";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -592,7 +592,7 @@ function FieldEditor({
             >
               {field.content && (
                 <img
-                  src={field.content}
+                  src={formImageSrc(field.content)}
                   alt={field.label || ""}
                   className="mb-2 max-h-40 rounded-md border border-line"
                 />

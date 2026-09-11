@@ -73,3 +73,43 @@ export interface FormField {
 }
 
 export type FormAnswers = Record<string, string | string[]>;
+
+/** 画像ブロックの保存先（/api/forms/image）。回答者の添付（/api/forms/upload）は
+ *  forms/ 直下に置かれるので、この接頭辞には入らない。 */
+export const FORM_IMAGE_PREFIX = "forms/images/";
+
+/**
+ * 画像ブロック用に保存した画像の URL か（/api/forms/image が forms/images/ 配下に保存したもの）。
+ * ストアは private 設定なので通常は *.private.blob.vercel-storage.com。
+ *
+ * 中継ルート（/api/forms/image/view）はログインなしで読めるため、ここで「Vercel Blob のホスト」かつ
+ * 「forms/images/ 直下のファイル名」に限る。回答者の添付（forms/ 直下）や商品写真（entries/ 等）は
+ * この条件に合わないので、中継ルートからは取れない。ファイル名は保存時に作る
+ * <時刻>-<乱数>.<拡張子> なので、英数字と . _ - 以外（%エンコードや / など）は通さない。
+ */
+export function isFormImageUrl(url: unknown): url is string {
+  if (typeof url !== "string" || !url) return false;
+  try {
+    const u = new URL(url);
+    return (
+      u.protocol === "https:" &&
+      (u.hostname.endsWith(".private.blob.vercel-storage.com") ||
+        u.hostname.endsWith(".public.blob.vercel-storage.com")) &&
+      /^\/forms\/images\/[A-Za-z0-9._-]+$/.test(u.pathname) &&
+      !u.search &&
+      !u.hash
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 画像ブロックの画像を <img src> に出すための URL。
+ * Blob ストアが private 設定なので保存先の URL を直接表示できず、/api/forms/image/view を通して配信する。
+ * 画像ブロックの URL でないもの（空文字など）はそのまま返す。
+ */
+export function formImageSrc(url: string | undefined): string {
+  if (!url) return "";
+  return isFormImageUrl(url) ? `/api/forms/image/view?u=${encodeURIComponent(url)}` : url;
+}

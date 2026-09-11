@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
+import { FORM_IMAGE_PREFIX } from "@/lib/form-shared";
 
 const MAX_BYTES = 5 * 1024 * 1024;
-const ALLOWED = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"];
+/** 受け付ける画像の種類と、保存するときの拡張子。拡張子はファイル名からではなく種類から決める
+ *  （ファイル名の拡張子を信じると、中継ルートが画像以外の Content-Type で返しかねない）。 */
+const EXT_BY_TYPE: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/svg+xml": "svg",
+};
 
 /**
  * 画像ブロック用のアップロード。回答者の添付を受ける /api/forms/upload とは
  * 別ルートにしている理由は2つ:
  *
- * 1. access が違う。ここで上げた画像は公開フォームを開いた誰にでも表示される
- *    ので "public" でなければならない。添付の方は事務局しか見ないので "private"。
- *    同じルートで両方扱うと、取り違えたときに回答者の添付が公開されてしまう。
+ * 1. 見せる相手が違う。ここで上げた画像は公開フォームを開いた誰にでも表示される。
+ *    添付の方は事務局しか見ない。Blob ストアが private 設定（access:"public" の保存は
+ *    "Cannot use public access on a private store" で拒否される）なので、どちらも private で
+ *    保存するが、画像は forms/images/ 配下に置き、ログインなしで読める中継ルート
+ *    （/api/forms/image/view）はこの配下だけを返す。同じ場所に置くと、回答者の添付まで
+ *    誰でも読めてしまう。
  * 2. 権限が違う。/api/forms/upload はログインしていない回答者が使うため認証が
  *    ないが、こちらはフォームを編集できる人だけに限る。
  */
@@ -34,7 +46,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!ALLOWED.includes(file.type)) {
+    const ext = EXT_BY_TYPE[file.type];
+    if (!ext) {
       return NextResponse.json(
         { success: false, message: "画像ファイル（PNG / JPEG / GIF / WebP / SVG）を選んでください" },
         { status: 400 }
@@ -48,11 +61,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ext = file.name.split(".").pop() || "png";
     const blob = await put(
-      `forms/images/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`,
+      `${FORM_IMAGE_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`,
       file,
-      { access: "public" }
+      { access: "private", contentType: file.type }
     );
 
     return NextResponse.json({ success: true, url: blob.url });

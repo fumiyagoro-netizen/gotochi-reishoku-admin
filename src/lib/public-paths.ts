@@ -32,6 +32,13 @@ export const PUBLIC_PATHS = [
   // RESEND_WEBHOOK_SECRET) before touching the database, and refuses with a
   // 500 if that secret isn't configured.
   "/api/webhooks",
+  // Form image-block relay (src/app/api/forms/image/view). Public forms at
+  // /f/<slug> are viewed logged-out and show these images, so the relay
+  // must bypass auth. The route itself only serves Vercel Blob files under
+  // forms/images/ (isFormImageUrl) — applicant attachments live directly
+  // under forms/ and stay behind /api/forms/attachment. Only the /view
+  // relay is listed: the upload route /api/forms/image stays behind login.
+  "/api/forms/image/view",
 ];
 
 /** Public form page: /f/<slug> */
