@@ -41,23 +41,23 @@ export const SITE_NAV: { label: string; items: SiteNavItem[] }[] = [
     items: [
       { href: "/site/winners", label: "受賞商品の公開", icon: Trophy, description: "年度ごとの公開・特別枠、商品ごとの公開と表示写真", ready: true },
       { href: "/site/hero", label: "トップ掲載商品", icon: LayoutGrid, description: "トップページに大きく出す商品と順番", ready: false },
-      { href: "/site/voices", label: "受賞者の声", icon: MessageSquareQuote, description: "受賞商品に紐づけたコメントと写真", ready: false },
+      { href: "/site/voices", label: "受賞者の声", icon: MessageSquareQuote, description: "受賞商品に紐づけたコメントと写真", ready: true },
       { href: "/site/import", label: "過去の受賞商品の取り込み", icon: Upload, description: "過去の年度の受賞商品を Excel と写真から登録", ready: true },
     ],
   },
   {
     label: "年度の内容",
     items: [
-      { href: "/site/overview", label: "開催概要", icon: CalendarRange, description: "募集期間・エントリー費・発表日・タイムライン", ready: false },
-      { href: "/site/judges", label: "審査員", icon: UserRoundCheck, description: "年度ごとの審査員の氏名・肩書き・写真・並び順", ready: false },
+      { href: "/site/overview", label: "開催概要", icon: CalendarRange, description: "募集期間・エントリー費・発表日・タイムライン", ready: true },
+      { href: "/site/judges", label: "審査員", icon: UserRoundCheck, description: "年度ごとの審査員の氏名・肩書き・写真・並び順", ready: true },
       { href: "/site/media", label: "ムービー・メディア", icon: Clapperboard, description: "ダイジェストムービーと掲載メディア", ready: false },
     ],
   },
   {
     label: "サイト全体",
     items: [
-      { href: "/site/news", label: "お知らせ", icon: Newspaper, description: "お知らせの作成・公開日・ピン留め", ready: false },
-      { href: "/site/partners", label: "パートナー・ロゴ", icon: Handshake, description: "主催・後援・協力・協賛のロゴと並び順", ready: false },
+      { href: "/site/news", label: "お知らせ", icon: Newspaper, description: "お知らせの作成・公開日・ピン留め", ready: true },
+      { href: "/site/partners", label: "パートナー・ロゴ", icon: Handshake, description: "主催・後援・協力・協賛のロゴと並び順", ready: true },
       { href: "/site/banner", label: "バナー・サイト設定", icon: Megaphone, description: "上部バナー・OGP・フッター・プライバシーポリシー", ready: false },
     ],
   },
