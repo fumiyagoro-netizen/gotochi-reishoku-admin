@@ -9,6 +9,7 @@ import {
   Newspaper,
   Handshake,
   Megaphone,
+  Upload,
   type LucideIcon,
 } from "@/components/ui/icons";
 
@@ -41,6 +42,7 @@ export const SITE_NAV: { label: string; items: SiteNavItem[] }[] = [
       { href: "/site/winners", label: "受賞商品の公開", icon: Trophy, description: "年度ごとの公開・特別枠、商品ごとの公開と表示写真", ready: true },
       { href: "/site/hero", label: "トップ掲載商品", icon: LayoutGrid, description: "トップページに大きく出す商品と順番", ready: false },
       { href: "/site/voices", label: "受賞者の声", icon: MessageSquareQuote, description: "受賞商品に紐づけたコメントと写真", ready: false },
+      { href: "/site/import", label: "過去の受賞商品の取り込み", icon: Upload, description: "過去の年度の受賞商品を Excel と写真から登録", ready: true },
     ],
   },
   {

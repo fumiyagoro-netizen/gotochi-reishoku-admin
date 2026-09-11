@@ -49,6 +49,7 @@ const ACTION_LABELS: Record<
   },
   site: { label: "サイト公開", tone: "info", dot: "bg-sky-500" },
   site_award: { label: "サイト年度設定", tone: "info", dot: "bg-sky-500" },
+  site_import: { label: "取り込み", tone: "info", dot: "bg-sky-500" },
   unsubscribe: { label: "配信停止", tone: "outline", dot: "bg-zinc-400" },
   resubscribe: {
     label: "配信再開",
