@@ -10,6 +10,7 @@ import { Field } from "@/components/ui/field";
 import { FileInput, Input, Textarea } from "@/components/ui/field-controls";
 import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2 } from "@/components/ui/icons";
 import { uploadSiteFile } from "./site-image-field";
+import { siteAssetSrc } from "@/lib/site-collections-shared";
 import {
   OVERVIEW_MAX_FEES,
   OVERVIEW_MAX_TIMELINE,
@@ -203,7 +204,7 @@ export function OverviewForm({
         <div className="space-y-3 p-5">
           {leafletUrl ? (
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <a href={leafletUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
+              <a href={siteAssetSrc(leafletUrl)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
                 登録済みのリーフレットを開く
                 <ExternalLink className="size-3.5" aria-hidden="true" />
               </a>

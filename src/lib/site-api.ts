@@ -29,14 +29,21 @@ export async function siteAuditLog(request: Request, target: string, targetId: s
 }
 
 /**
- * サイト用に保存した画像・PDF の URL か。公開ページに出すので public の Blob に置く（/api/site/upload）。
- * 任意の URL を保存させない（別サイトの画像を載せる・既存のファイルを消させる）ため、ホストと site/ 配下を確認する。
+ * サイト用に保存した画像・PDF の URL か（/api/site/upload が site/ 配下に保存したもの）。
+ * ストアは private 設定なので通常は *.private.blob.vercel-storage.com。
+ * 任意の URL を保存させない（別サイトの画像を載せる・既存のファイルを消させる・中継させる）ため、
+ * Vercel Blob のホストと site/ 配下であることを確認する。site/ 配下は公開サイトに出すためのファイルだけ
+ * （応募者の添付や商品写真は forms/ や entries/ など site/ の外に置かれる）。
  */
 export function isSiteAssetUrl(url: unknown): url is string {
   if (typeof url !== "string" || !url) return false;
   try {
     const u = new URL(url);
-    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com") && u.pathname.startsWith("/site/");
+    return (
+      u.protocol === "https:" &&
+      (u.hostname.endsWith(".private.blob.vercel-storage.com") || u.hostname.endsWith(".public.blob.vercel-storage.com")) &&
+      u.pathname.startsWith("/site/")
+    );
   } catch {
     return false;
   }

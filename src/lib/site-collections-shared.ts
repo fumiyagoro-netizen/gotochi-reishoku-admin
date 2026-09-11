@@ -12,3 +12,12 @@ export const MAX_VOICE_PHOTOS = 3;
 export const SITE_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
 
 export type SiteCollectionKind = "news" | "judges" | "voices" | "partners";
+
+/**
+ * サイト用ファイル（審査員の写真・ロゴ・受賞者の声の写真・リーフレット）を画面に出すための URL。
+ * Blob ストアが private 設定なので保存先の URL を直接 <img src> にできず、/api/site/asset を通して配信する。
+ * 空なら ""（Thumb などには `|| undefined` で渡す）。
+ */
+export function siteAssetSrc(url: string | null | undefined): string {
+  return url ? `/api/site/asset?u=${encodeURIComponent(url)}` : "";
+}

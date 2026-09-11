@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, ImageOff } from "@/components/ui/icons";
 import { CollectionEditor, type Column, type FieldDef } from "./collection-editor";
-import { PARTNER_KINDS } from "@/lib/site-collections-shared";
+import { PARTNER_KINDS, siteAssetSrc } from "@/lib/site-collections-shared";
 
 export type PartnerItem = {
   id: number;
@@ -29,7 +29,7 @@ export function PartnersEditor({ items }: { items: PartnerItem[] }) {
       width: "w-28",
       render: (p) =>
         p.logoUrl ? (
-          <img src={p.logoUrl} alt="" className="h-10 w-20 rounded-md border border-line bg-surface object-contain p-1" />
+          <img src={siteAssetSrc(p.logoUrl)} alt="" className="h-10 w-20 rounded-md border border-line bg-surface object-contain p-1" />
         ) : (
           <span className="grid h-10 w-20 place-items-center rounded-md bg-surface-muted text-ink-faint">
             <ImageOff className="size-4" aria-hidden="true" />

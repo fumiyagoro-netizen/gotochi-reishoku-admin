@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FileInput } from "@/components/ui/field-controls";
 import { ImageOff } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
-import { SITE_UPLOAD_MAX_BYTES, type SiteUploadKind } from "@/lib/site-collections-shared";
+import { SITE_UPLOAD_MAX_BYTES, siteAssetSrc, type SiteUploadKind } from "@/lib/site-collections-shared";
 
 // サイト管理の画像・PDF の入力欄。選んだ時点で /api/site/upload に上げ、返ってきた URL を値にする。
 // 保存（作成・更新）するまでは行に紐づかない。差し替え・削除で使わなくなったものはサーバーが消す
@@ -31,7 +31,7 @@ function Preview({ url, contain }: { url: string; contain?: boolean }) {
   }
   return (
     <img
-      src={url}
+      src={siteAssetSrc(url)}
       alt=""
       className={cn("size-16 shrink-0 rounded-md border border-line bg-surface", contain ? "object-contain p-1" : "object-cover")}
     />

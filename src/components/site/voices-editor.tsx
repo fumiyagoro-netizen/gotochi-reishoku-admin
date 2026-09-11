@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Thumb } from "@/components/ui/table";
 import { CollectionEditor, type Column, type FieldDef } from "./collection-editor";
-import { MAX_VOICE_PHOTOS } from "@/lib/site-collections-shared";
+import { MAX_VOICE_PHOTOS, siteAssetSrc } from "@/lib/site-collections-shared";
 
 export type VoiceItem = {
   id: number;
@@ -26,7 +26,7 @@ export function VoicesEditor({ items, entryOptions }: { items: VoiceItem[]; entr
   ];
 
   const columns: Column<VoiceItem>[] = [
-    { header: "写真", width: "w-16", render: (v) => <Thumb src={v.photoUrls[0]} alt="" /> },
+    { header: "写真", width: "w-16", render: (v) => <Thumb src={siteAssetSrc(v.photoUrls[0]) || undefined} alt="" /> },
     {
       header: "受賞商品",
       render: (v) => (

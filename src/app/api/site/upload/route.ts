@@ -5,8 +5,8 @@ import { denyUnlessSiteManager } from "@/lib/site-api";
 import { SITE_UPLOAD_KINDS, SITE_UPLOAD_MAX_BYTES, type SiteUploadKind } from "@/lib/site-collections-shared";
 
 // サイト管理の画像・PDF のアップロード。サイト管理（canManageSite）だけ。
-// 審査員の写真・ロゴ・受賞者の声の写真・リーフレットはどれも公開サイトに出すものなので、
-// フォームの画像ブロック（/api/forms/image）と同じく access:"public" で保存する（応募者の添付は private のまま）。
+// Blob ストアが private 設定で、access:"public" の保存は拒否される（"Cannot use public access on a private store"）。
+// そのため private で site/ 配下に保存し、表示は /api/site/asset を通す（siteAssetSrc）。
 // 画像は種類ごとの大きさに縮めて WebP にする（透過は残る）。
 
 const IMAGE_MAX_EDGE: Record<Exclude<SiteUploadKind, "leaflet">, number> = {
@@ -40,12 +40,15 @@ export async function POST(request: NextRequest) {
       if (file.type !== "application/pdf") {
         return NextResponse.json({ success: false, message: "リーフレットは PDF を選んでください" }, { status: 400 });
       }
-      const blob = await put(`site/leaflet/${stamp}.pdf`, file, { access: "public", contentType: "application/pdf" });
+      const blob = await put(`site/leaflet/${stamp}.pdf`, file, { access: "private", contentType: "application/pdf" });
       return NextResponse.json({ success: true, url: blob.url });
     }
 
     if (!IMAGE_TYPES.includes(file.type)) {
-      return NextResponse.json({ success: false, message: "画像（PNG / JPEG / WebP / GIF）を選んでください" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "画像（PNG / JPEG / WebP / GIF）を選んでください。iPhone の写真（HEIC）は JPEG に書き出してから選んでください" },
+        { status: 400 },
+      );
     }
     const edge = IMAGE_MAX_EDGE[kind];
     const webp = await sharp(Buffer.from(await file.arrayBuffer()), { failOn: "none" })
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
       .resize({ width: edge, height: edge, fit: "inside", withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer();
-    const blob = await put(`site/${kind}/${stamp}.webp`, webp, { access: "public", contentType: "image/webp" });
+    const blob = await put(`site/${kind}/${stamp}.webp`, webp, { access: "private", contentType: "image/webp" });
     return NextResponse.json({ success: true, url: blob.url });
   } catch (error) {
     console.error("Site upload error:", error);

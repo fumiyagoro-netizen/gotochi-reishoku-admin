@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Thumb } from "@/components/ui/table";
 import { CollectionEditor, type Column, type FieldDef } from "./collection-editor";
+import { siteAssetSrc } from "@/lib/site-collections-shared";
 
 export type JudgeItem = {
   id: number;
@@ -23,7 +24,7 @@ const FIELDS: FieldDef[] = [
 
 export function JudgesEditor({ awardId, items }: { awardId: number; items: JudgeItem[] }) {
   const columns: Column<JudgeItem>[] = [
-    { header: "写真", width: "w-16", render: (j) => <Thumb src={j.photoUrl || undefined} alt="" /> },
+    { header: "写真", width: "w-16", render: (j) => <Thumb src={siteAssetSrc(j.photoUrl) || undefined} alt="" /> },
     {
       header: "氏名",
       render: (j) => (
