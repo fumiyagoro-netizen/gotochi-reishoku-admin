@@ -11,6 +11,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { RoleBadge } from "@/components/ui/role-badge";
 import { Button } from "@/components/ui/button";
 import { Select, type SelectProps } from "@/components/ui/field-controls";
+import { SiteSidebar } from "@/components/site-sidebar";
+import { isSitePath } from "@/lib/site-nav";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -26,6 +28,7 @@ import {
   Settings,
   History,
   LogOut,
+  Globe,
   type LucideIcon,
 } from "@/components/ui/icons";
 
@@ -113,6 +116,12 @@ export function Sidebar({
   const currentYear = searchParams.get("year") || (awards.length > 0 ? String(awards[0].year) : "");
   const perms = PERMISSIONS[role];
 
+  // /site 配下（サイト管理）は専用のサイドバーに切り替える。layout で canManageSite を
+  // 確認済みなので、ここに来るのはサイト管理を使える役割だけ
+  if (isSitePath(pathname)) {
+    return <SiteSidebar role={role} userName={userName} />;
+  }
+
   function handleYearChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const year = e.target.value;
     const params = new URLSearchParams(searchParams.toString());
@@ -151,6 +160,7 @@ export function Sidebar({
     { href: "/users", label: "ユーザー管理", icon: Users, show: role === "admin", group: "admin" },
     { href: "/settings", label: "設定", icon: Settings, show: role === "admin", group: "admin" },
     { href: "/logs", label: "操作ログ", icon: History, show: role === "admin", group: "admin" },
+    { href: "/site", label: "サイト管理", icon: Globe, show: perms.canManageSite, group: "admin" },
   ];
 
   return (

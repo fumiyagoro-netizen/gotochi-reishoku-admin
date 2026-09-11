@@ -70,6 +70,12 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // no explicit user instruction either way for editor here — this is a
 // deliberate conservative default that should be revisited if editor turns
 // out to need it.
+// canManageSite gates the "サイト管理" area as a whole (/site pages and the
+// /api/site/* routes: 受賞商品の公開, お知らせ, 審査員, 開催概要 etc. — the public
+// website's content, see docs/site-migration/README.md §4). Admin-only for
+// now; widen it here (not in the pages) if 代表者 should edit site content.
+// src/app/site/layout.tsx gates every /site page with it; each /api/site/*
+// route must check it again because layouts don't run for API routes.
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -92,6 +98,7 @@ export const PERMISSIONS = {
     canManageProspects: true,
     canSetItemArrival: true,
     canManageInvoices: true,
+    canManageSite: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -112,6 +119,7 @@ export const PERMISSIONS = {
     canManageProspects: true,
     canSetItemArrival: true,
     canManageInvoices: true,
+    canManageSite: false,
   },
   editor: {
     canDelete: false,
@@ -135,6 +143,7 @@ export const PERMISSIONS = {
     // Unlike canManageProspects, editor does NOT get canManageInvoices —
     // see the comment above PERMISSIONS.
     canManageInvoices: false,
+    canManageSite: false,
   },
   viewer: {
     canDelete: false,
@@ -150,6 +159,7 @@ export const PERMISSIONS = {
     canManageProspects: false,
     canSetItemArrival: false,
     canManageInvoices: false,
+    canManageSite: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -168,6 +178,7 @@ export const PERMISSIONS = {
     canManageProspects: false,
     canSetItemArrival: false,
     canManageInvoices: false,
+    canManageSite: false,
   },
 } as const;
 

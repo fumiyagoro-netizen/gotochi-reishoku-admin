@@ -31,6 +31,18 @@ const config: Config = {
         warning: { DEFAULT: "#d97706", ink: "#b45309", soft: "#fffbeb", line: "#fde68a" },
         danger: { DEFAULT: "#dc2626", ink: "#b91c1c", soft: "#fef2f2", line: "#fecaca" },
         info: { DEFAULT: "#2563eb", ink: "#1d4ed8", soft: "#eff6ff", line: "#bfdbfe" },
+        // サイト管理（/site）のサイドバー専用。公開サイトの紺（--ink）・青（--blue）・シアン（--cyan）と同値で、
+        // 「公開サイトを触っている区画」だと一目で分かるようにする。本文の部品には使わない
+        site: {
+          DEFAULT: "#0b2545",
+          blue: "#0a4f8f",
+          accent: "#19b4d7",
+          ink: "#d3deea",
+          subtle: "#8499b3",
+          line: "rgb(255 255 255 / 0.1)",
+          hover: "rgb(255 255 255 / 0.08)",
+          active: "rgb(255 255 255 / 0.13)",
+        },
       },
       fontFamily: {
         // 日本語フォントを先頭に。Windows は Yu Gothic Medium を Yu Gothic より前に

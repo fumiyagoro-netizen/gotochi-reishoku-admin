@@ -30,6 +30,97 @@ model Award {
   createdAt       DateTime  @default(now())
   entries         Entry[]
   prospects       Prospect[]
+  siteSettings    SiteAwardSettings?
+  siteJudges      SiteJudge[]
+}
+
+// ---------------------------------------------------------------- 公開サイト（サイト管理 /site）
+// 設計は docs/site-migration/README.md §3〜4。表示ルールはここではなく画面・公開サイト側に持つ。
+
+// 年度ごとの公開サイト設定。行が無い年度は「受賞商品は非公開・特別枠なし」として扱う
+model SiteAwardSettings {
+  id               Int       @id @default(autoincrement())
+  awardId          Int       @unique
+  winnersPublished Boolean   @default(false) // 受賞商品を公開（発表時に ON、以後ずっと ON）
+  isFeatured       Boolean   @default(false) // 最新の受賞発表として特別枠に掲載（同時に1年度）
+  featuredUntil    DateTime? // これを過ぎたら特別枠は OFF として扱う
+  announceDate     DateTime? // 受賞発表日
+  overview         Json?     // 開催概要（名称・対象・資格・費用3段階・展示・特典・タイムライン）。形は開催概要画面の実装時に決める
+  leafletUrl       String    @default("") // 募集要項リーフレット（PDF）
+  updatedAt        DateTime  @updatedAt
+  award            Award     @relation(fields: [awardId], references: [id], onDelete: Cascade)
+}
+
+// 審査員（年度ごと）
+model SiteJudge {
+  id          Int      @id @default(autoincrement())
+  awardId     Int
+  name        String
+  title       String   @default("") // 肩書き
+  role        String   @default("") // 役割（例: 審査員代表・発起人）
+  photoUrl    String   @default("")
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  award       Award    @relation(fields: [awardId], references: [id], onDelete: Cascade)
+
+  @@index([awardId])
+}
+
+// お知らせ（年度に紐づけない。サイト全体で1本の時系列）
+model SiteNews {
+  id          Int       @id @default(autoincrement())
+  title       String
+  body        String    @default("")
+  category    String    @default("開催情報") // "開催情報" | "結果発表" | "メディア"
+  publishedAt DateTime? // 表示する公開日（並び順にも使う）
+  isPublished Boolean   @default(false) // false = 下書き
+  isPinned    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// 受賞者の声（受賞エントリーに紐づける）
+model SiteVoice {
+  id          Int      @id @default(autoincrement())
+  entryId     Int
+  quote       String
+  photoUrls   Json?    // 写真 URL の配列（最大3、並び順どおり）
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  entry       Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([entryId])
+}
+
+// 主催・後援・協力・協賛のロゴ（サイト全体）
+model SitePartner {
+  id          Int      @id @default(autoincrement())
+  kind        String   // "主催" | "後援" | "協力" | "協賛"
+  name        String
+  logoUrl     String   @default("")
+  url         String   @default("")
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 受賞に追加で付く称号（グランプリ、審査員特別賞○○賞）。段階（Entry.prizeLevel）とは別に 0〜n 件。
+// グランプリを prizeLevel の5段階目にしないのは、グランプリ＝最高金賞の中の1品で段階と重なるため
+model EntryTitle {
+  id        Int      @id @default(autoincrement())
+  entryId   Int
+  name      String   // "グランプリ" | "審査員特別賞" など
+  note      String   @default("") // 審査員特別賞の賞名（例: "タケムラダイ賞"）
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  entry     Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([entryId])
 }
 
 model Entry {
@@ -82,11 +173,20 @@ model Entry {
   // 増えない）、この規模でフルスキャンのコストは無視できる。reviewStatus と対称に
   // しておき、将来 reviewStatus に索引を張るならこちらも同時に検討する。
   itemArrivalStatus    String       @default("")
+  // 公開サイト（docs/site-migration/README.md §3）。年度の「受賞商品を公開」が ON のとき、受賞のある
+  // エントリーのうち sitePublished=true のものがサイトに出る。既定 true = 個別に外したものだけ非公開
+  sitePublished        Boolean      @default(true)
+  // サイトに出す写真（EntryImage.id の配列、最大3、並び順どおり）。null ならメイン画像を1枚だけ出す
+  sitePhotoIds         Json?
+  // 登録経路。"entry" = エントリーフォーム・CSV、"import" = 過去データの取り込み（第1回）、"manual" = 事務局が画面から登録
+  source               String       @default("entry")
   createdAt            DateTime     @default(now())
   award                Award        @relation(fields: [awardId], references: [id])
   images               EntryImage[]
   comments             EntryComment[]
   invoices             Invoice[]
+  titles               EntryTitle[]
+  siteVoices           SiteVoice[]
 }
 
 model AuditLog {

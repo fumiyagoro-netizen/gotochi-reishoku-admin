@@ -17,6 +17,16 @@ export {
   History,
   Snowflake,
   LogOut,
+  Globe,
+  // サイト管理（src/lib/site-nav.ts）
+  LayoutGrid,
+  MessageSquareQuote,
+  CalendarRange,
+  UserRoundCheck,
+  Clapperboard,
+  Newspaper,
+  Handshake,
+  Megaphone,
   // 操作
   Search,
   ChevronLeft,
