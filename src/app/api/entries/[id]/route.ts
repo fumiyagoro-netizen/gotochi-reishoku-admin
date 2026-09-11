@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getRoleFromRequest, getPermissions } from "@/lib/role";
 import { getUserFromRequest } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
+import { GRAND_PRIX_PRIZE_LEVEL, GRAND_PRIX_TITLE } from "@/lib/prize-shared";
 import { sendEmail } from "@/lib/email";
 import { ITEM_ARRIVAL_LABELS, parseItemArrivalStatuses } from "@/lib/item-arrival-shared";
 
@@ -131,6 +132,12 @@ export async function PATCH(
       where: { id: entryId },
       data,
     });
+
+    // グランプリは最高金賞の中の1品（src/app/api/entries/[id]/grand-prix）。最高金賞から外したら称号も外す
+    if ("prizeLevel" in body && data.prizeLevel !== GRAND_PRIX_PRIZE_LEVEL) {
+      const removed = await prisma.entryTitle.deleteMany({ where: { entryId, name: GRAND_PRIX_TITLE } });
+      if (removed.count > 0) changes.push("グランプリ: 取消（最高金賞ではなくなったため）");
+    }
 
     // Audit log
     const user = await getUserFromRequest(request);

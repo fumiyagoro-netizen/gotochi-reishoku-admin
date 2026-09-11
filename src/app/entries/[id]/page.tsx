@@ -4,6 +4,7 @@ import { getCurrentRole, getPermissions } from "@/lib/role";
 import { getCachedCurrentUser } from "@/lib/auth";
 import { maskEntryPrivateFields } from "@/lib/entry-privacy";
 import { EntryDetail } from "@/components/entry-detail";
+import { GRAND_PRIX_TITLE } from "@/lib/prize-shared";
 
 // ブラウザタブの名前（layout の template で「| ご当地冷凍食品大賞」が付く）
 export const metadata = { title: "エントリー詳細" };
@@ -19,6 +20,7 @@ export default async function EntryDetailPage({ params }: Props) {
     where: { id: entryId },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
+      titles: { select: { name: true } },
     },
   });
 
@@ -62,6 +64,7 @@ export default async function EntryDetailPage({ params }: Props) {
         createdAt: c.createdAt.toISOString(),
       }))}
       currentUserId={currentUser?.userId}
+      grandPrix={entry.titles.some((t) => t.name === GRAND_PRIX_TITLE)}
     />
   );
 }

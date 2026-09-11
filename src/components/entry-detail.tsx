@@ -12,7 +12,7 @@ import { useRole } from "@/lib/role-context";
 import { isPrizeLevel } from "@/lib/prize-shared";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Badge, PrizeBadge } from "@/components/ui/badge";
+import { Badge, GrandPrixBadge, PrizeBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/field-controls";
 import { KeyValue, KeyValueList } from "@/components/ui/key-value";
@@ -65,10 +65,13 @@ export function EntryDetail({
   entry: initialEntry,
   comments,
   currentUserId,
+  grandPrix = false,
 }: {
   entry: EntryData;
   comments: EntryCommentData[];
   currentUserId?: number;
+  /** グランプリ（称号）が付いているか */
+  grandPrix?: boolean;
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
@@ -201,11 +204,14 @@ export function EntryDetail({
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <div className="empty:hidden">
                   {permissions.canSetPrize ? (
-                    <PrizeSelector entryId={entry.id} currentPrize={entry.prizeLevel} />
+                    <PrizeSelector entryId={entry.id} currentPrize={entry.prizeLevel} grandPrix={grandPrix} />
                   ) : entry.prizeLevel ? (
                     // 既知の賞は賞色バッジ。未知の値でも旧表示と同じく落とさず文字列で見せる
                     isPrizeLevel(entry.prizeLevel) ? (
-                      <PrizeBadge prizeLevel={entry.prizeLevel} />
+                      <span className="inline-flex items-center gap-1.5">
+                        <PrizeBadge prizeLevel={entry.prizeLevel} />
+                        {grandPrix && <GrandPrixBadge />}
+                      </span>
                     ) : (
                       <Badge tone="neutral" icon={<Trophy />}>
                         {entry.prizeLevel}

@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
 import Link from "next/link";
-import { PRIZE_LEVELS, PRIZE_DOT_CLASS, isPrizeLevel } from "@/lib/prize-shared";
+import { PRIZE_LEVELS, PRIZE_DOT_CLASS, GRAND_PRIX_TITLE, isPrizeLevel } from "@/lib/prize-shared";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { FilterTile } from "@/components/ui/filter-tile";
 import { Table, Th, Td, Tr, Thumb } from "@/components/ui/table";
-import { Badge, PrizeBadge } from "@/components/ui/badge";
+import { Badge, GrandPrixBadge, PrizeBadge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { Trophy } from "@/components/ui/icons";
@@ -60,6 +60,7 @@ export default async function AwardsPage({ searchParams }: Props) {
           where: { imageType: "main" },
           take: 1,
         },
+        titles: { where: { name: GRAND_PRIX_TITLE }, select: { id: true } },
       },
     }),
     prisma.entry.count({ where }),
@@ -79,7 +80,8 @@ export default async function AwardsPage({ searchParams }: Props) {
   const sortedEntries = [...entries].sort((a, b) => {
     const orderA = PRIZE_ORDER[a.prizeLevel] || 99;
     const orderB = PRIZE_ORDER[b.prizeLevel] || 99;
-    return orderA - orderB;
+    // 同じ賞の中ではグランプリを先頭に
+    return orderA - orderB || b.titles.length - a.titles.length;
   });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -134,11 +136,14 @@ export default async function AwardsPage({ searchParams }: Props) {
               </Td>
               <Td>
                 {/* 未知の賞名は neutral ＋ 生文字列で落とさない（既存のフォールバックと同じ） */}
-                {isPrizeLevel(entry.prizeLevel) ? (
-                  <PrizeBadge prizeLevel={entry.prizeLevel} />
-                ) : (
-                  <Badge tone="neutral">{entry.prizeLevel}</Badge>
-                )}
+                <div className="flex flex-wrap items-center gap-1">
+                  {isPrizeLevel(entry.prizeLevel) ? (
+                    <PrizeBadge prizeLevel={entry.prizeLevel} />
+                  ) : (
+                    <Badge tone="neutral">{entry.prizeLevel}</Badge>
+                  )}
+                  {entry.titles.length > 0 && <GrandPrixBadge />}
+                </div>
               </Td>
               <Td primary>
                 <Link

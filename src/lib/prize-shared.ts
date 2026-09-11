@@ -33,3 +33,13 @@ export const PRIZE_DOT_CLASS: Record<PrizeLevel, string> = {
   銀賞: "bg-zinc-400",
   銅賞: "bg-orange-400",
 };
+
+// グランプリ（称号）。段階（prizeLevel）ではなく EntryTitle.name で持つ（prisma/schema.prisma の EntryTitle）。
+// 最高金賞の中から1年度に1品。付け外しは src/app/api/entries/[id]/grand-prix
+export const GRAND_PRIX_TITLE = "グランプリ";
+export const GRAND_PRIX_PRIZE_LEVEL: PrizeLevel = "最高金賞";
+
+// Badge tone="custom" 用。最高金賞（amber-50）より一段濃い金で、並べても区別できるようにする
+export const GRAND_PRIX_BADGE_CLASS = "bg-amber-400 text-amber-950 ring-amber-600/40";
+// TogglePill toneClassName（押した状態）用
+export const GRAND_PRIX_PILL_CLASS = "border-amber-500 bg-amber-100 text-amber-900";

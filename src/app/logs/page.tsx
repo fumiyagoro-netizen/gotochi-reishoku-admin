@@ -41,6 +41,14 @@ const ACTION_LABELS: Record<
     className: "bg-purple-50 text-purple-700 ring-purple-600/20",
     dot: "bg-purple-500",
   },
+  grand_prix: {
+    label: "グランプリ",
+    tone: "custom",
+    className: "bg-amber-50 text-amber-800 ring-amber-600/25",
+    dot: "bg-amber-500",
+  },
+  site: { label: "サイト公開", tone: "info", dot: "bg-sky-500" },
+  site_award: { label: "サイト年度設定", tone: "info", dot: "bg-sky-500" },
   unsubscribe: { label: "配信停止", tone: "outline", dot: "bg-zinc-400" },
   resubscribe: {
     label: "配信再開",

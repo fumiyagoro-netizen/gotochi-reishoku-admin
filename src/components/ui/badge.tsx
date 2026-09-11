@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Ban, CircleCheck, Package, PackageCheck, Trophy } from "./icons";
-import { PRIZE_BADGE_CLASS, isPrizeLevel } from "@/lib/prize-shared";
+import { GRAND_PRIX_BADGE_CLASS, PRIZE_BADGE_CLASS, isPrizeLevel } from "@/lib/prize-shared";
 import {
   REVIEW_BADGE_CLASS,
   REVIEW_STATUSES,
@@ -90,6 +90,15 @@ export function PrizeBadge({ prizeLevel, size }: { prizeLevel: string; size?: Ba
   return (
     <Badge tone="custom" size={size} className={PRIZE_BADGE_CLASS[prizeLevel]} icon={<Trophy />}>
       {prizeLevel}
+    </Badge>
+  );
+}
+
+/** グランプリ（称号）。受賞バッジの横に並べる */
+export function GrandPrixBadge({ size }: { size?: BadgeSize }) {
+  return (
+    <Badge tone="custom" size={size} className={GRAND_PRIX_BADGE_CLASS} icon={<Trophy />}>
+      グランプリ
     </Badge>
   );
 }

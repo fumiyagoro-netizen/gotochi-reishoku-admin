@@ -38,7 +38,7 @@ export const SITE_NAV: { label: string; items: SiteNavItem[] }[] = [
   {
     label: "受賞商品",
     items: [
-      { href: "/site/winners", label: "受賞商品の公開", icon: Trophy, description: "年度ごとの公開・特別枠、商品ごとの公開と表示写真", ready: false },
+      { href: "/site/winners", label: "受賞商品の公開", icon: Trophy, description: "年度ごとの公開・特別枠、商品ごとの公開と表示写真", ready: true },
       { href: "/site/hero", label: "トップ掲載商品", icon: LayoutGrid, description: "トップページに大きく出す商品と順番", ready: false },
       { href: "/site/voices", label: "受賞者の声", icon: MessageSquareQuote, description: "受賞商品に紐づけたコメントと写真", ready: false },
     ],
