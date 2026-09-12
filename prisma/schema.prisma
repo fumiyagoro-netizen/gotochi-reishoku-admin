@@ -308,6 +308,11 @@ model Form {
   fields          Json     // フィールド定義の配列 (see src/lib/form.ts for shape)
   targetListId    Int?     // 回答者を登録する見込みリスト（任意）
   requireOptIn    Boolean  @default(false)
+  // 同意チェックの見出しと補足文。空ならコード側の既定文言（src/lib/form-shared.ts の
+  // DEFAULT_OPT_IN_LABEL / DEFAULT_OPT_IN_HINT）を出す。フォームごとに趣旨が違う
+  // （説明会の案内・資料請求・問い合わせ）ため、自動返信の文面と同じく個別に持たせる。
+  optInLabel      String   @default("")
+  optInHint       String   @default("")
   thankYouMessage String   @default("")
   autoReplyEnabled Boolean @default(false)
   autoReplySubject String  @default("")

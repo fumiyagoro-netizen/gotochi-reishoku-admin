@@ -1,18 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { formImageSrc, isDisplayField } from "@/lib/form-shared";
+import {
+  formImageSrc,
+  isDisplayField,
+  DEFAULT_OPT_IN_LABEL,
+  DEFAULT_OPT_IN_HINT,
+} from "@/lib/form-shared";
 import type { FormField, FormAnswers } from "@/lib/form-shared";
 
 export function PublicForm({
   slug,
   fields,
   requireOptIn,
+  optInLabel,
+  optInHint,
   thankYouMessage,
 }: {
   slug: string;
   fields: FormField[];
   requireOptIn: boolean;
+  /** 空ならコード側の既定文言。フォーム編集画面で上書きできる */
+  optInLabel?: string;
+  optInHint?: string;
   thankYouMessage: string;
 }) {
   const [answers, setAnswers] = useState<FormAnswers>({});
@@ -148,14 +158,25 @@ export function PublicForm({
 
         {requireOptIn && (
           <div className="pt-2 border-t border-gray-100">
-            <label className="flex items-center gap-3 cursor-pointer">
+            {/* 補足文はチェックボックスと同じ label の中に置く。外に出すと説明文を
+                クリックしても選択が切り替わらず、注記だけ浮いて見えるため */}
+            <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={optIn}
                 onChange={(e) => setOptIn(e.target.checked)}
-                className="rounded border-gray-300 w-5 h-5"
+                className="mt-0.5 rounded border-gray-300 w-5 h-5 flex-shrink-0"
               />
-              <span className="text-sm font-medium">メルマガ配信に同意する</span>
+              <span>
+                <span className="text-sm font-medium">
+                  {optInLabel || DEFAULT_OPT_IN_LABEL}
+                </span>
+                {(optInHint || DEFAULT_OPT_IN_HINT) && (
+                  <span className="block text-sm text-gray-500 mt-0.5 whitespace-pre-wrap">
+                    {optInHint || DEFAULT_OPT_IN_HINT}
+                  </span>
+                )}
+              </span>
             </label>
           </div>
         )}

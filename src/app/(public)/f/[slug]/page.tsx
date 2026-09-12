@@ -45,6 +45,8 @@ export default async function PublicFormPage({
         slug={form.slug}
         fields={(form.fields as unknown as FormField[]) || []}
         requireOptIn={form.requireOptIn}
+        optInLabel={form.optInLabel}
+        optInHint={form.optInHint}
         thankYouMessage={form.thankYouMessage || "送信ありがとうございました。"}
       />
     </div>

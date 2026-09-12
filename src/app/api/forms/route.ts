@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
         fields: body.fields || [],
         targetListId: body.targetListId ? parseInt(body.targetListId) : null,
         requireOptIn: !!body.requireOptIn,
+        optInLabel: body.optInLabel || "",
+        optInHint: body.optInHint || "",
         thankYouMessage: body.thankYouMessage || "",
         autoReplyEnabled: !!body.autoReplyEnabled,
         autoReplySubject: body.autoReplySubject || "",

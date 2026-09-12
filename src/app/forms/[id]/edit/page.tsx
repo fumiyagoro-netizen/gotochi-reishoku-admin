@@ -29,6 +29,8 @@ export default function EditFormPage({ params }: { params: Promise<{ id: string 
             fields: data.form.fields || [],
             targetListId: data.form.targetListId,
             requireOptIn: data.form.requireOptIn,
+            optInLabel: data.form.optInLabel ?? "",
+            optInHint: data.form.optInHint ?? "",
             thankYouMessage: data.form.thankYouMessage,
             autoReplyEnabled: data.form.autoReplyEnabled,
             autoReplySubject: data.form.autoReplySubject,

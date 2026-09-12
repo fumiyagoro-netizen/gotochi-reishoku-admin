@@ -113,3 +113,14 @@ export function formImageSrc(url: string | undefined): string {
   if (!url) return "";
   return isFormImageUrl(url) ? `/api/forms/image/view?u=${encodeURIComponent(url)}` : url;
 }
+
+/**
+ * 同意チェックの既定文言。フォーム側（Form.optInLabel / optInHint）が空のときに使う。
+ *
+ * 「メルマガ配信に同意する」から変更した。回答者が申し込んだ内容と結びつかず、
+ * 宣伝メールの勧誘に見えて素通りされていたため（説明会フォームでは9名中2名しか
+ * チェックしなかった）。何が届くのかと、やめられることを明記する。
+ */
+export const DEFAULT_OPT_IN_LABEL = "事務局からのご案内メールを受け取る";
+export const DEFAULT_OPT_IN_HINT =
+  "資料・説明会・募集情報などをお送りします。配信停止はいつでも可能です。";

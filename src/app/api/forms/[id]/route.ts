@@ -11,6 +11,8 @@ const EDITABLE_FIELDS = [
   "fields",
   "targetListId",
   "requireOptIn",
+  "optInLabel",
+  "optInHint",
   "thankYouMessage",
   "slug",
   "autoReplyEnabled",

@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { formImageSrc, isDisplayField } from "@/lib/form-shared";
+import {
+  formImageSrc,
+  isDisplayField,
+  DEFAULT_OPT_IN_LABEL,
+  DEFAULT_OPT_IN_HINT,
+} from "@/lib/form-shared";
 import type { DisplayFieldType, FieldType, FormField } from "@/lib/form-shared";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -41,6 +46,8 @@ export interface FormData {
   fields: FormField[];
   targetListId: number | null;
   requireOptIn: boolean;
+  optInLabel: string;
+  optInHint: string;
   thankYouMessage: string;
   autoReplyEnabled: boolean;
   autoReplySubject: string;
@@ -99,6 +106,8 @@ const EMPTY_FORM: FormData = {
   fields: [],
   targetListId: null,
   requireOptIn: false,
+  optInLabel: "",
+  optInHint: "",
   thankYouMessage: "",
   autoReplyEnabled: false,
   autoReplySubject: "",
@@ -193,6 +202,8 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
           fields: form.fields,
           targetListId: form.targetListId,
           requireOptIn: form.requireOptIn,
+          optInLabel: form.optInLabel,
+          optInHint: form.optInHint,
           thankYouMessage: form.thankYouMessage,
           autoReplyEnabled: form.autoReplyEnabled,
           autoReplySubject: form.autoReplySubject,
@@ -296,14 +307,41 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
           </Field>
 
           {/* 以下は基本情報カード内の小節。見出しを付けて、5 セクションが一枚に詰まって見えないようにする */}
-          <div className="border-t border-line pt-5">
-            <FieldsetTitle>メルマガ同意</FieldsetTitle>
-            <Field inline label="メルマガ配信の同意を求める（同意した回答者のみ配信対象になります）">
+          <div className="space-y-4 border-t border-line pt-5">
+            <FieldsetTitle>配信への同意</FieldsetTitle>
+            <Field inline label="ご案内メールの同意を求める（同意した回答者だけが配信対象になります）">
               <Checkbox
                 checked={form.requireOptIn}
                 onChange={(e) => update("requireOptIn", e.target.checked)}
               />
             </Field>
+            {/* 文言はフォームごとに変えられる。説明会の案内・資料請求・問い合わせで
+                何が届くのかが違い、共通文だと回答者に伝わらないため */}
+            {form.requireOptIn && (
+              <>
+                <Field
+                  label="同意チェックの文言"
+                  hint={`未入力なら「${DEFAULT_OPT_IN_LABEL}」と表示されます`}
+                >
+                  <Input
+                    value={form.optInLabel}
+                    onChange={(e) => update("optInLabel", e.target.value)}
+                    placeholder={DEFAULT_OPT_IN_LABEL}
+                  />
+                </Field>
+                <Field
+                  label="チェックの下に出す説明"
+                  hint={`未入力なら「${DEFAULT_OPT_IN_HINT}」と表示されます`}
+                >
+                  <Textarea
+                    value={form.optInHint}
+                    onChange={(e) => update("optInHint", e.target.value)}
+                    rows={2}
+                    placeholder={DEFAULT_OPT_IN_HINT}
+                  />
+                </Field>
+              </>
+            )}
           </div>
 
           <div className="space-y-4 border-t border-line pt-5">
