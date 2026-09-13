@@ -129,8 +129,7 @@ export function EntryDetail({
 
   return (
     <PageContainer width="detail">
-      {/* 見出し行（戻る・編集・PDF・削除）は #entry-detail の外に置き、PDF の撮影範囲に入れない。
-          編集中は保存・キャンセルを下の StickyActionBar に出すので actions は空にする */}
+      {/* 編集中は保存・キャンセルを下の StickyActionBar に出すので actions は空にする */}
       <PageHeader
         title="エントリー詳細"
         backHref="/entries"
@@ -144,7 +143,7 @@ export function EntryDetail({
                 </Button>
               )}
               {permissions.canDownload && (
-                <PdfDownloadButton entryName={entry.productName} />
+                <PdfDownloadButton entryId={entry.id} />
               )}
               {permissions.canDelete && (
                 <DeleteEntryButton entryId={entry.id} />
@@ -154,9 +153,10 @@ export function EntryDetail({
         }
       />
 
-      {/* html2canvas の撮影対象。旧ラッパー（p-8 max-w-5xl）と同じく PDF に 32px の余白を写すため
-          p-8 を持たせ、PageContainer の px-8 と PageHeader の mb-6 は負マージンで打ち消して
-          画面上の位置と横幅（1024px の箱）を今までどおりにする。白背景は canvas 色や影を写さないため */}
+      {/* もとは html2canvas の撮影範囲だった箱。PDF はサーバー側で組むようになったので
+          撮影のための存在理由は無くなったが、詳細を白い紙のように見せる枠として残す
+          （外すと余白と背景が変わるため）。負マージンは PageContainer の px-8 と
+          PageHeader の mb-6 を打ち消して、横幅 1024px の見え方を保つためのもの */}
       <div id="entry-detail" className="-mx-8 -mt-6 bg-surface p-8">
         {/* PrizeSelector のポップオーバーがはみ出すので、このカードには clip を付けない */}
         <Card className="mb-6">

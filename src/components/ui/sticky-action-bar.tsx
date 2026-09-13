@@ -11,7 +11,7 @@ export type StickyActionBarProps = {
 
 /**
  * 長いフォームの保存・キャンセル行。PageContainer の px-8 を -mx-8 / px-8 で打ち消して全幅にする。
- * entry-detail では #entry-detail の外に置き、html2canvas の撮影範囲に入れない。
+ * entry-detail では #entry-detail の外に置く（保存バーは紙面の一部ではないため）。
  */
 export function StickyActionBar({ start, children, error }: StickyActionBarProps) {
   return (

@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       "./assets/fonts/NotoSansJP-Regular.ttf",
       "./assets/images/fta-logo.png",
     ],
+    "/api/entries/[id]/pdf": ["./assets/fonts/NotoSansJP-Regular.ttf"],
   },
   async headers() {
     return [

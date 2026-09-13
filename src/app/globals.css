@@ -27,7 +27,8 @@ body {
   .admin-shell input[type="radio"] {
     accent-color: theme("colors.ink.DEFAULT");
   }
-  /* html2canvas の撮影対象は常に白背景（PDF に canvas 色や影を写さない） */
+  /* 詳細を白い紙のように見せる。もとは html2canvas 対策だったが、
+     PDF がサーバー生成になった後も見た目の枠として残している */
   .admin-shell #entry-detail {
     @apply bg-surface;
   }
