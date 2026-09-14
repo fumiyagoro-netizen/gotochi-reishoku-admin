@@ -135,6 +135,7 @@ const PRODUCT_LICENSE_OPTIONS = [
 const REFERRAL_SOURCE_OPTIONS = [
   "参加メーカーからの紹介",
   "その他企業からの紹介",
+  "事務局や審査員からの推薦",
   "テレビ報道",
   "メディア記事",
   "プレスリリース",
