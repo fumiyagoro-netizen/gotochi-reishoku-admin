@@ -65,7 +65,9 @@ export function matchesPathPrefix(pathname: string, prefix: string): boolean {
  * sync with that directory. /f/<slug> is matched separately via
  * PUBLIC_FORM_PATH since it's a dynamic segment.
  */
-const PUBLIC_PAGE_PATHS = ["/entry", "/results", "/unsubscribe"];
+// "/web" は公開サイト本体（src/app/web）。まだ PUBLIC_PATHS に入れていないので
+// ログインが要る（社内確認用）。公開時に PUBLIC_PATHS へ移す。
+const PUBLIC_PAGE_PATHS = ["/entry", "/results", "/unsubscribe", "/web"];
 
 /**
  * True if `pathname` belongs to the `(public)` route group, i.e. should
