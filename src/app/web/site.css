@@ -655,10 +655,11 @@ html.is-locked,html.is-locked body{overflow:hidden}
 .entry-box .fee-steps{margin:0}
 .entry-note{margin:12px 0 0;font-size:.74rem;color:var(--mute);line-height:1.7}
 .entry-steps{counter-reset:s;display:grid;gap:12px}
-.entry-steps li{counter-increment:s;display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:baseline}
-.entry-steps li::before{content:counter(s);font-family:var(--num);font-weight:800;font-size:.78rem;color:var(--blue);background:var(--ice);border-radius:6px;text-align:center;padding:2px 0}
-.entry-steps b{font-family:var(--disp);font-size:.9rem;display:block}
-.entry-steps span{font-size:.76rem;color:var(--mute);line-height:1.6;display:block;margin-top:2px}
+/* 番号は1列目、見出しと説明は2列目に縦に積む（説明が3列目に回ると幅がゼロになる） */
+.entry-steps li{counter-increment:s;display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:baseline}
+.entry-steps li::before{content:counter(s);grid-column:1;grid-row:1;font-family:var(--num);font-weight:800;font-size:.78rem;color:var(--blue);background:var(--ice);border-radius:6px;text-align:center;padding:2px 0}
+.entry-steps b{grid-column:2;grid-row:1;font-family:var(--disp);font-size:.9rem}
+.entry-steps span{grid-column:2;grid-row:2;font-size:.76rem;color:var(--mute);line-height:1.7}
 .entry-perks{display:grid;gap:8px}
 .entry-perks li{font-size:.8rem;color:var(--ink-2);line-height:1.6;padding-left:16px;position:relative}
 .entry-perks li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:2px;background:var(--cyan);transform:rotate(45deg)}
