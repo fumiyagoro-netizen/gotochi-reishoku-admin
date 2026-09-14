@@ -370,6 +370,7 @@ export default async function SiteTopPage() {
                     </div>
                   )}
                   <a className="btn btn-primary magnet" href="/entry" target="_blank" rel="noopener noreferrer">エントリーする</a>
+                  <FormButton form={forms.briefing} className="btn btn-ghost btn-sm">説明会に参加する</FormButton>
                   {current.leafletUrl && (
                     <a className="btn btn-ghost btn-sm" href={current.leafletUrl} target="_blank" rel="noopener noreferrer">募集要項リーフレット（PDF）</a>
                   )}
