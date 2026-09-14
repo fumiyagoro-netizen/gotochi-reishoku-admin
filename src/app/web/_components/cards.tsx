@@ -55,7 +55,6 @@ export function GrandPrixCard({ w, emblem }: { w: SiteWinner; emblem: string }) 
         <Tags w={w} />
         <h3>{w.name}</h3>
         <p>{[w.company, w.prefecture].filter(Boolean).join("｜")}</p>
-        {w.appeal ? <p className="gp-txt">{w.appeal}</p> : null}
       </div>
     </article>
   );

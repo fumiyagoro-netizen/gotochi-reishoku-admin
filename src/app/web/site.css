@@ -579,3 +579,41 @@ html.is-locked,html.is-locked body{overflow:hidden}
 .article-body{white-space:pre-wrap;color:var(--ink-2);line-height:2}
 .article-nav{margin-top:44px;padding-top:22px;border-top:1px solid var(--line-2)}
 .news-empty{color:var(--mute);padding-block:30px}
+
+/* ---------- 実データに合わせた調整（プロトタイプは短い仮データだった） ---------- */
+
+/* 見出しと商品名は語の途中で折り返さない（対応ブラウザのみ効く） */
+.h2,.card h3,.gp-body h3,.top-body h3,.nt,.cta-h,.hero-h{word-break:auto-phrase}
+
+/* 特別枠：社名が長いと縦に伸びるので2行で止める。商品名は詰まらせない */
+.gp-body{gap:8px}
+.gp-body h3{line-height:1.35}
+.top-body{padding:14px 14px 16px;gap:5px}
+.top-body h3{font-size:.95rem;line-height:1.45}
+.top-body p{line-height:1.5;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.top-card{grid-template-columns:40% 1fr}
+
+/* パートナー：ロゴは小さく、社名はロゴの下に */
+.logo{width:180px;padding:26px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;white-space:normal;text-align:center}
+.logo img{height:40px;width:auto;max-width:140px;object-fit:contain}
+.logo small{font-family:var(--disp);font-weight:700;font-size:.72rem;letter-spacing:0;color:var(--mute);line-height:1.5}
+.logo i{width:40px;height:40px;border-radius:8px;background:var(--ice);transform:none}
+
+/* 審査員：人数が少なくても間延びしないように中央にそろえる。役割の枠は常に確保する */
+.judge-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
+.judge{flex:0 1 208px;padding:24px 16px 22px}
+.judge .role.is-empty{visibility:hidden}
+@media(max-width:560px){.judge{flex:1 1 140px}}
+
+/* 地域で絞り込む：ご当地名が2行になっても重ならないように */
+.jt{font-size:.7rem;padding:8px 10px;line-height:1.3;overflow:hidden}
+.jt span{white-space:nowrap}
+.jt small{font-size:.85rem}
+
+/* フッター：主催・後援・協力は1行ずつ */
+.foot-org span{display:block}
+/* メディア掲載：番組名と「この他、…」の間を空ける */
+.media-list{margin-top:26px}
+
+/* モーダルの本文は、入力された改行や空行をそのまま出す */
+.pm-dl dd,.vm blockquote{white-space:pre-wrap}

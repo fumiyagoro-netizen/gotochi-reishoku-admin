@@ -20,13 +20,19 @@ export function VoicesRail({ voices }: { voices: SiteVoiceItem[] }) {
 
   return (
     <>
-      <div className="scroller-nav">
-        <button aria-label="前へ" onClick={() => step(-1)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-        </button>
-        <button aria-label="次へ" onClick={() => step(1)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-        </button>
+      <div className="wrap sec-head" data-reveal>
+        <div>
+          <p className="eyebrow">Voices</p>
+          <h2 className="h2">受賞者の声</h2>
+        </div>
+        <div className="scroller-nav">
+          <button aria-label="前へ" onClick={() => step(-1)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <button aria-label="次へ" onClick={() => step(1)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+        </div>
       </div>
       <div
         className="scroller"

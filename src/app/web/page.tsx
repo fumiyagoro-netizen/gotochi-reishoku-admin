@@ -1,5 +1,5 @@
 import { loadSitePublicData } from "@/lib/site-public";
-import { PRIZE_STYLE, editionRange, type SiteWinner } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, editionRange } from "@/lib/site-public-shared";
 import { Banner, SiteNav } from "./_components/chrome";
 import { GrandPrixCard, MovieButton, TopCard } from "./_components/cards";
 import { WinnersArchive } from "./_components/archive";
@@ -101,11 +101,9 @@ export default async function SiteTopPage() {
     label: k === "gp" ? "グランプリ" : PRIZE_STYLE[k].label,
     n: featuredWinners.filter((w) => w.prize === k).length,
   }));
-  const heroPicked: SiteWinner[] = hero
-    .map((h) => featuredWinners.find((w) => w.id === h.id))
-    .filter((w): w is SiteWinner => !!w);
-  const gp = heroPicked.find((w) => w.prize === "gp") ?? heroPicked[0];
-  const others = heroPicked.filter((w) => w !== gp);
+  // 特別枠はその年度のグランプリと最高金賞。右側の枠は4つなので最高金賞は4品まで
+  const gp = featuredWinners.find((w) => w.prize === "gp");
+  const others = featuredWinners.filter((w) => w.prize === "top").slice(0, 4);
 
   const organizers = ["主催", "後援", "協力", "協賛"]
     .map((kind) => ({ kind, names: partners.filter((p) => p.kind === kind) }))
@@ -236,7 +234,7 @@ export default async function SiteTopPage() {
         </section>
 
         {/* 最新回の受賞発表（特別枠） */}
-        {featured && heroPicked.length > 0 && gp && (
+        {featured && gp && (
           <section className="sec latest" id="latest">
             <div className="wrap">
               <div className="latest-head" data-reveal>
@@ -303,7 +301,15 @@ export default async function SiteTopPage() {
               <div className="ov-layout">
                 <dl className="spec" data-reveal-group>
                   {overview.name && (
-                    <div><dt>名称</dt><dd><b>{overview.name}</b>{organizers.length > 0 && <small>{organizers.map((g) => `${g.kind}：${g.names.map((p) => p.name).join("／")}`).join("　")}</small>}</dd></div>
+                    <div>
+                      <dt>名称</dt>
+                      <dd>
+                        <b>{overview.name}</b>
+                        {organizers.map((g) => (
+                          <small key={g.kind}>{g.kind}：{g.names.map((p) => p.name).join("／")}</small>
+                        ))}
+                      </dd>
+                    </div>
                   )}
                   {overview.target && <div><dt>対象商品</dt><dd><b>{overview.target}</b></dd></div>}
                   {overview.eligibility && <div><dt>応募資格</dt><dd>{overview.eligibility}</dd></div>}
@@ -390,7 +396,7 @@ export default async function SiteTopPage() {
                     ) : (
                       <div className={`ph judge-ph ph-init ph-${i % 6}`}>{j.name.slice(0, 1)}</div>
                     )}
-                    {j.role && <span className="role">{j.role}</span>}
+                    <span className={`role${j.role ? "" : " is-empty"}`}>{j.role || "－"}</span>
                     <b>{j.name}</b>
                     {j.title && <small>{j.title}</small>}
                   </li>
@@ -440,10 +446,7 @@ export default async function SiteTopPage() {
         {/* 受賞者の声 */}
         {voices.length > 0 && (
           <section className="sec voices" id="voices">
-            <div className="wrap sec-head" data-reveal>
-              <div><p className="eyebrow">Voices</p><h2 className="h2">受賞者の声</h2></div>
-              <VoicesRail voices={voices} />
-            </div>
+            <VoicesRail voices={voices} />
           </section>
         )}
 
@@ -481,10 +484,10 @@ export default async function SiteTopPage() {
             <div className="logos" aria-label="パートナー一覧">
               <div className="logos-track">
                 {[...partners, ...partners].map((p, i) => (
-                  <span className="logo jp" key={i}>
+                  <span className="logo" key={i}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {p.logo ? <img src={p.logo} alt="" /> : <i />}
-                    {p.name}
+                    {p.logo ? <img src={p.logo} alt="" loading="lazy" /> : <i />}
+                    <small>{p.name}</small>
                   </span>
                 ))}
               </div>
@@ -511,7 +514,11 @@ export default async function SiteTopPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <a className="brand" href="#top"><img src="/site/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
             {organizers.length > 0 && (
-              <p className="foot-org">{organizers.map((g) => `${g.kind}：${g.names.map((p) => p.name).join("／")}`).join("\n")}</p>
+              <p className="foot-org">
+                {organizers.map((g) => (
+                  <span key={g.kind}>{g.kind}：{g.names.map((p) => p.name).join("／")}</span>
+                ))}
+              </p>
             )}
           </div>
           <nav className="foot-links" aria-label="フッター">

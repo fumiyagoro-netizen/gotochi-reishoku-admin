@@ -46,18 +46,18 @@ export function WinnersArchive({ winners, editions }: { winners: SiteWinner[]; e
 
   return (
     <>
-      <div className="tabs" role="tablist" aria-label="開催回">
-        {editions.length > 1 && (
+      {editions.length > 1 && (
+        <div className="tabs" role="tablist" aria-label="開催回">
           <button className={`tab${edition === "all" ? " is-on" : ""}`} role="tab" aria-selected={edition === "all"} onClick={() => pick("all")}>
             すべて
           </button>
-        )}
-        {editions.map((e) => (
-          <button key={e.edition} className={`tab${edition === e.edition ? " is-on" : ""}`} role="tab" aria-selected={edition === e.edition} onClick={() => pick(e.edition)}>
-            第{e.edition}回 {e.range}
-          </button>
-        ))}
-      </div>
+          {editions.map((e) => (
+            <button key={e.edition} className={`tab${edition === e.edition ? " is-on" : ""}`} role="tab" aria-selected={edition === e.edition} onClick={() => pick(e.edition)}>
+              第{e.edition}回 {e.range}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="win-grid">
         <aside className="jmap" data-reveal>
           <p className="jmap-t">地域で絞り込む</p>
