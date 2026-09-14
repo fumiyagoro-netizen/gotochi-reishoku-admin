@@ -13,6 +13,7 @@ const IMAGE_MAX_EDGE: Record<Exclude<SiteUploadKind, "leaflet">, number> = {
   judge: 800,
   partner: 800,
   voice: 1600,
+  og: 1200, // SNS 共有用（1200×630 で使う）
 };
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 

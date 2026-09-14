@@ -19,7 +19,7 @@ type Data = Record<string, unknown>;
 
 export type CollectionDef = {
   /** prisma のモデル名（prisma.siteNews など） */
-  model: "siteNews" | "siteJudge" | "siteVoice" | "sitePartner";
+  model: "siteNews" | "siteJudge" | "siteVoice" | "sitePartner" | "siteMedia";
   /** 操作ログに出す名前 */
   label: string;
   /** 入力を検証して保存する値にする。エラーならメッセージを返す */
@@ -31,6 +31,14 @@ export type CollectionDef = {
   /** 並べ替えの単位（同じ値を持つ行の中で並べる）。undefined なら並べ替えなし */
   sortScope?: (row: Row) => Data;
 };
+
+/** YouTube の動画ID。URL を貼られても ID だけ取り出す（watch?v= / youtu.be / embed どれでも） */
+export function parseYouTubeId(value: string): string {
+  const v = value.trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(v)) return v;
+  const m = v.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : "";
+}
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const bool = (v: unknown) => v === true || v === "true";
@@ -109,6 +117,21 @@ export const COLLECTIONS: Record<SiteCollectionKind, CollectionDef> = {
     },
     describe: (r) => `#${r.id}（エントリー ${r.entryId}）`,
     assetUrls: (r) => (Array.isArray(r.photoUrls) ? (r.photoUrls as unknown[]).map(String) : []),
+    sortScope: () => ({}),
+  },
+
+  media: {
+    model: "siteMedia",
+    label: "掲載メディア",
+    async parse(body) {
+      const name = str(body.name, 200);
+      if (!name) return { error: "番組名を入れてください" };
+      const youtubeId = parseYouTubeId(str(body.youtubeId, 200));
+      if (!youtubeId) return { error: "YouTube の動画ID（または動画のURL）を入れてください" };
+      return { data: { name, outlet: str(body.outlet, 100), youtubeId, isPublished: bool(body.isPublished) } };
+    },
+    describe: (r) => `「${r.name}」`,
+    assetUrls: () => [],
     sortScope: () => ({}),
   },
 

@@ -45,8 +45,13 @@ model SiteAwardSettings {
   isFeatured       Boolean   @default(false) // 最新の受賞発表として特別枠に掲載（同時に1年度）
   featuredUntil    DateTime? // これを過ぎたら特別枠は OFF として扱う
   announceDate     DateTime? // 受賞発表日
-  overview         Json?     // 開催概要（名称・対象・資格・費用3段階・展示・特典・タイムライン）。形は開催概要画面の実装時に決める
+  overview         Json?     // 開催概要（名称・対象・資格・費用3段階・展示・特典・タイムライン）。形は src/lib/site-overview-shared.ts
   leafletUrl       String    @default("") // 募集要項リーフレット（PDF）
+  // トップのヒーローに出す商品。"auto" は最新回のグランプリ＋最高金賞から自動、"manual" は heroEntryIds の順
+  heroMode         String    @default("auto")
+  heroEntryIds     Json?     // 手動のときの Entry.id の配列（最大4、並び順どおり）
+  digestVideoId    String    @default("") // ダイジェストムービーの YouTube 動画ID
+  digestCaption    String    @default("")
   updatedAt        DateTime  @updatedAt
   award            Award     @relation(fields: [awardId], references: [id], onDelete: Cascade)
 }
@@ -498,4 +503,42 @@ model InvoiceLine {
   unitPrice Int                    // 単価・税別（円）。マイナス可（マスタからコピー、編集可）
   amount    Int                    // 金額 = quantity * unitPrice（サーバー側で計算し直す）
   invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+// 掲載メディアの動画（サイト全体。年度をまたいで並べる）
+model SiteMedia {
+  id          Int      @id @default(autoincrement())
+  name        String   // 番組名
+  outlet      String   @default("") // 局名・媒体名
+  youtubeId   String
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// サイト全体の設定。1行だけ使う（id=1 を upsert する）
+model SiteConfig {
+  id               Int       @id @default(1)
+  // 上部のお知らせバナー
+  bannerOn         Boolean   @default(false)
+  bannerTag        String    @default("INFO")
+  bannerText       String    @default("")
+  bannerLinkText   String    @default("")
+  bannerUrl        String    @default("")
+  bannerFrom       DateTime?
+  bannerTo         DateTime?
+  // SNS で共有したときの表示
+  ogTitle          String    @default("")
+  ogDescription    String    @default("")
+  ogImageUrl       String    @default("")
+  footerLinks      Json?     // [{ label, url }] の配列
+  privacyBody      String    @default("")
+  privacyUpdatedAt DateTime?
+  // 「この他、○○など多数のメディアに掲載」に出す媒体名
+  mediaOutlets     String    @default("")
+  // ヒーローの実績数。第1回は受賞分しか取り込んでいないので DB から数えず、事務局の実数を入れる
+  statsEntries     Int       @default(0)
+  statsPrefectures Int       @default(0)
+  updatedAt        DateTime  @updatedAt
 }
