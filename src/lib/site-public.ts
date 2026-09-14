@@ -3,6 +3,7 @@ import { GRAND_PRIX_TITLE } from "@/lib/prize-shared";
 import { normalizeOverview, type SiteOverview } from "@/lib/site-overview-shared";
 import { normalizeFooterLinks, type FooterLink } from "@/lib/site-config-shared";
 import { siteAssetSrc, MAX_HERO_ENTRIES } from "@/lib/site-collections-shared";
+import type { FormField } from "@/lib/form-shared";
 import {
   editionOf,
   editionRange,
@@ -248,6 +249,26 @@ export async function loadSitePublicData() {
 
   const overview: SiteOverview = normalizeOverview(current?.siteSettings?.overview);
 
+  // サイトからモーダルで開くフォーム（お問い合わせ・説明会）。公開中のものだけ出す
+  const formSlugs = [configRow?.contactFormSlug, configRow?.briefingFormSlug].filter((s): s is string => !!s);
+  const formRows = formSlugs.length
+    ? await prisma.form.findMany({ where: { slug: { in: formSlugs }, status: "published" } })
+    : [];
+  const asSiteForm = (slug: string | undefined) => {
+    const f = formSlugs.length && slug ? formRows.find((r) => r.slug === slug) : undefined;
+    if (!f) return null;
+    return {
+      slug: f.slug,
+      title: f.title,
+      description: f.description,
+      fields: (f.fields ?? []) as unknown as FormField[],
+      requireOptIn: f.requireOptIn,
+      optInLabel: f.optInLabel,
+      optInHint: f.optInHint,
+      thankYouMessage: f.thankYouMessage || "送信ありがとうございました。",
+    };
+  };
+
   return {
     config: { ...config, footerLinks },
     current: current
@@ -286,6 +307,10 @@ export async function loadSitePublicData() {
     partners,
     media,
     overview,
+    forms: {
+      contact: asSiteForm(configRow?.contactFormSlug),
+      briefing: asSiteForm(configRow?.briefingFormSlug),
+    },
     stats: {
       entries: config.statsEntries,
       prefectures: config.statsPrefectures,

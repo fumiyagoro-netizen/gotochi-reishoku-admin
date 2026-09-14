@@ -537,6 +537,9 @@ model SiteConfig {
   privacyUpdatedAt DateTime?
   // 「この他、○○など多数のメディアに掲載」に出す媒体名
   mediaOutlets     String    @default("")
+  // 公開サイトからモーダルで開くフォーム（src/app/forms のフォーム作成で作ったものの slug）
+  contactFormSlug  String    @default("")
+  briefingFormSlug String    @default("")
   // ヒーローの実績数。第1回は受賞分しか取り込んでいないので DB から数えず、事務局の実数を入れる
   statsEntries     Int       @default(0)
   statsPrefectures Int       @default(0)

@@ -18,6 +18,9 @@ export type SiteConfigValues = {
   privacyBody: string;
   privacyUpdatedAt: string;
   mediaOutlets: string;
+  /** 公開サイトからモーダルで開くフォームの slug（フォーム作成で作ったもの） */
+  contactFormSlug: string;
+  briefingFormSlug: string;
   /** ヒーローの実績数。第1回は受賞分しか取り込んでいないので、DB から数えず事務局の実数を入れる */
   statsEntries: number;
   statsPrefectures: number;
@@ -30,6 +33,7 @@ export function emptySiteConfig(): SiteConfigValues {
     bannerOn: false, bannerTag: "INFO", bannerText: "", bannerLinkText: "", bannerUrl: "",
     bannerFrom: "", bannerTo: "", ogTitle: "", ogDescription: "", ogImageUrl: "",
     footerLinks: [], privacyBody: "", privacyUpdatedAt: "", mediaOutlets: "",
+    contactFormSlug: "", briefingFormSlug: "",
     statsEntries: 0, statsPrefectures: 0,
   };
 }

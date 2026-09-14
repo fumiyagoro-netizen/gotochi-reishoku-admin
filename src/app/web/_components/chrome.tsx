@@ -35,14 +35,14 @@ export function SiteNav({ links, entryUrl }: { links: { href: string; label: str
         <nav className="nav-links" aria-label="サイト内">
           {links.map((l) => <a key={l.href} href={l.href}>{l.label}</a>)}
         </nav>
-        <a className="btn btn-primary btn-sm nav-cta" href={entryUrl}>エントリー</a>
+        <a className="btn btn-primary btn-sm nav-cta" href={entryUrl} target="_blank" rel="noopener noreferrer">エントリー</a>
         <button className="nav-burger" id="burger" aria-label="メニュー" aria-expanded={open} aria-controls="navMobile" onClick={() => setOpen(!open)}>
           <span /><span />
         </button>
       </div>
       <div className="nav-mobile" id="navMobile" hidden={!open}>
         {links.map((l) => <a key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>)}
-        <a href={entryUrl} onClick={() => setOpen(false)}>エントリー</a>
+        <a href={entryUrl} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>エントリー</a>
       </div>
     </header>
   );

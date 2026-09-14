@@ -6,13 +6,22 @@ import { Card, CardHeader, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
-import { Checkbox, Input, Textarea } from "@/components/ui/field-controls";
+import { Checkbox, Input, Select, Textarea } from "@/components/ui/field-controls";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "@/components/ui/icons";
 import { ImageField } from "./site-image-field";
 import { MAX_FOOTER_LINKS, type SiteConfigValues } from "@/lib/site-config-shared";
 
 // バナー・サイト設定。保存は /api/site/config（送った項目だけ更新される）
-export function SiteConfigForm({ initial, today }: { initial: SiteConfigValues; today: string }) {
+export function SiteConfigForm({
+  initial,
+  today,
+  forms,
+}: {
+  initial: SiteConfigValues;
+  today: string;
+  /** フォーム作成で「公開」にしてあるフォーム */
+  forms: { slug: string; title: string }[];
+}) {
   const router = useRouter();
   const [v, setV] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -112,6 +121,31 @@ export function SiteConfigForm({ initial, today }: { initial: SiteConfigValues; 
           </Field>
           <Field label="画像" hint="横長（1200×630px 程度）がきれいに出ます。未設定のときはサイトの既定画像を使います">
             <ImageField kind="og" value={v.ogImageUrl} onChange={(url) => set("ogImageUrl", url)} />
+          </Field>
+        </div>
+      </Card>
+
+      <Card padding="none" as="section">
+        <CardHeader
+          title="公開サイトから開くフォーム"
+          description="サイトの「お問い合わせ」「説明会に参加する」を押すと、その場でフォームが開きます。フォーム作成で公開にしたものから選びます"
+        />
+        <div className="grid gap-5 p-5 md:grid-cols-2">
+          <Field label="お問い合わせ" htmlFor="form-contact" hint="選ばないと、サイトにお問い合わせのボタンを出しません">
+            <Select id="form-contact" value={v.contactFormSlug} onChange={(e) => set("contactFormSlug", e.target.value)}>
+              <option value="">使わない</option>
+              {forms.map((f) => (
+                <option key={f.slug} value={f.slug}>{f.title}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="説明会の申し込み" htmlFor="form-briefing" hint="募集期間中だけ出したいときは、フォーム側を「公開」「終了」で切り替えます">
+            <Select id="form-briefing" value={v.briefingFormSlug} onChange={(e) => set("briefingFormSlug", e.target.value)}>
+              <option value="">使わない</option>
+              {forms.map((f) => (
+                <option key={f.slug} value={f.slug}>{f.title}</option>
+              ))}
+            </Select>
           </Field>
         </div>
       </Card>

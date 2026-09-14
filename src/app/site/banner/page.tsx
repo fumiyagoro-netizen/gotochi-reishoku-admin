@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "バナー・サイト設定" };
 
 export default async function SiteBannerPage() {
-  const row = await prisma.siteConfig.findUnique({ where: { id: 1 } });
+  const [row, forms] = await Promise.all([
+    prisma.siteConfig.findUnique({ where: { id: 1 } }),
+    prisma.form.findMany({ where: { status: "published" }, select: { slug: true, title: true }, orderBy: { title: "asc" } }),
+  ]);
   const values: SiteConfigValues = row
     ? {
         bannerOn: row.bannerOn,
@@ -27,6 +30,8 @@ export default async function SiteBannerPage() {
         mediaOutlets: row.mediaOutlets,
         statsEntries: row.statsEntries,
         statsPrefectures: row.statsPrefectures,
+        contactFormSlug: row.contactFormSlug,
+        briefingFormSlug: row.briefingFormSlug,
       }
     : emptySiteConfig();
 
@@ -36,7 +41,7 @@ export default async function SiteBannerPage() {
         title="バナー・サイト設定"
         description="上部のお知らせバナーと、サイト全体の設定（SNS共有・フッター・プライバシーポリシー・実績数）。"
       />
-      <SiteConfigForm initial={values} today={utcToJstDateInputValue(new Date())} />
+      <SiteConfigForm initial={values} today={utcToJstDateInputValue(new Date())} forms={forms} />
     </PageContainer>
   );
 }

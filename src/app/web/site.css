@@ -594,10 +594,10 @@ html.is-locked,html.is-locked body{overflow:hidden}
 .top-card{grid-template-columns:40% 1fr}
 
 /* パートナー：ロゴは小さく、社名はロゴの下に */
-.logo{width:180px;padding:26px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;white-space:normal;text-align:center}
-.logo img{height:40px;width:auto;max-width:140px;object-fit:contain}
+.logo{width:250px;padding:30px 22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;white-space:normal;text-align:center}
+.logo img{height:92px;width:auto;max-width:210px;object-fit:contain}
 .logo small{font-family:var(--disp);font-weight:700;font-size:.72rem;letter-spacing:0;color:var(--mute);line-height:1.5}
-.logo i{width:40px;height:40px;border-radius:8px;background:var(--ice);transform:none}
+.logo i{width:92px;height:92px;border-radius:12px;background:var(--ice);transform:none}
 
 /* 審査員：人数が少なくても間延びしないように中央にそろえる。役割の枠は常に確保する */
 .judge-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
@@ -619,3 +619,57 @@ html.is-locked,html.is-locked body{overflow:hidden}
 .pm-dl dd,.vm blockquote{white-space:pre-wrap}
 /* 開催回のタブは中身の幅だけにする（本文の下に置いているので、帯が横いっぱいに伸びないように） */
 .tabs{display:inline-flex;width:auto;margin-bottom:clamp(20px,3vw,30px)}
+
+/* ---------- お問い合わせ・説明会のフォーム（モーダル） ---------- */
+.fm{display:flex;flex-direction:column;height:min(84vh,720px)}
+.fm-head{padding:26px 28px 18px;border-bottom:1px solid var(--line-2)}
+.fm-head h3{font-family:var(--disp);font-size:1.25rem;font-weight:700;line-height:1.4;padding-right:28px}
+.fm-head p{margin:8px 0 0;font-size:.86rem;color:var(--mute);line-height:1.7;white-space:pre-wrap}
+.fm-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:22px 28px 30px}
+@media(max-width:560px){.fm{height:min(90vh,720px)}.fm-head{padding:22px 18px 14px}.fm-body{padding:18px 18px 24px}}
+
+/* 文章の中に置くボタン（お問い合わせフォームへ） */
+.cta-link{background:none;border:0;padding:0;color:#fff;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.cta-link:hover{opacity:.8}
+/* フッターのリンクと同じ見た目のボタン */
+.foot-link-btn{background:none;border:0;padding:0;font-family:inherit;font-size:.88rem;font-weight:500;color:var(--ink-2);cursor:pointer}
+.foot-link-btn:hover{color:var(--blue)}
+
+/* ---------- エントリーページ（/entry） ---------- */
+.entry-hero{background:linear-gradient(160deg,var(--ice) 0%,var(--ground) 70%);padding-block:clamp(40px,6vw,76px) clamp(28px,4vw,44px);border-bottom:1px solid var(--line-2)}
+.entry-hero .lead{max-width:44em}
+.entry-facts{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.entry-facts>div{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 18px;min-width:180px}
+.entry-facts dt{font-size:.74rem;color:var(--mute);font-weight:700;letter-spacing:.04em}
+.entry-facts dd{margin:4px 0 0;font-family:var(--disp);font-weight:700;font-size:1.15rem;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.entry-facts dd small{font-family:var(--body);font-weight:500;font-size:.74rem;color:var(--blue);background:var(--ice);border-radius:999px;padding:3px 9px}
+.entry-sec{padding-block:clamp(36px,5vw,64px) clamp(60px,8vw,110px)}
+.entry-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:clamp(24px,3vw,40px);align-items:start}
+.entry-form-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-card);padding:clamp(20px,3vw,34px)}
+.entry-form-head{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--line-2)}
+.entry-form-head h2{font-family:var(--disp);font-weight:700;font-size:1.3rem}
+.entry-form-head p{margin:10px 0 0;font-size:.86rem;color:var(--mute);line-height:1.9}
+.entry-side{position:sticky;top:92px;display:grid;gap:14px}
+.entry-box{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-card);padding:20px}
+.entry-box h3{font-family:var(--disp);font-weight:700;font-size:.95rem;margin-bottom:14px}
+.entry-box .fee-steps{margin:0}
+.entry-note{margin:12px 0 0;font-size:.74rem;color:var(--mute);line-height:1.7}
+.entry-steps{counter-reset:s;display:grid;gap:12px}
+.entry-steps li{counter-increment:s;display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:baseline}
+.entry-steps li::before{content:counter(s);font-family:var(--num);font-weight:800;font-size:.78rem;color:var(--blue);background:var(--ice);border-radius:6px;text-align:center;padding:2px 0}
+.entry-steps b{font-family:var(--disp);font-size:.9rem;display:block}
+.entry-steps span{font-size:.76rem;color:var(--mute);line-height:1.6;display:block;margin-top:2px}
+.entry-perks{display:grid;gap:8px}
+.entry-perks li{font-size:.8rem;color:var(--ink-2);line-height:1.6;padding-left:16px;position:relative}
+.entry-perks li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:2px;background:var(--cyan);transform:rotate(45deg)}
+.entry-box-quiet{background:var(--ice);border-color:var(--ice-2);display:grid;gap:10px;justify-items:start}
+.entry-stat{margin:0;font-size:.8rem;color:var(--ink-2)}
+.entry-stat b{font-family:var(--num);font-size:1.05rem;color:var(--ink);margin:0 3px}
+.entry-notice{text-align:center;display:grid;justify-items:center;gap:16px;padding-block:clamp(50px,8vw,90px)}
+@media(max-width:900px){.entry-layout{grid-template-columns:1fr}.entry-side{position:static;order:-1}}
+.entry-no{margin:0;font-size:.9rem;color:var(--mute);display:flex;align-items:baseline;gap:10px}
+.entry-no b{font-family:var(--num);font-size:1.5rem;color:var(--blue);letter-spacing:.04em}
+
+/* コンセプトの主催・後援。ロゴが無いときは名前を出す */
+.org-card .org-name{font-family:var(--disp);font-weight:700;font-size:.95rem;color:var(--ink);padding:18px 0}
+@media(max-width:560px){.logo{width:200px;padding:24px 16px}.logo img{height:74px;max-width:170px}}

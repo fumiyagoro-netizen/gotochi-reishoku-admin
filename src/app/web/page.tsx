@@ -4,6 +4,7 @@ import { Banner, SiteNav } from "./_components/chrome";
 import { GrandPrixCard, MovieButton, TopCard } from "./_components/cards";
 import { WinnersArchive } from "./_components/archive";
 import { VoicesRail } from "./_components/voices-rail";
+import { FormButton } from "./_components/form-button";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +76,7 @@ function Chevron() {
 
 export default async function SiteTopPage() {
   const data = await loadSitePublicData();
-  const { config, current, featured, overview, winners, hero, judges, voices, news, partners, media, digest, stats } = data;
+  const { config, current, featured, overview, winners, hero, judges, voices, news, partners, media, digest, stats, forms } = data;
 
   const today = todayJst();
   const bannerLive =
@@ -108,6 +109,9 @@ export default async function SiteTopPage() {
   const organizers = ["主催", "後援", "協力", "協賛"]
     .map((kind) => ({ kind, names: partners.filter((p) => p.kind === kind) }))
     .filter((g) => g.names.length > 0);
+  // 主催・後援はコンセプトにロゴで出し、下の帯には協力・協賛だけを流す
+  const hosts = partners.filter((p) => p.kind === "主催" || p.kind === "後援");
+  const supporters = partners.filter((p) => p.kind === "協力" || p.kind === "協賛");
 
   const marquee = winners
     .slice()
@@ -143,7 +147,7 @@ export default async function SiteTopPage() {
                 )}
               </div>
               <div className="hero-cta">
-                <a className="btn btn-primary btn-lg magnet" href="/entry">エントリーはこちら</a>
+                <a className="btn btn-primary btn-lg magnet" href="/entry" target="_blank" rel="noopener noreferrer">エントリーはこちら</a>
                 <a className="btn btn-ghost btn-lg" href="#overview">開催概要を見る</a>
               </div>
               <dl className="stats">
@@ -228,6 +232,17 @@ export default async function SiteTopPage() {
                     <div key={g.kind}><dt>{g.kind}</dt><dd>{g.names.map((p) => p.name).join("／")}</dd></div>
                   ))}
                 </dl>
+              )}
+              {hosts.length > 0 && (
+                <div className="orgs" data-reveal-group>
+                  {hosts.map((p) => (
+                    <figure className="org-card" key={p.id}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {p.logo ? <img src={p.logo} alt={p.name} /> : <span className="org-name">{p.name}</span>}
+                      <figcaption>{p.kind}</figcaption>
+                    </figure>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -354,7 +369,7 @@ export default async function SiteTopPage() {
                       {daysLeft > 0 ? <><b>{daysLeft}</b><span>日</span></> : <b style={{ fontSize: "1.1rem" }}>受付終了</b>}
                     </div>
                   )}
-                  <a className="btn btn-primary magnet" href="/entry">エントリーする</a>
+                  <a className="btn btn-primary magnet" href="/entry" target="_blank" rel="noopener noreferrer">エントリーする</a>
                   {current.leafletUrl && (
                     <a className="btn btn-ghost btn-sm" href={current.leafletUrl} target="_blank" rel="noopener noreferrer">募集要項リーフレット（PDF）</a>
                   )}
@@ -478,14 +493,14 @@ export default async function SiteTopPage() {
         )}
 
         {/* パートナー */}
-        {partners.length > 0 && (
+        {supporters.length > 0 && (
           <section className="sec partners" id="partners">
             <div className="wrap sec-head" data-reveal>
               <div><p className="eyebrow">Partners</p><h2 className="h2">協賛・協力パートナー</h2></div>
             </div>
             <div className="logos" aria-label="パートナー一覧">
               <div className="logos-track">
-                {[...partners, ...partners].map((p, i) => (
+                {[...supporters, ...supporters].map((p, i) => (
                   <span className="logo" key={i}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {p.logo ? <img src={p.logo} alt="" loading="lazy" /> : <i />}
@@ -504,8 +519,18 @@ export default async function SiteTopPage() {
             <h2 className="cta-h">あなたのご当地の味を、<br />全国の食卓へ。</h2>
             {entryPeriod && <p className="cta-p">エントリー受付：{entryPeriod}。書類選考は無料です。</p>}
             <div className="cta-btns">
-              <a className="btn btn-light btn-lg magnet" href="/entry">エントリーはこちら</a>
+              <a className="btn btn-light btn-lg magnet" href="/entry" target="_blank" rel="noopener noreferrer">
+                エントリーはこちら
+              </a>
+              <FormButton form={forms.briefing} className="btn btn-outline btn-lg">
+                説明会に参加する
+              </FormButton>
             </div>
+            {forms.contact && (
+              <p className="cta-sub">
+                ご質問は<FormButton form={forms.contact} className="cta-link">お問い合わせフォーム</FormButton>からお気軽にどうぞ。
+              </p>
+            )}
           </div>
         </section>
       </main>
@@ -528,6 +553,7 @@ export default async function SiteTopPage() {
             <a href="#winners">受賞商品</a>
             <a href="/web/news">お知らせ</a>
             <a href="/entry">エントリー</a>
+            <FormButton form={forms.contact} className="foot-link-btn">お問い合わせ</FormButton>
             <a href="/web/privacy">プライバシーポリシー</a>
             {config.footerLinks.map((l) => <a key={l.url} href={l.url}>{l.label}</a>)}
           </nav>

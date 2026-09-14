@@ -53,12 +53,24 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, message: "プライバシーポリシーの更新日は YYYY-MM-DD の形で入れてください" }, { status: 400 });
     }
 
+    // 公開サイトから開くフォーム。フォーム作成で「公開」にしたものだけ選べる
+    const contactFormSlug = str(body.contactFormSlug, 60);
+    const briefingFormSlug = str(body.briefingFormSlug, 60);
+    for (const [slug, label] of [[contactFormSlug, "お問い合わせ"], [briefingFormSlug, "説明会"]] as const) {
+      if (!slug) continue;
+      const form = await prisma.form.findUnique({ where: { slug }, select: { status: true } });
+      if (!form || form.status !== "published") {
+        return NextResponse.json({ success: false, message: `${label}に選んだフォームが見つからないか、公開されていません` }, { status: 400 });
+      }
+    }
+
     // 送られてきた項目だけ更新する（バナー画面とムービー・メディア画面が別々の項目を保存するため）
     const all: Record<string, unknown> = {
       bannerOn, bannerTag: str(body.bannerTag, 20), bannerText, bannerLinkText, bannerUrl, bannerFrom, bannerTo,
       ogTitle: str(body.ogTitle, 200), ogDescription: str(body.ogDescription, 400), ogImageUrl,
       footerLinks: links, privacyBody: str(body.privacyBody, 20000), privacyUpdatedAt,
       mediaOutlets: str(body.mediaOutlets, 2000),
+      contactFormSlug, briefingFormSlug,
       statsEntries: num(body.statsEntries), statsPrefectures: Math.min(num(body.statsPrefectures), 47),
     };
     const BANNER_KEYS = ["bannerOn", "bannerTag", "bannerText", "bannerLinkText", "bannerUrl", "bannerFrom", "bannerTo"];

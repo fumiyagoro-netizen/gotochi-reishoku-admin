@@ -1,7 +1,21 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { PublicForm } from "@/components/public-form";
+import type { FormField } from "@/lib/form-shared";
 import { PRIZE_STYLE, editionRange, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
+
+/** サイトからモーダルで開くフォーム（お問い合わせ・説明会） */
+export type SiteForm = {
+  slug: string;
+  title: string;
+  description: string;
+  fields: FormField[];
+  requireOptIn: boolean;
+  optInLabel: string;
+  optInHint: string;
+  thankYouMessage: string;
+};
 
 /**
  * 商品・受賞者の声・ムービーのモーダル。ページのどこからでも開けるように
@@ -11,12 +25,14 @@ import { PRIZE_STYLE, editionRange, type SiteVoiceItem, type SiteWinner } from "
 type ModalContent =
   | { kind: "product"; winner: SiteWinner }
   | { kind: "voice"; voice: SiteVoiceItem }
-  | { kind: "movie"; videoId: string; title: string };
+  | { kind: "movie"; videoId: string; title: string }
+  | { kind: "form"; form: SiteForm };
 
 type Ctx = {
   openProduct: (winner: SiteWinner) => void;
   openVoice: (voice: SiteVoiceItem) => void;
   openMovie: (videoId: string, title: string) => void;
+  openForm: (form: SiteForm) => void;
 };
 
 const ModalContext = createContext<Ctx | null>(null);
@@ -163,6 +179,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     openProduct: (winner) => open({ kind: "product", winner }),
     openVoice: (voice) => open({ kind: "voice", voice }),
     openMovie: (videoId, title) => open({ kind: "movie", videoId, title }),
+    openForm: (form) => open({ kind: "form", form }),
   };
 
   return (
@@ -175,6 +192,24 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
           <div>
             {content?.kind === "product" && <ProductBody w={content.winner} />}
             {content?.kind === "voice" && <VoiceBody v={content.voice} />}
+            {content?.kind === "form" && (
+              <div className="fm">
+                <div className="fm-head">
+                  <h3>{content.form.title}</h3>
+                  {content.form.description && <p>{content.form.description}</p>}
+                </div>
+                <div className="fm-body">
+                  <PublicForm
+                    slug={content.form.slug}
+                    fields={content.form.fields}
+                    requireOptIn={content.form.requireOptIn}
+                    optInLabel={content.form.optInLabel}
+                    optInHint={content.form.optInHint}
+                    thankYouMessage={content.form.thankYouMessage}
+                  />
+                </div>
+              </div>
+            )}
             {content?.kind === "movie" && (
               <div className="mm">
                 <div className="mm-frame">
