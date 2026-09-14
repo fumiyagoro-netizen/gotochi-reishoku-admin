@@ -171,9 +171,11 @@ export async function loadSitePublicData() {
     count: winners.filter((w) => w.year === a.year).length,
   }));
 
-  // トップに出す商品（特別枠の年度の設定にしたがう）
-  const heroSettings = featuredAward?.siteSettings ?? null;
-  const heroYear = featuredAward?.year ?? null;
+  // トップに出す商品。特別枠を出している年度の設定にしたがい、特別枠が無いときは
+  // 受賞商品を公開している一番新しい年度から出す（サイト管理のトップ掲載商品と同じ選び方）
+  const heroAward = featuredAward ?? publishedAwards[0] ?? null;
+  const heroSettings = heroAward?.siteSettings ?? null;
+  const heroYear = heroAward?.year ?? null;
   const heroSource = winners.filter((w) => w.year === heroYear);
   const manualIds = Array.isArray(heroSettings?.heroEntryIds)
     ? (heroSettings.heroEntryIds as unknown[]).filter((v): v is number => Number.isInteger(v))
@@ -270,9 +272,10 @@ export async function loadSitePublicData() {
           count: winners.filter((w) => w.year === featuredAward.year).length,
         }
       : null,
+    // ダイジェストは年度ごとに入れるので、動画が入っている一番手前の年度のものを出す
     digest: (() => {
-      const withVideo = (featuredAward ?? current)?.siteSettings;
-      return { videoId: withVideo?.digestVideoId ?? "", caption: withVideo?.digestCaption ?? "" };
+      const s = [featuredAward, heroAward, current].map((a) => a?.siteSettings).find((x) => x?.digestVideoId);
+      return { videoId: s?.digestVideoId ?? "", caption: s?.digestCaption ?? "" };
     })(),
     years,
     winners,
