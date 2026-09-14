@@ -23,8 +23,6 @@ export default function EntryLayout({ children }: { children: React.ReactNode })
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <a className="brand" href="/web"><img src="/site/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
             <nav className="nav-links" aria-label="サイト内">
-              <a href="/web#overview">開催概要</a>
-              <a href="/web#winners">受賞商品</a>
               <a href="/web">トップへ戻る</a>
             </nav>
           </div>
