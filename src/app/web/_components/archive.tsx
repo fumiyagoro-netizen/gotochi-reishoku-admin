@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 import { PRIZE_STYLE, REGIONS, type SiteWinner } from "@/lib/site-public-shared";
 import { WinnerCard } from "./cards";
 
-/** 地域タイルの置き方（日本地図を崩した配置。プロトタイプと同じ） */
+/** 地域タイルの置き方。北海道・東北を右上に、九州を左下に置いた階段状の並び（日本列島の向き） */
 const TILES = [
-  { r: 0, x: 58, y: 0, w: 42, h: 36 },
-  { r: 1, x: 52, y: 40, w: 38, h: 22 },
-  { r: 2, x: 31, y: 42, w: 19, h: 20 },
-  { r: 3, x: 29, y: 64, w: 24, h: 18 },
-  { r: 4, x: 0, y: 60, w: 27, h: 22 },
-  { r: 5, x: 0, y: 84, w: 24, h: 16 },
+  { r: 0, x: 66, y: 2, w: 34, h: 26 },
+  { r: 1, x: 54, y: 31, w: 34, h: 19 },
+  { r: 2, x: 64, y: 52, w: 22, h: 19 },
+  { r: 3, x: 44, y: 52, w: 18, h: 19 },
+  { r: 4, x: 18, y: 52, w: 24, h: 26 },
+  { r: 5, x: 0, y: 70, w: 17, h: 26 },
 ];
 
 const PAGE = 12;
