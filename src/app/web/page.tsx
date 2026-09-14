@@ -89,8 +89,8 @@ export default async function SiteTopPage() {
   const normalFee = overview.fees.find((f) => f.label === "通常" && f.amount != null) ?? overview.fees.find((f) => f.amount != null);
   const usedFees = overview.fees.filter((f) => f.label && f.amount != null && f.from && f.to);
 
-  // 特別枠に出している年度の商品は、下のアーカイブでは重ねて出さない
-  const archiveWinners = featured ? winners.filter((w) => w.year !== featured.year) : winners;
+  // 下の一覧には、特別枠に出している年度も含めてすべての年度を出す
+  const archiveWinners = winners;
   const archiveEditions = [...new Set(archiveWinners.map((w) => w.year))]
     .sort((a, b) => b - a)
     .map((y) => ({ edition: y - 2024, range: editionRange(y) }));
@@ -434,8 +434,10 @@ export default async function SiteTopPage() {
               <div className="sec-head" data-reveal>
                 <div>
                   <p className="eyebrow">Archive</p>
-                  <h2 className="h2">{featured ? "過去の受賞商品" : "受賞商品"}</h2>
-                  <p className="lead" style={{ marginTop: 10, maxWidth: "40em" }}>商品をクリックすると、写真とご当地のこだわりが開きます。</p>
+                  <h2 className="h2">受賞商品</h2>
+                  <p className="lead" style={{ marginTop: 10, maxWidth: "40em" }}>
+                    開催回と地域で絞り込めます。商品をクリックすると、写真とご当地のこだわりが開きます。
+                  </p>
                 </div>
               </div>
               <WinnersArchive winners={archiveWinners} editions={archiveEditions} />

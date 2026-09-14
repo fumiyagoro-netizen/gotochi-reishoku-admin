@@ -617,3 +617,5 @@ html.is-locked,html.is-locked body{overflow:hidden}
 
 /* モーダルの本文は、入力された改行や空行をそのまま出す */
 .pm-dl dd,.vm blockquote{white-space:pre-wrap}
+/* 開催回のタブは中身の幅だけにする（本文の下に置いているので、帯が横いっぱいに伸びないように） */
+.tabs{display:inline-flex;width:auto;margin-bottom:clamp(20px,3vw,30px)}
