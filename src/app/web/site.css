@@ -680,3 +680,9 @@ html.is-locked,html.is-locked body{overflow:hidden}
 /* コンセプトの主催・後援。ロゴが無いときは名前を出す */
 .org-card .org-name{font-family:var(--disp);font-weight:700;font-size:.95rem;color:var(--ink);padding:18px 0}
 @media(max-width:560px){.logo{width:200px;padding:24px 16px}.logo img{height:74px;max-width:170px}}
+
+/* パートナーのロゴは、登録された URL があれば別タブで開く */
+.org-card,.logo{text-decoration:none;color:inherit}
+.org-card .org-kind{font-family:var(--num);font-size:.66rem;letter-spacing:.2em;color:var(--blue);font-weight:800}
+a.logo:hover small{color:var(--blue)}
+a.logo:hover img,a.org-card:hover img{opacity:.85}

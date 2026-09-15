@@ -235,13 +235,22 @@ export default async function SiteTopPage() {
               )}
               {hosts.length > 0 && (
                 <div className="orgs" data-reveal-group>
-                  {hosts.map((p) => (
-                    <figure className="org-card" key={p.id}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {p.logo ? <img src={p.logo} alt={p.name} /> : <span className="org-name">{p.name}</span>}
-                      <figcaption>{p.kind}</figcaption>
-                    </figure>
-                  ))}
+                  {hosts.map((p) => {
+                    const inner = (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {p.logo ? <img src={p.logo} alt={p.name} /> : <span className="org-name">{p.name}</span>}
+                        <span className="org-kind">{p.kind}</span>
+                      </>
+                    );
+                    return p.url ? (
+                      <a className="org-card" key={p.id} href={p.url} target="_blank" rel="noopener noreferrer" title={p.name}>
+                        {inner}
+                      </a>
+                    ) : (
+                      <div className="org-card" key={p.id}>{inner}</div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -501,13 +510,22 @@ export default async function SiteTopPage() {
             </div>
             <div className="logos" aria-label="パートナー一覧">
               <div className="logos-track">
-                {[...supporters, ...supporters].map((p, i) => (
-                  <span className="logo" key={i}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {p.logo ? <img src={p.logo} alt="" loading="lazy" /> : <i />}
-                    <small>{p.name}</small>
-                  </span>
-                ))}
+                {[...supporters, ...supporters].map((p, i) => {
+                  const inner = (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {p.logo ? <img src={p.logo} alt="" loading="lazy" /> : <i />}
+                      <small>{p.name}</small>
+                    </>
+                  );
+                  return p.url ? (
+                    <a className="logo" key={i} href={p.url} target="_blank" rel="noopener noreferrer" title={p.name}>
+                      {inner}
+                    </a>
+                  ) : (
+                    <span className="logo" key={i}>{inner}</span>
+                  );
+                })}
               </div>
             </div>
           </section>
