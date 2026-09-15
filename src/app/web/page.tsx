@@ -401,7 +401,7 @@ export default async function SiteTopPage() {
             <div className="wrap">
               <div className="sec-head" data-reveal>
                 <div><p className="eyebrow">Judges</p><h2 className="h2">審査員</h2></div>
-                <p className="lead" style={{ margin: 0, maxWidth: "30em" }}>冷凍食品・流通・食の専門家が、エントリー商品を一品一品試食して評価します。</p>
+                <p className="lead" style={{ margin: 0, maxWidth: "30em" }}>冷凍食品や食のエキスパートたちが、エントリー商品を一品一品試食して優れた商品を選出しています。</p>
               </div>
               <ul className="judge-grid" data-reveal-group>
                 {judges.map((j, i) => (
