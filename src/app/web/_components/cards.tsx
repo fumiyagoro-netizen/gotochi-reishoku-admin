@@ -1,6 +1,6 @@
 "use client";
 
-import { PRIZE_STYLE, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, companyInitial, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 import { useSiteModal } from "./modal-provider";
 
 /** 写真の枠。写真が無いときは地域ごとの色違いのプレースホルダーを出す */
@@ -103,7 +103,7 @@ export function VoiceCard({ v, index }: { v: SiteVoiceItem; index: number }) {
       <span className={`badge ${v.cls}`}>{v.tag}</span>
       <blockquote>{v.quote}</blockquote>
       <footer>
-        <span className="avatar">{(v.company || v.productName).slice(0, 1)}</span>
+        <span className="avatar">{companyInitial(v.company, v.productName)}</span>
         <div>
           <b>{v.productName}</b>
           <small>{[v.company, v.prefecture].filter(Boolean).join("｜")}</small>
