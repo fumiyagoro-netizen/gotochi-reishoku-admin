@@ -95,6 +95,78 @@ function Slides({ photos, className }: { photos: string[]; className: string }) 
   );
 }
 
+/**
+ * YouTube の再生枠。字幕は最初からオフにする（見る人が再生中に出すのは自由）。
+ * cc_load_policy=0 だけでは見る人の設定によっては出るので、YouTube の操作用スクリプトが
+ * 読み込めたときは字幕の機能そのものを外す。読み込めなくても再生はできる。
+ */
+function MovieFrame({ videoId, title }: { videoId: string; title: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let player: { destroy?: () => void } | null = null;
+    const w = window as unknown as {
+      YT?: { Player: new (el: HTMLElement, opts: unknown) => { destroy?: () => void } };
+      onYouTubeIframeAPIReady?: () => void;
+    };
+
+    const init = () => {
+      if (cancelled || !ref.current || !w.YT?.Player) return;
+      try {
+        player = new w.YT.Player(ref.current, {
+          events: {
+            onReady: (e: { target: { unloadModule?: (m: string) => void } }) => {
+              try {
+                e.target.unloadModule?.("captions");
+                e.target.unloadModule?.("cc");
+              } catch {
+                /* 字幕を外せなくても再生はできる */
+              }
+            },
+          },
+        });
+      } catch {
+        /* 操作用スクリプトが使えないときは、ふつうの埋め込みのまま */
+      }
+    };
+
+    if (w.YT?.Player) {
+      init();
+    } else {
+      const prev = w.onYouTubeIframeAPIReady;
+      w.onYouTubeIframeAPIReady = () => {
+        prev?.();
+        init();
+      };
+      if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+        const s = document.createElement("script");
+        s.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(s);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+      try {
+        player?.destroy?.();
+      } catch {
+        /* 閉じるときの後始末は失敗しても構わない */
+      }
+    };
+  }, [videoId]);
+
+  return (
+    <iframe
+      ref={ref}
+      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&cc_load_policy=0&enablejsapi=1`}
+      title={title}
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+      allowFullScreen
+    />
+  );
+}
+
 function ProductBody({ w }: { w: SiteWinner }) {
   const p = PRIZE_STYLE[w.prize];
   const extraTitles = w.titles.filter((t) => !t.startsWith("グランプリ"));
@@ -213,12 +285,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             {content?.kind === "movie" && (
               <div className="mm">
                 <div className="mm-frame">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${content.videoId}?autoplay=1&rel=0`}
-                    title={content.title}
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                    allowFullScreen
-                  />
+                  <MovieFrame videoId={content.videoId} title={content.title} />
                 </div>
                 <div className="mm-foot">
                   <b>{content.title}</b>
