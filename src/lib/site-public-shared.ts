@@ -101,27 +101,3 @@ export type SiteNewsItem = {
   date: string;
   isPinned: boolean;
 };
-
-/** 会社名の前後に付く法人格。頭文字を取るときに落とす */
-const COMPANY_FORMS = [
-  "一般社団法人", "公益社団法人", "一般財団法人", "公益財団法人", "特定非営利活動法人", "社会福祉法人",
-  "農事組合法人", "有限責任事業組合", "企業組合", "協同組合", "農業協同組合", "漁業協同組合",
-  "株式会社", "有限会社", "合同会社", "合資会社", "合名会社", "NPO法人",
-  "（株）", "（有）", "(株)", "(有)", "㈱", "㈲",
-];
-
-/**
- * 受賞者の声のカードに出す丸い頭文字。
- * 会社名そのままだと「株式会社◯◯」が「株」になってしまうので、法人格を落としてから1文字目を取る。
- * 会社名が無い・落とすと空になる場合は商品名の1文字目。
- */
-export function companyInitial(company: string, productName: string): string {
-  let name = (company || "").trim();
-  for (const form of COMPANY_FORMS) {
-    if (name.startsWith(form)) name = name.slice(form.length);
-    if (name.endsWith(form)) name = name.slice(0, -form.length);
-  }
-  name = name.replace(/^[\s　・･,.\-—–]+/, "").trim();
-  const source = name || productName.trim();
-  return source.slice(0, 1).toUpperCase();
-}

@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { PublicForm } from "@/components/public-form";
 import type { FormField } from "@/lib/form-shared";
-import { PRIZE_STYLE, companyInitial, editionRange, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, editionRange, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 
 /** サイトからモーダルで開くフォーム（お問い合わせ・説明会） */
 export type SiteForm = {
@@ -209,7 +209,6 @@ function VoiceBody({ v }: { v: SiteVoiceItem }) {
         <span className={`badge ${v.cls}`}>{v.tag}</span>
         <blockquote>{v.quote}</blockquote>
         <footer>
-          <span className="avatar">{companyInitial(v.company, v.productName)}</span>
           <div>
             <b>{v.productName}</b>
             <small>{[v.company, v.prefecture].filter(Boolean).join("｜")}</small>
