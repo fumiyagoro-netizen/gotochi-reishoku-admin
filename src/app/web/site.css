@@ -108,7 +108,7 @@ a{color:var(--blue)}
 .tile-in{background:var(--paper);border-radius:var(--r-card);overflow:hidden;box-shadow:0 30px 60px -30px rgba(11,37,69,.35);animation:float 7s ease-in-out infinite}
 /* ふわふわ浮かせたまま、商品名が隣のカードに隠れないだけの間隔をとる
    （商品名が2行になる分と、上下 10px の揺れを見込む） */
-.t1{left:0;top:0}.t2{right:0;top:5%}.t3{left:8%;bottom:0}.t4{right:4%;bottom:0}
+.t1{left:0;top:0}.t2{right:0;top:5%}.t3{left:5%;bottom:0}.t4{right:1%;bottom:0}
 .t2 .tile-in{animation-duration:8.5s;animation-delay:-2s}.t3 .tile-in{animation-duration:9s;animation-delay:-4s}.t4 .tile-in{animation-duration:7.5s;animation-delay:-1s}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 .tile .ph{aspect-ratio:4/3}
