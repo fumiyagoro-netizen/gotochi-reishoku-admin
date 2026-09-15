@@ -604,10 +604,12 @@ html.is-locked,html.is-locked body{overflow:hidden}
 .logo i{width:92px;height:92px;border-radius:12px;background:var(--ice);transform:none}
 
 /* 審査員：人数が少なくても間延びしないように中央にそろえる。役割の枠は常に確保する */
-.judge-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
-.judge{flex:0 1 208px;padding:24px 16px 22px}
+/* 折り返したとき、最後の1枚だけ中央に寄って見えないようにグリッドで置く
+   （列は入るだけ作り、全体を中央に寄せる。余った枠は詰まる） */
+.judge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,208px));justify-content:center;gap:18px}
+.judge{padding:24px 16px 22px}
 .judge .role.is-empty{visibility:hidden}
-@media(max-width:560px){.judge{flex:1 1 140px}}
+@media(max-width:560px){.judge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 
 /* 地域で絞り込む：ご当地名が2行になっても重ならないように */
 .jt{font-size:.72rem;padding:8px 6px;line-height:1.3;overflow:hidden;align-items:center;justify-content:center;text-align:center;gap:4px}
