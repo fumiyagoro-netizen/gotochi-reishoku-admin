@@ -128,7 +128,7 @@ export function SiteConfigForm({
       <Card padding="none" as="section">
         <CardHeader
           title="公開サイトから開くフォーム"
-          description="サイトの「お問い合わせ」「説明会に参加する」を押すと、その場でフォームが開きます。フォーム作成で公開にしたものから選びます"
+          description="サイトの「お問い合わせ」「説明会動画&資料請求」を押すと、その場でフォームが開きます。フォーム作成で公開にしたものから選びます"
         />
         <div className="grid gap-5 p-5 md:grid-cols-2">
           <Field label="お問い合わせ" htmlFor="form-contact" hint="選ばないと、サイトにお問い合わせのボタンを出しません">
