@@ -141,6 +141,7 @@ const REFERRAL_SOURCE_OPTIONS = [
   "プレスリリース",
   "インターネット検索",
   "SNS",
+  "再エントリー",
   "その他",
 ];
 const HYGIENE_OPTIONS = [
