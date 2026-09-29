@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth-core";
 import {
+  PREVIEW_COOKIE,
+  PREVIEW_MAX_AGE,
+  PREVIEW_PATHS,
+  PREVIEW_REALM,
+  checkBasicAuth,
+  createPreviewToken,
+  previewEnabled,
+  verifyPreviewToken,
+} from "@/lib/preview-auth";
+import {
   PUBLIC_PATHS,
   PUBLIC_FORM_PATH,
   FORM_SUBMIT_PATH,
@@ -35,6 +45,34 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/favicon")
   ) {
     return next();
+  }
+
+  // 公開前の確認用アクセス。PREVIEW_USER / PREVIEW_PASSWORD を設定しているあいだだけ、
+  // /web（公開サイト）とそのファイル配信を ID・パスワードで開ける。管理画面はこの下の
+  // 通常のログイン確認に進むので、この仕組みからは入れない。
+  if (previewEnabled() && PREVIEW_PATHS.some((p) => matchesPathPrefix(pathname, p))) {
+    const staff = request.cookies.get("auth_token")?.value;
+    if (staff && (await verifyToken(staff))) {
+      return next();
+    }
+    if (await verifyPreviewToken(request.cookies.get(PREVIEW_COOKIE)?.value)) {
+      return next();
+    }
+    if (checkBasicAuth(request.headers.get("authorization"))) {
+      const res = next();
+      res.cookies.set(PREVIEW_COOKIE, await createPreviewToken(), {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: request.nextUrl.protocol === "https:",
+        maxAge: PREVIEW_MAX_AGE,
+      });
+      return res;
+    }
+    return new NextResponse("認証が必要です", {
+      status: 401,
+      headers: { "WWW-Authenticate": `Basic realm="${PREVIEW_REALM}", charset="UTF-8"` },
+    });
   }
 
   // Check auth token

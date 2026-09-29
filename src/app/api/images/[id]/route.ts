@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { PREVIEW_COOKIE, verifyPreviewToken } from "@/lib/preview-auth";
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +10,16 @@ export async function GET(
   const { id } = await params;
   const image = await prisma.entryImage.findUnique({
     where: { id: parseInt(id) },
-    include: { entry: { select: { prizeLevel: true, awardId: true } } },
+    include: {
+      entry: {
+        select: {
+          prizeLevel: true,
+          awardId: true,
+          sitePublished: true,
+          award: { select: { siteSettings: { select: { winnersPublished: true } } } },
+        },
+      },
+    },
   });
 
   if (!image) {
@@ -26,20 +36,32 @@ export async function GET(
   // brute-forcing ids can't tell an unpublished image from a nonexistent one.
   const user = await getUserFromRequest(request);
   if (!user) {
-    const latestAward = await prisma.award.findFirst({
-      where: { entries: { some: { prizeLevel: { not: "" } } } },
-      orderBy: { year: "desc" },
-      select: { id: true },
-    });
+    // 公開前の確認用アクセス（Basic認証を通った人）は、公開サイトに出している商品の写真を見られる。
+    // 受賞していない商品や、サイトで非公開にしている商品・年度の写真は、ここでも出さない。
+    if (await verifyPreviewToken(request.cookies.get(PREVIEW_COOKIE)?.value)) {
+      const onSite =
+        image.entry.prizeLevel !== "" &&
+        image.entry.sitePublished &&
+        !!image.entry.award.siteSettings?.winnersPublished;
+      if (!onSite) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+    } else {
+      const latestAward = await prisma.award.findFirst({
+        where: { entries: { some: { prizeLevel: { not: "" } } } },
+        orderBy: { year: "desc" },
+        select: { id: true },
+      });
 
-    const isPublic =
-      image.imageType === "main" &&
-      image.entry.prizeLevel !== "" &&
-      !!latestAward &&
-      image.entry.awardId === latestAward.id;
+      const isPublic =
+        image.imageType === "main" &&
+        image.entry.prizeLevel !== "" &&
+        !!latestAward &&
+        image.entry.awardId === latestAward.id;
 
-    if (!isPublic) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (!isPublic) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
     }
   }
 

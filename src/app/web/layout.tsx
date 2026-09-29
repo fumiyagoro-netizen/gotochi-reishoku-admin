@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import "./site.css";
 import { ModalProvider } from "./_components/modal-provider";
 import { SiteMotion } from "./_components/motion";
+import { previewEnabled } from "@/lib/preview-auth";
 
 export const metadata: Metadata = {
   title: { default: "日本全国！ご当地冷凍食品大賞", template: "%s｜日本全国！ご当地冷凍食品大賞" },
   description: "全国から集まったご当地冷凍食品を、審査員が一品一品試食して評価するアワードです。",
+  // 公開前の確認中は検索結果に出さない（PREVIEW_USER を外すと通常の扱いに戻る）
+  robots: previewEnabled() ? { index: false, follow: false } : undefined,
 };
 
 /**
