@@ -31,11 +31,11 @@ const NAV_LINKS = [
 ];
 
 const EMBLEM = {
-  gp: "/site/em_gp.png",
-  top: "/site/em_top.png",
-  gold: "/site/em_gold.png",
-  silver: "/site/em_silver.png",
-  bronze: "/site/em_bronze.png",
+  gp: "/brand/em_gp.png",
+  top: "/brand/em_top.png",
+  gold: "/brand/em_gold.png",
+  silver: "/brand/em_silver.png",
+  bronze: "/brand/em_bronze.png",
 } as const;
 
 const JST = "Asia/Tokyo";
@@ -558,7 +558,7 @@ export default async function SiteTopPage() {
         <div className="wrap foot-in">
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <a className="brand" href="#top"><img src="/site/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
+            <a className="brand" href="#top"><img src="/brand/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
             {organizers.length > 0 && (
               <p className="foot-org">
                 {organizers.map((g) => (

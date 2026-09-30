@@ -6,11 +6,11 @@ import { WinnerCard } from "../../_components/cards";
 export const dynamic = "force-dynamic";
 
 const GROUPS = [
-  { key: "gp", label: "グランプリ", emblem: "/site/em_gp.png" },
-  { key: "top", label: "最高金賞", emblem: "/site/em_top.png" },
-  { key: "gold", label: "金賞", emblem: "/site/em_gold.png" },
-  { key: "silver", label: "銀賞", emblem: "/site/em_silver.png" },
-  { key: "bronze", label: "銅賞", emblem: "/site/em_bronze.png" },
+  { key: "gp", label: "グランプリ", emblem: "/brand/em_gp.png" },
+  { key: "top", label: "最高金賞", emblem: "/brand/em_top.png" },
+  { key: "gold", label: "金賞", emblem: "/brand/em_gold.png" },
+  { key: "silver", label: "銀賞", emblem: "/brand/em_silver.png" },
+  { key: "bronze", label: "銅賞", emblem: "/brand/em_bronze.png" },
 ] as const;
 
 export async function generateMetadata({ params }: { params: Promise<{ year: string }> }) {

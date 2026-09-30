@@ -39,6 +39,9 @@ export const PUBLIC_PATHS = [
   // under forms/ and stay behind /api/forms/attachment. Only the /view
   // relay is listed: the upload route /api/forms/image stays behind login.
   "/api/forms/image/view",
+  // 公開サイトのブランド画像（public/brand の受賞ロゴとサイトロゴ）。ロゴそのものなので
+  // 誰が見てもよい。管理画面のパス（/site）と混ざらないよう public/site から移した。
+  "/brand",
 ];
 
 /** Public form page: /f/<slug> */

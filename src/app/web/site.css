@@ -686,3 +686,8 @@ html.is-locked,html.is-locked body{overflow:hidden}
 .org-card .org-kind{font-family:var(--num);font-size:.66rem;letter-spacing:.2em;color:var(--blue);font-weight:800}
 a.logo:hover small{color:var(--blue)}
 a.logo:hover img,a.org-card:hover img{opacity:.85}
+
+/* ヒーローの年号と受賞ロゴの大きさ（年号を控えめに、ロゴを主役に） */
+.hero-year{font-size:clamp(4.2rem,10.5vw,8rem)}
+.hero-seal{width:clamp(120px,14.5vw,186px)}
+@media(max-width:560px){.hero-year{font-size:clamp(3.6rem,18vw,5.4rem)}.hero-seal{width:116px}}

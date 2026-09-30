@@ -21,7 +21,7 @@ export default function EntryLayout({ children }: { children: React.ReactNode })
         <header className="nav is-scrolled">
           <div className="wrap nav-in">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <a className="brand" href="/web"><img src="/site/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
+            <a className="brand" href="/web"><img src="/brand/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
             <nav className="nav-links" aria-label="サイト内">
               <a href="/web">トップへ戻る</a>
             </nav>

@@ -31,7 +31,7 @@ export function SiteNav({ links, entryUrl }: { links: { href: string; label: str
     <header className="nav" id="nav">
       <div className="wrap nav-in">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <a className="brand" href="#top"><img src="/site/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
+        <a className="brand" href="#top"><img src="/brand/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
         <nav className="nav-links" aria-label="サイト内">
           {links.map((l) => <a key={l.href} href={l.href}>{l.label}</a>)}
         </nav>
