@@ -22,15 +22,18 @@ export type StatCardProps = {
   /** 指定すると Link で包み、右上に ArrowUpRight を出す */
   href?: string;
   tone?: StatTone;
+  /** 同じ並びの中で「いま見ている対象」を示す。枠線の出し方は FilterTile の active と揃える */
+  selected?: boolean;
 };
 
-export function StatCard({ label, value, hint, href, tone = "default" }: StatCardProps) {
+export function StatCard({ label, value, hint, href, tone = "default", selected = false }: StatCardProps) {
   const body = (
     <Card
       padding="sm"
       className={cn(
         "relative",
         href && "transition-colors hover:border-line-strong hover:bg-surface-muted/40",
+        selected && "border-ink ring-1 ring-ink",
       )}
     >
       <p className="text-caption font-medium text-ink-subtle">{label}</p>
@@ -52,6 +55,7 @@ export function StatCard({ label, value, hint, href, tone = "default" }: StatCar
   return (
     <Link
       href={href}
+      aria-current={selected ? "true" : undefined}
       className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
     >
       {body}

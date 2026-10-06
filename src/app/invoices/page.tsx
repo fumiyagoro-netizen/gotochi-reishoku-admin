@@ -15,6 +15,7 @@ import { Table, Th, Td, Tr } from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Pagination } from "@/components/ui/pagination";
 import { TableSkeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import { Plus, Search, X, Receipt } from "@/components/ui/icons";
 
 interface InvoiceRow {
@@ -31,6 +32,20 @@ interface InvoiceRow {
   sentAt: string | null;
   sentTo: string;
 }
+
+// GET /api/invoices/summary の戻り。年度は紐づくエントリーの年度で数える
+// （発行日の暦年ではない — 一覧の年度絞り込みと同じ定義にするため）
+interface YearSummary {
+  year: number;
+  count: number;
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
+  unsentCount: number;
+}
+
+// 全年度を足した行。年度の区別が無いだけで項目は同じ
+type AllYearsTotal = Omit<YearSummary, "year">;
 
 // GET /api/invoices の PAGE_SIZE と同じ値。ページ送りの「1–20 / 57件」表示にだけ使う
 const PAGE_SIZE = 20;
@@ -68,6 +83,11 @@ function InvoicesPageInner() {
   const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
 
+  // 年度ごとの売上。検索語やページ送りでは変わらない数字なので、一覧とは
+  // 別の useEffect で一度だけ取る（年度を切り替えても中身は同じ）。
+  const [summary, setSummary] = useState<{ years: YearSummary[]; total: AllYearsTotal } | null>(null);
+  const [summaryError, setSummaryError] = useState("");
+
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     setErrorMsg("");
@@ -96,6 +116,23 @@ function InvoicesPageInner() {
     fetchInvoices();
   }, [fetchInvoices]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/invoices/summary")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.success) setSummary({ years: data.years, total: data.total });
+        else setSummaryError(data.message || "集計の取得に失敗しました");
+      })
+      .catch(() => {
+        if (!cancelled) setSummaryError("集計の取得に失敗しました");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // 年度を切り替えたら1ページ目に戻す（src/app/prospects/page.tsx と同じ扱い）。
   useEffect(() => {
     setPage(1);
@@ -112,6 +149,10 @@ function InvoicesPageInner() {
     setQ("");
     setPage(1);
   }
+
+  // いま一覧に出ている年度。?year= が無いときサーバー側（resolveAwardId）は最新年度に
+  // 落とすので、サマリー側も同じく先頭（years は年度の降順）を選択中として扱う。
+  const selectedYear = year ? Number(year) : summary?.years[0]?.year;
 
   if (!permissions.canManageInvoices) {
     return (
@@ -142,6 +183,49 @@ function InvoicesPageInner() {
       {errorMsg && (
         <div className="mb-4">
           <Alert tone="danger">{errorMsg}</Alert>
+        </div>
+      )}
+
+      {summaryError && (
+        <div className="mb-4">
+          <Alert tone="warning">{summaryError}</Alert>
+        </div>
+      )}
+
+      {/* 年度ごとの売上。下の一覧と違い検索語では絞られない（年度どうしを見比べるための数字なので）。
+          カードを押すとその年度の一覧に切り替わる — サイドバーの年度セレクタは ?year= を読むので
+          ここから遷移しても選択状態がずれない。 */}
+      {summary && (
+        <div className="mb-6">
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 className="text-sm font-medium text-ink">年度ごとの売上（税込）</h2>
+            <p className="text-caption text-ink-subtle">請求書の発行額の合計です（入金状況は含みません）</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {summary.years.map((y) => (
+              <StatCard
+                key={y.year}
+                label={`${y.year}年度`}
+                value={formatYen(y.totalAmount)}
+                hint={
+                  y.count === 0
+                    ? "請求書なし"
+                    : `${y.count}件 ・ 税抜 ${formatYen(y.subtotal)}${
+                        y.unsentCount > 0 ? ` ・ 未送信 ${y.unsentCount}件` : ""
+                      }`
+                }
+                href={`/invoices?year=${y.year}`}
+                selected={y.year === selectedYear}
+              />
+            ))}
+            {summary.years.length > 1 && (
+              <StatCard
+                label="全年度合計"
+                value={formatYen(summary.total.totalAmount)}
+                hint={`${summary.total.count}件 ・ 税抜 ${formatYen(summary.total.subtotal)}`}
+              />
+            )}
+          </div>
         </div>
       )}
 
