@@ -1,9 +1,10 @@
-# 死活監視：公開サイト（gotouchireisyoku.com）と管理画面（dashboard）が応答しているかを10分おきに確かめる。
+# 死活監視：公開サイト（gotouchireisyoku.com）と管理画面（dashboard）が応答しているかを30分おきに確かめる。
+# 毎時ちょうどは GitHub が混んで遅れやすいので、7分と37分に動かす。
 # どちらかが3回続けて失敗したらこのワークフローが「失敗」になり、GitHub から失敗の通知メールが届く
 # （届く先は GitHub アカウントの通知設定 → Actions。既定で「失敗したときだけ」メールが来る）。
 #
 # データベースを使わないページ（robots.txt とログイン画面）だけを見る。Neon は5分アクセスが無いと止まり、
-# アクセスがあると動き出して使用量（CU-hours）が増えるので、10分おきに起こすと無料枠を大きく使ってしまう。
+# アクセスがあると動き出して使用量（CU-hours）が増えるので、定期的に起こすとその分の料金がかかる。
 # データベースの障害は、サイトや管理画面を使ったときのエラー通知（src/lib/alert.ts）で気づける。
 # 手動で確かめたいときは https://gotouchireisyoku.com/api/health （データベースまで確認する）を開く。
 #
@@ -13,7 +14,7 @@ name: uptime
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:
