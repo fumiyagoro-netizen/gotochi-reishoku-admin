@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import { PRIZE_STYLE, winnerPath, withWidth, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 import { useSiteModal } from "./modal-provider";
 
@@ -25,6 +26,16 @@ function Tags({ w }: { w: SiteWinner }) {
 }
 
 /**
+ * いま並んでいる商品の一覧（並び順どおり）。ポップアップの中で「前の商品／次の商品」に送るのに使う。
+ * 一覧ごと（アーカイブ・年度別ページ・特別枠など）に1回だけ渡せばよく、カード1枚ずつに持たせない。
+ */
+const WinnerListContext = createContext<SiteWinner[] | undefined>(undefined);
+
+export function WinnerList({ list, children }: { list: SiteWinner[]; children: React.ReactNode }) {
+  return <WinnerListContext.Provider value={list}>{children}</WinnerListContext.Provider>;
+}
+
+/**
  * 商品カードのクリック。ふつうに押したらポップアップで開き、
  * ⌘/Ctrl＋クリックや中クリックなど「新しいタブで開く」操作のときは、ブラウザに任せて商品ページを開く。
  * 検索エンジンはリンク先（商品ページ）をたどれる。
@@ -38,8 +49,9 @@ function onCardClick(e: React.MouseEvent<HTMLAnchorElement>, open: () => void) {
 /** 受賞商品の一覧に並ぶカード */
 export function WinnerCard({ w }: { w: SiteWinner }) {
   const { openProduct } = useSiteModal();
+  const list = useContext(WinnerListContext);
   return (
-    <a className="card" href={winnerPath(w)} aria-haspopup="dialog" onClick={(e) => onCardClick(e, () => openProduct(w))}>
+    <a className="card" href={winnerPath(w)} aria-haspopup="dialog" onClick={(e) => onCardClick(e, () => openProduct(w, list))}>
       <Photo src={withWidth(w.photos[0] ?? "", 640)} region={w.region} alt={w.name} />
       <div className="card-b">
         <Tags w={w} />
@@ -53,8 +65,9 @@ export function WinnerCard({ w }: { w: SiteWinner }) {
 /** 特別枠のグランプリ（大きいカード） */
 export function GrandPrixCard({ w, emblem }: { w: SiteWinner; emblem: string }) {
   const { openProduct } = useSiteModal();
+  const list = useContext(WinnerListContext);
   return (
-    <a className="gp-card" href={winnerPath(w)} aria-haspopup="dialog" onClick={(e) => onCardClick(e, () => openProduct(w))}>
+    <a className="gp-card" href={winnerPath(w)} aria-haspopup="dialog" onClick={(e) => onCardClick(e, () => openProduct(w, list))}>
       <Photo src={withWidth(w.photos[0] ?? "", 960)} region={w.region} alt={w.name} />
       <div className="gp-body">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -70,8 +83,9 @@ export function GrandPrixCard({ w, emblem }: { w: SiteWinner; emblem: string }) 
 /** 特別枠の最高金賞など（小さいカード） */
 export function TopCard({ w }: { w: SiteWinner }) {
   const { openProduct } = useSiteModal();
+  const list = useContext(WinnerListContext);
   return (
-    <a className="top-card" href={winnerPath(w)} aria-haspopup="dialog" onClick={(e) => onCardClick(e, () => openProduct(w))}>
+    <a className="top-card" href={winnerPath(w)} aria-haspopup="dialog" onClick={(e) => onCardClick(e, () => openProduct(w, list))}>
       <Photo src={withWidth(w.photos[0] ?? "", 480)} region={w.region} alt={w.name} />
       <div className="top-body">
         <span className={`badge ${PRIZE_STYLE[w.prize].cls}`}>{PRIZE_STYLE[w.prize].label}</span>
@@ -115,5 +129,36 @@ export function VoiceCard({ v, index }: { v: SiteVoiceItem; index: number }) {
       </footer>
       <span className="voice-more">全文を読む →</span>
     </article>
+  );
+}
+
+/** トップのヒーローに浮かぶ商品。押すとポップアップ（新しいタブなら商品ページ） */
+export function HeroTiles({ winners }: { winners: SiteWinner[] }) {
+  const { openProduct } = useSiteModal();
+  return (
+    <div className="hero-r">
+      {winners.map((w, i) => (
+        <a
+          className={`tile t${i + 1}`}
+          key={w.id}
+          href={winnerPath(w)}
+          aria-haspopup="dialog"
+          onClick={(e) => onCardClick(e, () => openProduct(w, winners))}
+        >
+          <div className="tile-in">
+            <div className={`ph ph-${i}${w.photos[0] ? " has-img" : ""}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {w.photos[0] ? <img src={withWidth(w.photos[0], 480)} alt={w.name} /> : null}
+              <span className="ph-l">PHOTO</span>
+            </div>
+            <div className="tile-b">
+              <span className={`badge ${w.prize === "gp" ? "b-gp" : "b-top"}`}>{w.prize === "gp" ? "グランプリ" : "最高金賞"}</span>
+              <strong>{w.name}</strong>
+              <small>{[w.prefecture, `第${w.edition}回`].filter(Boolean).join("｜")}</small>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
   );
 }

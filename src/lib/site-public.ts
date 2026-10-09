@@ -216,9 +216,11 @@ export async function loadSitePublicData() {
       const photos = Array.isArray(v.photoUrls)
         ? (v.photoUrls as unknown[]).filter((u): u is string => typeof u === "string").map(siteAssetSrc)
         : [];
+      const product = winners.find((w) => w.id === v.entryId);
       return {
         id: v.id,
         entryId: v.entryId,
+        productPath: product ? `/winners/${product.year}/${product.id}` : "",
         quote: v.quote,
         photos,
         productName: v.entry.productName,

@@ -1,7 +1,8 @@
 import { loadSitePublicData } from "@/lib/site-public";
 import { PRIZE_STYLE, editionRange, withWidth } from "@/lib/site-public-shared";
-import { Banner, SiteNav } from "./_components/chrome";
-import { GrandPrixCard, MovieButton, TopCard } from "./_components/cards";
+import { Banner } from "./_components/chrome";
+import { SiteFooter, SiteHeader } from "./_components/site-chrome";
+import { GrandPrixCard, HeroTiles, MovieButton, TopCard, WinnerList } from "./_components/cards";
 import { WinnersArchive } from "./_components/archive";
 import { VoicesRail } from "./_components/voices-rail";
 import { FormButton } from "./_components/form-button";
@@ -33,14 +34,6 @@ export async function generateMetadata() {
     twitter: { card: "summary_large_image" as const, title, description, images: config.ogImageUrl ? [config.ogImageUrl] : [] },
   };
 }
-
-const NAV_LINKS = [
-  { href: "#overview", label: "開催概要" },
-  { href: "#judges", label: "審査員" },
-  { href: "#winners", label: "受賞商品" },
-  { href: "#voices", label: "受賞者の声" },
-  { href: "#news", label: "お知らせ" },
-];
 
 const EMBLEM = {
   gp: "/brand/em_gp.png",
@@ -111,6 +104,7 @@ export default async function SiteTopPage() {
     .map((y) => ({ edition: y - 2024, range: editionRange(y) }));
 
   const featuredWinners = featured ? winners.filter((w) => w.year === featured.year) : [];
+  const heroWinners = hero.map((h) => winners.find((w) => w.id === h.id)).filter((w): w is (typeof winners)[number] => !!w);
   const featuredCounts = (["gp", "top", "gold", "silver", "bronze"] as const).map((k) => ({
     key: k,
     label: k === "gp" ? "グランプリ" : PRIZE_STYLE[k].label,
@@ -154,7 +148,7 @@ export default async function SiteTopPage() {
         ]}
       />
       {bannerLive && <Banner tag={config.bannerTag} text={config.bannerText} linkText={config.bannerLinkText} url={config.bannerUrl} />}
-      <SiteNav links={NAV_LINKS} entryUrl="/entry" />
+      <SiteHeader top="" />
 
       <main>
         {/* ヒーロー */}
@@ -188,24 +182,7 @@ export default async function SiteTopPage() {
                 <div><dt>受賞商品</dt><dd><span className="num" data-count={stats.winners}>{stats.winners}</span><small>品</small></dd></div>
               </dl>
             </div>
-            <div className="hero-r" aria-hidden="true">
-              {hero.map((h, i) => (
-                <div className={`tile t${i + 1}`} key={h.id}>
-                  <div className="tile-in">
-                    <div className={`ph ph-${i}${h.photo ? " has-img" : ""}`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {h.photo ? <img src={withWidth(h.photo, 480)} alt={h.name} /> : null}
-                      <span className="ph-l">PHOTO</span>
-                    </div>
-                    <div className="tile-b">
-                      <span className={`badge ${h.grandPrix ? "b-gp" : "b-top"}`}>{h.grandPrix ? "グランプリ" : "最高金賞"}</span>
-                      <strong>{h.name}</strong>
-                      <small>{[h.prefecture, `第${h.edition}回`].filter(Boolean).join("｜")}</small>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <HeroTiles winners={heroWinners} />
             <p className="hero-tate" aria-hidden="true">日本全国のご当地の味を、冷凍で未来の食卓へ。</p>
           </div>
           {marquee.length > 0 && (
@@ -303,10 +280,12 @@ export default async function SiteTopPage() {
                   </p>
                 </div>
               </div>
-              <div className="latest-grid" data-reveal-group>
-                <GrandPrixCard w={gp} emblem={EMBLEM.gp} />
-                {others.map((w) => <TopCard key={w.id} w={w} />)}
-              </div>
+              <WinnerList list={[gp, ...others]}>
+                <div className="latest-grid" data-reveal-group>
+                  <GrandPrixCard w={gp} emblem={EMBLEM.gp} />
+                  {others.map((w) => <TopCard key={w.id} w={w} />)}
+                </div>
+              </WinnerList>
               <div className="latest-more" data-reveal>
                 <div className="latest-counts">
                   {featuredCounts.filter((c) => c.n > 0).map((c) => <span key={c.key}>{c.label}<b>{c.n}</b></span>)}
@@ -586,33 +565,7 @@ export default async function SiteTopPage() {
         </section>
       </main>
 
-      <footer className="foot">
-        <div className="wrap foot-in">
-          <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <a className="brand" href="#top"><img src="/brand/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
-            {organizers.length > 0 && (
-              <p className="foot-org">
-                {organizers.map((g) => (
-                  <span key={g.kind}>{g.kind}：{g.names.map((p) => p.name).join("／")}</span>
-                ))}
-              </p>
-            )}
-          </div>
-          <nav className="foot-links" aria-label="フッター">
-            <a href="#overview">開催概要</a>
-            <a href="#winners">受賞商品</a>
-            <a href={`${base}/news`}>お知らせ</a>
-            <a href="/entry">エントリー</a>
-            <FormButton form={forms.contact} className="foot-link-btn">お問い合わせ</FormButton>
-            <a href={`${base}/privacy`}>プライバシーポリシー</a>
-            {config.footerLinks.map((l) => <a key={l.url} href={l.url}>{l.label}</a>)}
-          </nav>
-        </div>
-        <div className="wrap foot-b">
-          <small>© {organizers.find((g) => g.kind === "主催")?.names[0]?.name ?? "一般社団法人未来の食卓"}</small>
-        </div>
-      </footer>
+      <SiteFooter data={data} top="" base={base} />
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PRIZE_STYLE, REGIONS, type SiteWinner } from "@/lib/site-public-shared";
-import { WinnerCard } from "./cards";
+import { WinnerCard, WinnerList } from "./cards";
 
 /** 地域タイルの置き方。北海道・東北を右上に、九州を左下に置いた階段状の並び（日本列島の向き） */
 const TILES = [
@@ -81,9 +81,11 @@ export function WinnersArchive({ winners, editions }: { winners: SiteWinner[]; e
         </aside>
         <div>
           <p className="win-count">{region === null ? "全地域" : REGIONS[region]}｜{list.length}品</p>
-          <div className="cards">
-            {list.slice(0, shown).map((w) => <WinnerCard key={w.id} w={w} />)}
-          </div>
+          <WinnerList list={list}>
+            <div className="cards">
+              {list.slice(0, shown).map((w) => <WinnerCard key={w.id} w={w} />)}
+            </div>
+          </WinnerList>
           <div className="more-wrap">
             <button className="btn btn-ghost" hidden={shown >= list.length} onClick={() => setShown(shown + PAGE)}>
               もっと見る

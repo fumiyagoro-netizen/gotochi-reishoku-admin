@@ -84,6 +84,8 @@ export type SiteVoiceItem = {
   id: number;
   /** 紐づく受賞商品（Entry.id） */
   entryId: number;
+  /** 紐づく受賞商品のページ（公開サイトに出ている商品のときだけ） */
+  productPath: string;
   quote: string;
   photos: string[];
   productName: string;
@@ -117,4 +119,16 @@ export function withWidth(url: string, width: number): string {
 /** 受賞商品ごとのページ（公開ドメインのパス）。例: /winners/2026/123 */
 export function winnerPath(w: { year: number; id: number }): string {
   return `/winners/${w.year}/${w.id}`;
+}
+
+export const PRIZE_NAME: Record<PrizeKey, string> = { gp: "グランプリ", top: "最高金賞", gold: "金賞", silver: "銀賞", bronze: "銅賞" };
+
+/** 共有するときの文面（例：「あきたと鶏めし」第2回 日本全国！ご当地冷凍食品大賞 グランプリ受賞） */
+export function shareText(w: { name: string; edition: number; prize: PrizeKey }): string {
+  return `「${w.name}」第${w.edition}回 日本全国！ご当地冷凍食品大賞 ${PRIZE_NAME[w.prize]}受賞 #ご当地冷凍食品大賞`;
+}
+
+/** 年度別ページと同じ並び（賞の高い順、同じ賞は登録順） */
+export function byPrizeThenId(a: { prize: PrizeKey; id: number }, b: { prize: PrizeKey; id: number }): number {
+  return PRIZE_STYLE[a.prize].rank - PRIZE_STYLE[b.prize].rank || a.id - b.id;
 }

@@ -3,8 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { PublicForm } from "@/components/public-form";
 import { track } from "@/lib/analytics";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
+import { ShareButtons } from "./share-buttons";
 import type { FormField } from "@/lib/form-shared";
-import { PRIZE_STYLE, editionRange, winnerPath, withWidth, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, editionRange, shareText, winnerPath, withWidth, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 
 /** サイトからモーダルで開くフォーム（お問い合わせ・説明会） */
 export type SiteForm = {
@@ -24,13 +26,14 @@ export type SiteForm = {
  */
 
 type ModalContent =
-  | { kind: "product"; winner: SiteWinner }
+  | { kind: "product"; winner: SiteWinner; list?: SiteWinner[] }
   | { kind: "voice"; voice: SiteVoiceItem }
   | { kind: "movie"; videoId: string; title: string }
   | { kind: "form"; form: SiteForm };
 
 type Ctx = {
-  openProduct: (winner: SiteWinner) => void;
+  /** list を渡すと、ポップアップの中で前後の商品へ送れる（一覧の並び順） */
+  openProduct: (winner: SiteWinner, list?: SiteWinner[]) => void;
   openVoice: (voice: SiteVoiceItem) => void;
   openMovie: (videoId: string, title: string) => void;
   openForm: (form: SiteForm) => void;
@@ -168,12 +171,19 @@ function MovieFrame({ videoId, title }: { videoId: string; title: string }) {
   );
 }
 
-function ProductBody({ w }: { w: SiteWinner }) {
+function ProductBody({
+  w,
+  nav,
+}: {
+  w: SiteWinner;
+  /** 一覧から開いたときの前後送り */
+  nav?: { index: number; total: number; prev: () => void; next: () => void };
+}) {
   const p = PRIZE_STYLE[w.prize];
   const extraTitles = w.titles.filter((t) => !t.startsWith("グランプリ"));
   return (
     <div className="pm">
-      <Slides photos={w.photos} className="pm-ph" alt={w.name} />
+      <Slides key={w.id} photos={w.photos} className="pm-ph" alt={w.name} />
       <div className="pm-body">
         <div className="card-tags">
           <span className={`badge ${p.cls}`}>{p.label}</span>
@@ -198,6 +208,17 @@ function ProductBody({ w }: { w: SiteWinner }) {
           )}
           <a className="btn btn-ghost btn-sm" href={winnerPath(w)}>この商品のページ</a>
         </div>
+        {/* 共有と前後送りは、文章が長くてもすぐ押せるようにポップアップの下に固定する */}
+        <div className="pm-foot">
+          <ShareButtons url={`${PUBLIC_SITE_ORIGIN}${winnerPath(w)}`} text={shareText(w)} itemName={w.name} />
+          {nav && nav.total > 1 && (
+            <div className="pm-nav">
+              <button type="button" onClick={nav.prev} aria-label="前の商品">‹ 前の商品</button>
+              <span>{nav.index + 1} / {nav.total}</span>
+              <button type="button" onClick={nav.next} aria-label="次の商品">次の商品 ›</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -216,6 +237,9 @@ function VoiceBody({ v }: { v: SiteVoiceItem }) {
             <small>{[v.company, v.prefecture].filter(Boolean).join("｜")}</small>
           </div>
         </footer>
+        {v.productPath && (
+          <a className="btn btn-ghost btn-sm" href={v.productPath}>この商品のページを見る</a>
+        )}
       </div>
     </div>
   );
@@ -236,6 +260,29 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     if (el instanceof HTMLElement) el.focus();
   }, []);
 
+  const step = useCallback(
+    (dir: number) => {
+      setContent((c) => {
+        if (!c || c.kind !== "product" || !c.list || c.list.length < 2) return c;
+        const i = c.list.findIndex((x) => x.id === c.winner.id);
+        const next = c.list[(i + dir + c.list.length) % c.list.length];
+        track("view_winner", { item_name: next.name, prize: next.prize, edition: next.edition, via: "modal_nav" });
+        return { ...c, winner: next };
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!content || content.kind !== "product" || !content.list) return;
+    const onArrow = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") step(1);
+      else if (e.key === "ArrowLeft") step(-1);
+    };
+    document.addEventListener("keydown", onArrow);
+    return () => document.removeEventListener("keydown", onArrow);
+  }, [content, step]);
+
   useEffect(() => {
     if (!content) return;
     document.documentElement.classList.add("is-locked");
@@ -250,9 +297,9 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
   // 開いたものは Google アナリティクスにも記録する（よく見られた受賞商品・フォームの利用などを後で集計するため）
   const ctx: Ctx = {
-    openProduct: (winner) => {
+    openProduct: (winner, list) => {
       track("view_winner", { item_name: winner.name, prize: winner.prize, edition: winner.edition });
-      open({ kind: "product", winner });
+      open({ kind: "product", winner, list });
     },
     openVoice: (voice) => {
       track("view_voice", { item_name: voice.productName });
@@ -276,7 +323,21 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         <div className="modal-box" role="dialog" aria-modal="true" data-lenis-prevent>
           <button className="modal-x" type="button" aria-label="閉じる" ref={closeRef} onClick={close}>×</button>
           <div>
-            {content?.kind === "product" && <ProductBody w={content.winner} />}
+            {content?.kind === "product" && (
+              <ProductBody
+                w={content.winner}
+                nav={
+                  content.list && content.list.length > 1
+                    ? {
+                        index: Math.max(0, content.list.findIndex((x) => x.id === content.winner.id)),
+                        total: content.list.length,
+                        prev: () => step(-1),
+                        next: () => step(1),
+                      }
+                    : undefined
+                }
+              />
+            )}
             {content?.kind === "voice" && <VoiceBody v={content.voice} />}
             {content?.kind === "form" && (
               <div className="fm">
