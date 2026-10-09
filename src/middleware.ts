@@ -15,6 +15,7 @@ import {
   PUBLIC_SITE_ORIGIN,
   PUBLIC_SITE_HOST,
   hostOf,
+  isAdminPage,
   isPublicSiteHost,
   legacyRedirect,
   publicSiteRewrite,
@@ -60,14 +61,20 @@ export async function middleware(request: NextRequest) {
       requestHeaders.set("x-pathname", target);
       return NextResponse.rewrite(new URL(`${target}${search}`, request.url), { request: { headers: requestHeaders } });
     }
-    // 管理画面のページに来たら、管理用のドメインへ（API と公開物は下の共通処理に任せる）
+    // 管理画面のページ（ログイン画面を含む）に来たら、管理用のドメインへ
+    if (isAdminPage(pathname)) {
+      return NextResponse.redirect(`${ADMIN_ORIGIN}${pathname}${search}`, 307);
+    }
+    // それ以外で公開サイトに無いURLは、公開サイトの「ページが見つかりません」を出す
+    // （API と公開物＝エントリー・フォーム・画像などは下の共通処理に任せる）
     const publicish =
       PUBLIC_PATHS.some((p) => matchesPathPrefix(pathname, p)) ||
       PUBLIC_FORM_PATH.test(pathname) ||
       pathname.startsWith("/_next") ||
       pathname.startsWith("/favicon");
     if (!publicish && !pathname.startsWith("/api/")) {
-      return NextResponse.redirect(`${ADMIN_ORIGIN}${pathname}${search}`, 307);
+      requestHeaders.set("x-pathname", "/web/not-found");
+      return NextResponse.rewrite(new URL("/web/not-found", request.url), { request: { headers: requestHeaders } });
     }
   }
 

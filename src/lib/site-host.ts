@@ -30,8 +30,20 @@ export function publicSiteRewrite(pathname: string): string | null {
   return null;
 }
 
+/** 管理画面のページ（公開ドメインで開かれたら管理用ドメインへ送る） */
+const ADMIN_PAGES = [
+  "/login", "/entries", "/reviews", "/awards", "/award-settings", "/contacts", "/email-logs", "/forms",
+  "/invoices", "/logs", "/prospects", "/settings", "/site", "/ui-preview", "/upload", "/users",
+];
+
+export function isAdminPage(pathname: string): boolean {
+  return ADMIN_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 /** 旧サイト（WordPress）のURLの行き先。該当しなければ null */
 export function legacyRedirect(pathname: string): string | null {
+  // 旧サイトのサイトマップ（Yoast の sitemap_index.xml / page-sitemap.xml など）→ 新しいサイトマップ
+  if (pathname === "/sitemap_index.xml" || /^\/[a-z0-9_-]+-sitemap\d*\.xml$/i.test(pathname)) return "/sitemap.xml";
   // 募集要項リーフレットのPDF（チラシやQRコードから張られている）→ いまのリーフレット
   if (/^\/wp-content\/uploads\/.+\.pdf$/i.test(pathname)) return "/leaflet";
   if (pathname.startsWith("/wp-") || pathname === "/xmlrpc.php" || pathname === "/feed" || pathname.startsWith("/feed/")) {
