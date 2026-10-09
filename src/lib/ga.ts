@@ -79,6 +79,8 @@ export class GaError extends Error {
     /** auth = 鍵が違う / disabled = Data API が無効 / permission = GA4 に権限が無い / api = それ以外 */
     public kind: "auth" | "disabled" | "permission" | "api",
     message: string,
+    /** 直すための画面（API を有効にするページなど）。Google が教えてくれたときだけ */
+    public link?: string,
   ) {
     super(message);
   }
@@ -100,7 +102,9 @@ async function batchRunReports(cfg: GaConfig, requests: ReportRequest[]): Promis
     const body = await res.text().catch(() => "");
     // Google Cloud 側で Data API を有効にしていないときも 403 が返るので、権限不足と分けて知らせる
     if (/SERVICE_DISABLED|has not been used|is disabled/i.test(body)) {
-      throw new GaError("disabled", "Google Cloud で「Google Analytics Data API」が有効になっていません");
+      // Google が返す「このプロジェクトで API を有効にするページ」の URL（プロジェクト番号入り）
+      const link = body.match(/https:\/\/console\.(?:developers|cloud)\.google\.com\/apis\/api\/analyticsdata\.googleapis\.com\/[^\s"\\]*/)?.[0];
+      throw new GaError("disabled", "Google Cloud で「Google Analytics Data API」が有効になっていません", link);
     }
     if (res.status === 403) throw new GaError("permission", "このサービスアカウントに GA4 プロパティの閲覧権限がありません");
     if (res.status === 404 || /not found|INVALID_ARGUMENT/i.test(body)) {

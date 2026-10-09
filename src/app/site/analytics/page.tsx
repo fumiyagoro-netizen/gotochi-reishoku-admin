@@ -48,7 +48,9 @@ function fixHint(error: GaError, email: string): string {
     case "permission":
       return `GA4 の「管理」→「プロパティのアクセス管理」に ${email} を「閲覧者」で追加してください。`;
     case "disabled":
-      return "Google Cloud コンソールで、サービスアカウントを作ったプロジェクトを選び、「API とサービス」→「ライブラリ」で Google Analytics Data API を「有効にする」を押してください。数分後に開き直すと表示されます。";
+      return error.link
+        ? "下のリンクを開くと、サービスアカウントを作ったプロジェクトの Google Analytics Data API のページが出ます。「有効にする」を押し、数分後にこの画面を開き直してください。"
+        : "Google Cloud コンソールで、サービスアカウントを作ったプロジェクトを選び、「API とサービス」→「ライブラリ」で Google Analytics Data API を「有効にする」を押してください。数分後に開き直すと表示されます。";
     case "auth":
       return "Vercel に登録したサービスアカウントの鍵（GA_SERVICE_ACCOUNT_JSON）が正しいか確認してください。";
     default:
@@ -128,6 +130,11 @@ export default async function SiteAnalyticsPage({ searchParams }: { searchParams
       {error || !report ? (
         <Alert tone="danger" title={error?.message ?? "読み込めませんでした"}>
           {error ? fixHint(error, cfg.credentials.client_email) : "時間をおいて開き直してください。"}
+          {error?.link && (
+            <a className="mt-2 block font-medium underline underline-offset-2" href={error.link} target="_blank" rel="noopener noreferrer">
+              API を有効にするページを開く ↗
+            </a>
+          )}
         </Alert>
       ) : (
         <Report report={report} />
