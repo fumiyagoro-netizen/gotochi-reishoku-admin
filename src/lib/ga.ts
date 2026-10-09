@@ -76,8 +76,8 @@ async function accessToken(c: Credentials): Promise<string> {
 
 export class GaError extends Error {
   constructor(
-    /** auth = 鍵が違う / permission = GA4 に権限が無い / api = それ以外 */
-    public kind: "auth" | "permission" | "api",
+    /** auth = 鍵が違う / disabled = Data API が無効 / permission = GA4 に権限が無い / api = それ以外 */
+    public kind: "auth" | "disabled" | "permission" | "api",
     message: string,
   ) {
     super(message);
@@ -96,8 +96,18 @@ async function batchRunReports(cfg: GaConfig, requests: ReportRequest[]): Promis
     body: JSON.stringify({ requests }),
     signal: AbortSignal.timeout(15_000),
   });
-  if (res.status === 403) throw new GaError("permission", "このサービスアカウントに GA4 プロパティの閲覧権限がありません");
-  if (!res.ok) throw new GaError("api", `アナリティクスから読み込めませんでした（${res.status}）`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    // Google Cloud 側で Data API を有効にしていないときも 403 が返るので、権限不足と分けて知らせる
+    if (/SERVICE_DISABLED|has not been used|is disabled/i.test(body)) {
+      throw new GaError("disabled", "Google Cloud で「Google Analytics Data API」が有効になっていません");
+    }
+    if (res.status === 403) throw new GaError("permission", "このサービスアカウントに GA4 プロパティの閲覧権限がありません");
+    if (res.status === 404 || /not found|INVALID_ARGUMENT/i.test(body)) {
+      throw new GaError("api", `GA4 のプロパティが見つかりません（${res.status}）。GA_PROPERTY_ID が「プロパティの詳細」の数字か確認してください`);
+    }
+    throw new GaError("api", `アナリティクスから読み込めませんでした（${res.status}）`);
+  }
   return ((await res.json()) as { reports?: ReportResponse[] }).reports ?? [];
 }
 

@@ -42,6 +42,20 @@ function change(now: number, before: number): string | undefined {
   return `${pct >= 0 ? "+" : ""}${pct}%`;
 }
 
+/** 読み込めなかったときに、何を直せばよいか */
+function fixHint(error: GaError, email: string): string {
+  switch (error.kind) {
+    case "permission":
+      return `GA4 の「管理」→「プロパティのアクセス管理」に ${email} を「閲覧者」で追加してください。`;
+    case "disabled":
+      return "Google Cloud コンソールで、サービスアカウントを作ったプロジェクトを選び、「API とサービス」→「ライブラリ」で Google Analytics Data API を「有効にする」を押してください。数分後に開き直すと表示されます。";
+    case "auth":
+      return "Vercel に登録したサービスアカウントの鍵（GA_SERVICE_ACCOUNT_JSON）が正しいか確認してください。";
+    default:
+      return "時間をおいて開き直してください。続くときは GA_PROPERTY_ID が正しいか確認してください。";
+  }
+}
+
 /** ページ名。どのページにも付く「｜日本全国！ご当地冷凍食品大賞」は省く。トップはサイト名だけなので「トップページ」 */
 function pageName(title: string, path: string): string {
   if (path === "/") return "トップページ";
@@ -113,11 +127,7 @@ export default async function SiteAnalyticsPage({ searchParams }: { searchParams
       />
       {error || !report ? (
         <Alert tone="danger" title={error?.message ?? "読み込めませんでした"}>
-          {error?.kind === "permission"
-            ? `GA4 の「管理」→「プロパティのアクセス管理」に ${cfg.credentials.client_email} を「閲覧者」で追加してください。`
-            : error?.kind === "auth"
-              ? "Vercel に登録したサービスアカウントの鍵（GA_SERVICE_ACCOUNT_JSON）が正しいか確認してください。"
-              : "時間をおいて開き直してください。続くときは GA_PROPERTY_ID が正しいか確認してください。"}
+          {error ? fixHint(error, cfg.credentials.client_email) : "時間をおいて開き直してください。"}
         </Alert>
       ) : (
         <Report report={report} />
