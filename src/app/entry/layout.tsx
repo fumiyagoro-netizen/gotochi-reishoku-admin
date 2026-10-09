@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
 import "../web/site.css";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
+import { defaultOgImage } from "@/lib/site-meta";
 import { ModalProvider } from "../web/_components/modal-provider";
 import { siteBase } from "@/lib/site-links";
 import { GoogleTag } from "../web/_components/analytics";
 
-export const metadata: Metadata = {
-  title: "エントリー｜日本全国！ご当地冷凍食品大賞",
-  description: "日本全国！ご当地冷凍食品大賞のエントリーフォームです。書類選考は無料です。",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const image = await defaultOgImage();
+  return {
+  metadataBase: new URL(PUBLIC_SITE_ORIGIN),
+  // 管理画面側のタイトルの付け方（「… | ご当地冷凍食品大賞」）が重ならないよう absolute にする
+  title: { absolute: "エントリー｜日本全国！ご当地冷凍食品大賞" },
+  description: "日本全国！ご当地冷凍食品大賞のエントリーフォームです。書類選考は無料。費用がかかるのは書類審査を通過した商品だけです。",
+  alternates: { canonical: "/entry" },
+  openGraph: {
+    title: "エントリー｜日本全国！ご当地冷凍食品大賞",
+    description: "日本全国！ご当地冷凍食品大賞のエントリーフォームです。書類選考は無料です。",
+    url: "/entry",
+    siteName: "日本全国！ご当地冷凍食品大賞",
+    locale: "ja_JP",
+    type: "website",
+    images: image ? [image] : undefined,
+  },
+  };
+}
 
 /** エントリーフォームのページ。公開サイト（/web）と同じ見た目で出す */
 export default async function EntryLayout({ children }: { children: React.ReactNode }) {

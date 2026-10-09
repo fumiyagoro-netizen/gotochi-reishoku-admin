@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { loadSitePublicData } from "@/lib/site-public";
-import { PRIZE_STYLE, editionRange } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, editionRange, withWidth } from "@/lib/site-public-shared";
 import { WinnerCard } from "../../_components/cards";
+import { JsonLd, breadcrumbLd } from "../../_components/json-ld";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 import { siteBase } from "@/lib/site-links";
+import { defaultOgImage, pageMeta } from "@/lib/site-meta";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +19,20 @@ const GROUPS = [
 
 export async function generateMetadata({ params }: { params: Promise<{ year: string }> }) {
   const { year } = await params;
-  const edition = Number(year) - 2024;
-  return { title: `第${edition}回 受賞商品一覧` };
+  const y = Number(year);
+  const edition = y - 2024;
+  const { winners } = await loadSitePublicData();
+  const list = winners.filter((w) => w.year === y);
+  const gp = list.find((w) => w.prize === "gp");
+  return pageMeta({
+    title: `第${edition}回 受賞商品一覧`,
+    description:
+      `第${edition}回 日本全国！ご当地冷凍食品大賞（${y - 1}–${y}）の受賞商品${list.length}品。` +
+      (gp ? `グランプリ「${gp.name}」をはじめ、` : "") +
+      "最高金賞・金賞・銀賞・銅賞の商品を賞ごとに紹介します。",
+    path: `/winners/${y}`,
+    image: gp?.photos[0] ? withWidth(gp.photos[0], 1280) : await defaultOgImage(),
+  });
 }
 
 /** 年度ごとの受賞商品一覧。賞ごとにまとめて並べる */
@@ -34,6 +49,15 @@ export default async function WinnersYearPage({ params }: { params: Promise<{ ye
 
   return (
     <div className="yp yp-page">
+      <JsonLd
+        data={breadcrumbLd(
+          [
+            { name: "トップ", path: "/" },
+            { name: `第${target.edition}回 受賞商品一覧`, path: `/winners/${target.year}` },
+          ],
+          PUBLIC_SITE_ORIGIN,
+        )}
+      />
       <div className="yp-top">
         <div className="wrap">
           <a className="yp-back" href={top}>← トップに戻る</a>

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { get } from "@vercel/blob";
+import sharp from "sharp";
 import { isSiteAssetUrl } from "@/lib/site-api";
+import { IMAGE_WIDTHS } from "@/lib/site-collections-shared";
 
 /**
  * サイト用ファイル（審査員の写真・ロゴ・受賞者の声の写真・リーフレット）の配信。
@@ -24,6 +26,20 @@ export async function GET(request: NextRequest) {
     if (!result || result.statusCode !== 200 || !result.stream) {
       return NextResponse.json({ success: false, message: "見つかりません" }, { status: 404 });
     }
+    // ?w=640 のように幅を指定された画像は、その幅に縮めて WebP で返す（PDF などはそのまま）
+    const width = Number(request.nextUrl.searchParams.get("w"));
+    const type = result.blob.contentType || "";
+    if (IMAGE_WIDTHS.includes(width) && type.startsWith("image/") && !type.includes("svg")) {
+      const buf = Buffer.from(await new Response(result.stream).arrayBuffer());
+      const out = await sharp(buf).rotate().resize({ width, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
+      return new NextResponse(new Uint8Array(out), {
+        headers: {
+          "Content-Type": "image/webp",
+          "Cache-Control": "public, max-age=86400, s-maxage=604800",
+        },
+      });
+    }
+
     // 保存名は毎回ランダムなので、同じ URL の中身は変わらない。長めにキャッシュしてよい
     return new NextResponse(result.stream, {
       headers: {

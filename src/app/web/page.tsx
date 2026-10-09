@@ -1,10 +1,12 @@
 import { loadSitePublicData } from "@/lib/site-public";
-import { PRIZE_STYLE, editionRange } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, editionRange, withWidth } from "@/lib/site-public-shared";
 import { Banner, SiteNav } from "./_components/chrome";
 import { GrandPrixCard, MovieButton, TopCard } from "./_components/cards";
 import { WinnersArchive } from "./_components/archive";
 import { VoicesRail } from "./_components/voices-rail";
 import { FormButton } from "./_components/form-button";
+import { JsonLd } from "./_components/json-ld";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 import { siteBase } from "@/lib/site-links";
 
 export const dynamic = "force-dynamic";
@@ -18,8 +20,17 @@ export async function generateMetadata() {
   return {
     title: { absolute: title },
     description,
-    openGraph: { title, description, images: config.ogImageUrl ? [config.ogImageUrl] : [] },
-    twitter: { card: "summary_large_image" as const, title, description },
+    alternates: { canonical: "/" },
+    openGraph: {
+      title,
+      description,
+      url: "/",
+      siteName: "日本全国！ご当地冷凍食品大賞",
+      locale: "ja_JP",
+      type: "website" as const,
+      images: config.ogImageUrl ? [config.ogImageUrl] : [],
+    },
+    twitter: { card: "summary_large_image" as const, title, description, images: config.ogImageUrl ? [config.ogImageUrl] : [] },
   };
 }
 
@@ -124,6 +135,24 @@ export default async function SiteTopPage() {
 
   return (
     <>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "日本全国！ご当地冷凍食品大賞",
+            url: PUBLIC_SITE_ORIGIN,
+            inLanguage: "ja",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: hosts.find((p) => p.kind === "主催")?.name || "一般社団法人未来の食卓",
+            url: hosts.find((p) => p.kind === "主催")?.url || undefined,
+            logo: `${PUBLIC_SITE_ORIGIN}/brand/logo_blue.png`,
+          },
+        ]}
+      />
       {bannerLive && <Banner tag={config.bannerTag} text={config.bannerText} linkText={config.bannerLinkText} url={config.bannerUrl} />}
       <SiteNav links={NAV_LINKS} entryUrl="/entry" />
 
@@ -165,7 +194,7 @@ export default async function SiteTopPage() {
                   <div className="tile-in">
                     <div className={`ph ph-${i}${h.photo ? " has-img" : ""}`}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {h.photo ? <img src={h.photo} alt="" /> : null}
+                      {h.photo ? <img src={withWidth(h.photo, 480)} alt={h.name} /> : null}
                       <span className="ph-l">PHOTO</span>
                     </div>
                     <div className="tile-b">
@@ -208,7 +237,7 @@ export default async function SiteTopPage() {
                 ariaLabel="ダイジェストムービーを再生"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`https://i.ytimg.com/vi/${digest.videoId}/maxresdefault.jpg`} alt="" />
+                <img src={`https://i.ytimg.com/vi/${digest.videoId}/maxresdefault.jpg`} alt={digest.caption || "ダイジェストムービー"} />
                 <span className="movie-shade" aria-hidden="true" />
                 <span className="play-big" aria-hidden="true"><span className="play-ring" /><span className="play-tri" /></span>
                 {digest.caption && (
@@ -242,7 +271,7 @@ export default async function SiteTopPage() {
                     const inner = (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {p.logo ? <img src={p.logo} alt={p.name} /> : <span className="org-name">{p.name}</span>}
+                        {p.logo ? <img src={withWidth(p.logo, 480)} alt={p.name} /> : <span className="org-name">{p.name}</span>}
                         <span className="org-kind">{p.kind}</span>
                       </>
                     );
@@ -420,7 +449,7 @@ export default async function SiteTopPage() {
                   <li className="judge" key={j.id}>
                     {j.photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <div className="ph judge-ph has-img"><img src={j.photo} alt="" loading="lazy" /></div>
+                      <div className="ph judge-ph has-img"><img src={withWidth(j.photo, 320)} alt={`審査員 ${j.name}`} loading="lazy" /></div>
                     ) : (
                       <div className={`ph judge-ph ph-init ph-${i % 6}`}>{j.name.slice(0, 1)}</div>
                     )}
@@ -492,7 +521,7 @@ export default async function SiteTopPage() {
                   {media.map((m) => (
                     <MovieButton key={m.id} videoId={m.youtubeId} title={[m.name, m.outlet].filter(Boolean).join("｜")} className="video">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <div className="ph has-img"><img src={`https://i.ytimg.com/vi/${m.youtubeId}/hqdefault.jpg`} alt="" loading="lazy" /><span className="play" aria-hidden="true" /></div>
+                      <div className="ph has-img"><img src={`https://i.ytimg.com/vi/${m.youtubeId}/hqdefault.jpg`} alt={[m.name, m.outlet].filter(Boolean).join("（") + (m.outlet ? "）" : "")} loading="lazy" /><span className="play" aria-hidden="true" /></div>
                       <p>{m.name}{m.outlet && <small>{m.outlet}</small>}</p>
                     </MovieButton>
                   ))}
@@ -517,7 +546,7 @@ export default async function SiteTopPage() {
                   const inner = (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {p.logo ? <img src={p.logo} alt="" loading="lazy" /> : <i />}
+                      {p.logo ? <img src={withWidth(p.logo, 480)} alt="" loading="lazy" /> : <i />}
                       <small>{p.name}</small>
                     </>
                   );

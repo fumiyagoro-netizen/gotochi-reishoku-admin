@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { PublicForm } from "@/components/public-form";
 import { track } from "@/lib/analytics";
 import type { FormField } from "@/lib/form-shared";
-import { PRIZE_STYLE, editionRange, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, editionRange, winnerPath, withWidth, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 
 /** サイトからモーダルで開くフォーム（お問い合わせ・説明会） */
 export type SiteForm = {
@@ -45,7 +45,7 @@ export function useSiteModal(): Ctx {
 }
 
 /** 写真スライド。1枚のときは矢印・ドットを出さない */
-function Slides({ photos, className }: { photos: string[]; className: string }) {
+function Slides({ photos, className, alt = "" }: { photos: string[]; className: string; alt?: string }) {
   const [i, setI] = useState(0);
   const n = photos.length;
   const startX = useRef<number | null>(null);
@@ -76,7 +76,7 @@ function Slides({ photos, className }: { photos: string[]; className: string }) 
         {photos.map((src, k) => (
           <div className="ss-slide ph ph-0 has-img" key={k}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" />
+            <img src={withWidth(src, 1280)} alt={alt ? `${alt}（${k + 1}枚目）` : ""} />
           </div>
         ))}
       </div>
@@ -173,7 +173,7 @@ function ProductBody({ w }: { w: SiteWinner }) {
   const extraTitles = w.titles.filter((t) => !t.startsWith("グランプリ"));
   return (
     <div className="pm">
-      <Slides photos={w.photos} className="pm-ph" />
+      <Slides photos={w.photos} className="pm-ph" alt={w.name} />
       <div className="pm-body">
         <div className="card-tags">
           <span className={`badge ${p.cls}`}>{p.label}</span>
@@ -192,11 +192,12 @@ function ProductBody({ w }: { w: SiteWinner }) {
             <div><dt>ご当地のこだわり</dt><dd>{w.appeal}</dd></div>
           </dl>
         )}
-        {w.url && (
-          <div className="pm-btns">
+        <div className="pm-btns">
+          {w.url && (
             <a className="btn btn-primary btn-sm" href={w.url} target="_blank" rel="noopener noreferrer">公式サイトを見る ↗</a>
-          </div>
-        )}
+          )}
+          <a className="btn btn-ghost btn-sm" href={winnerPath(w)}>この商品のページ</a>
+        </div>
       </div>
     </div>
   );
@@ -205,7 +206,7 @@ function ProductBody({ w }: { w: SiteWinner }) {
 function VoiceBody({ v }: { v: SiteVoiceItem }) {
   return (
     <div className="vm">
-      <Slides photos={v.photos} className="vm-ph" />
+      <Slides photos={v.photos} className="vm-ph" alt={`${v.productName}の受賞者の声`} />
       <div className="vm-body">
         <span className={`badge ${v.cls}`}>{v.tag}</span>
         <blockquote>{v.quote}</blockquote>

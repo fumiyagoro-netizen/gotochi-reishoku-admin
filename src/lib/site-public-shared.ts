@@ -82,6 +82,8 @@ export type SiteWinner = {
 
 export type SiteVoiceItem = {
   id: number;
+  /** 紐づく受賞商品（Entry.id） */
+  entryId: number;
   quote: string;
   photos: string[];
   productName: string;
@@ -101,3 +103,18 @@ export type SiteNewsItem = {
   date: string;
   isPinned: boolean;
 };
+
+/**
+ * 公開サイトの写真を、表示する大きさに縮めた URL にする（/api/images と /api/site/asset だけが対象）。
+ * 高精細な画面でもぼやけないよう、表示幅の2倍程度を渡す。使える幅は IMAGE_WIDTHS。
+ */
+export function withWidth(url: string, width: number): string {
+  if (!url) return url;
+  if (!url.startsWith("/api/images/") && !url.startsWith("/api/site/asset")) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}w=${width}`;
+}
+
+/** 受賞商品ごとのページ（公開ドメインのパス）。例: /winners/2026/123 */
+export function winnerPath(w: { year: number; id: number }): string {
+  return `/winners/${w.year}/${w.id}`;
+}

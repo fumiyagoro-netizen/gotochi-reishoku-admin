@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import sharp from "sharp";
 import { getUserFromRequest } from "@/lib/auth";
+import { IMAGE_WIDTHS } from "@/lib/site-collections-shared";
 
 export async function GET(
   request: NextRequest,
@@ -35,27 +37,35 @@ export async function GET(
   // - /results が出している、最新の受賞年度の商品のメイン写真（従来のルール）
   // Everything else 404s (not 403) so a third party brute-forcing ids can't
   // tell an unpublished image from a nonexistent one.
-  const user = await getUserFromRequest(request);
-  if (!user) {
-    const onSite =
-      image.entry.prizeLevel !== "" &&
-      image.entry.sitePublished &&
-      !!image.entry.award.siteSettings?.winnersPublished;
+  const onSite =
+    image.entry.prizeLevel !== "" &&
+    image.entry.sitePublished &&
+    !!image.entry.award.siteSettings?.winnersPublished;
 
-    let onResults = false;
-    if (!onSite && image.imageType === "main" && image.entry.prizeLevel !== "") {
-      const latestAward = await prisma.award.findFirst({
-        where: { entries: { some: { prizeLevel: { not: "" } } } },
-        orderBy: { year: "desc" },
-        select: { id: true },
-      });
-      onResults = !!latestAward && image.entry.awardId === latestAward.id;
-    }
-
-    if (!onSite && !onResults) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
+  let onResults = false;
+  if (!onSite && image.imageType === "main" && image.entry.prizeLevel !== "") {
+    const latestAward = await prisma.award.findFirst({
+      where: { entries: { some: { prizeLevel: { not: "" } } } },
+      orderBy: { year: "desc" },
+      select: { id: true },
+    });
+    onResults = !!latestAward && image.entry.awardId === latestAward.id;
   }
+  const isPublic = onSite || onResults;
+
+  const user = await getUserFromRequest(request);
+  if (!user && !isPublic) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // 誰が見てもよい写真だけ CDN に置く（審査中の写真などはブラウザにだけキャッシュさせる）
+  const cacheControl = isPublic
+    ? "public, max-age=31536000, s-maxage=31536000, immutable"
+    : "private, max-age=86400";
+
+  // ?w=640 のように幅を指定されたら、その幅に縮めて WebP で返す（公開サイトの表示を軽くするため）
+  const width = Number(request.nextUrl.searchParams.get("w"));
+  const resizeTo = IMAGE_WIDTHS.includes(width) ? width : null;
 
   const download = request.nextUrl.searchParams.get("download") === "1";
 
@@ -84,9 +94,21 @@ export async function GET(
     const contentType = res.headers.get("content-type") || "image/jpeg";
     const buffer = await res.arrayBuffer();
 
+    if (resizeTo && !download) {
+      const out = await sharp(Buffer.from(buffer))
+        .rotate()
+        .resize({ width: resizeTo, withoutEnlargement: true })
+        .webp({ quality: 78 })
+        .toBuffer();
+      return new NextResponse(new Uint8Array(out), {
+        status: 200,
+        headers: { "Content-Type": "image/webp", "Cache-Control": cacheControl },
+      });
+    }
+
     const resHeaders: Record<string, string> = {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": cacheControl,
     };
 
     if (download) {

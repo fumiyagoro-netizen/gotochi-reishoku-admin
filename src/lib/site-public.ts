@@ -218,6 +218,7 @@ export async function loadSitePublicData() {
         : [];
       return {
         id: v.id,
+        entryId: v.entryId,
         quote: v.quote,
         photos,
         productName: v.entry.productName,

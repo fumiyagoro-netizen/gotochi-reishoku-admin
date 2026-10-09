@@ -1,8 +1,16 @@
 import { loadSitePublicData } from "@/lib/site-public";
 import { siteBase } from "@/lib/site-links";
+import { defaultOgImage, pageMeta } from "@/lib/site-meta";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "お知らせ" };
+export async function generateMetadata() {
+  return pageMeta({
+    title: "お知らせ",
+    description: "日本全国！ご当地冷凍食品大賞のお知らせ一覧です。開催情報・結果発表・メディア掲載などをお知らせします。",
+    path: "/news",
+    image: await defaultOgImage(),
+  });
+}
 
 /** お知らせ一覧 */
 export default async function NewsListPage() {

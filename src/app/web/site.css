@@ -691,3 +691,30 @@ a.logo:hover img,a.org-card:hover img{opacity:.85}
 .hero-year{font-size:clamp(4.2rem,10.5vw,8rem)}
 .hero-seal{width:clamp(120px,14.5vw,186px)}
 @media(max-width:560px){.hero-year{font-size:clamp(3.6rem,18vw,5.4rem)}.hero-seal{width:116px}}
+
+/* 商品カードはリンク（検索エンジンが商品ページをたどれるように）。見た目はこれまでと同じ */
+a.card,a.gp-card,a.top-card{color:inherit;text-decoration:none}
+a.card{display:block}
+
+/* ---------- 受賞商品ごとのページ ---------- */
+.wp-crumb{display:flex;flex-wrap:wrap;gap:6px;font-size:.78rem;color:var(--mute);padding-block:22px 0}
+.wp-crumb a{color:var(--mute);text-decoration:none}
+.wp-crumb a:hover{color:var(--blue);text-decoration:underline}
+.wp-main{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(24px,4vw,52px);padding-block:22px clamp(40px,6vw,72px);align-items:start}
+.wp-gallery{display:grid;gap:10px}
+.wp-gallery .ph{border-radius:var(--r-card);aspect-ratio:4/3}
+.wp-thumbs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wp-thumbs .ph{aspect-ratio:4/3}
+.wp-info{display:grid;gap:14px;justify-items:start}
+.wp-info h1{font-family:var(--disp);font-weight:700;font-size:clamp(1.5rem,3vw,2.2rem);line-height:1.35;text-wrap:balance;word-break:auto-phrase}
+.wp-meta{margin:0;color:var(--mute);font-size:.95rem}
+.wp-appeal{width:100%;background:var(--paper);border:1px solid var(--line-2);border-radius:var(--r-card);padding:20px 22px}
+.wp-appeal h2{font-family:var(--disp);font-size:.78rem;letter-spacing:.14em;color:var(--blue);font-weight:700;margin-bottom:8px}
+.wp-appeal p{margin:0;white-space:pre-wrap;color:var(--ink-2);line-height:1.9;font-size:.95rem}
+.wp-voice{background:var(--ice);border-radius:var(--r-card);padding:22px 24px;display:grid;gap:10px;margin-bottom:clamp(36px,5vw,56px)}
+.wp-voice h2{font-family:var(--disp);font-size:.78rem;letter-spacing:.14em;color:var(--blue);font-weight:700}
+.wp-voice blockquote{margin:0;white-space:pre-wrap;line-height:1.9;color:var(--ink-2)}
+.wp-related{padding-bottom:clamp(50px,7vw,90px)}
+.wp-related h2{font-family:var(--disp);font-weight:700;font-size:1.15rem;margin-bottom:16px}
+.wp-related .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.wp-main{grid-template-columns:1fr}.wp-related .cards{grid-template-columns:repeat(2,minmax(0,1fr))}}

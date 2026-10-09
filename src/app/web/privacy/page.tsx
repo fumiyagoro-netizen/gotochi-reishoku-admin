@@ -1,8 +1,16 @@
 import { loadSitePublicData } from "@/lib/site-public";
 import { siteBase } from "@/lib/site-links";
+import { defaultOgImage, pageMeta } from "@/lib/site-meta";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "プライバシーポリシー" };
+export async function generateMetadata() {
+  return pageMeta({
+    title: "プライバシーポリシー",
+    description: "日本全国！ご当地冷凍食品大賞（主催：一般社団法人未来の食卓）における個人情報の取り扱いについて定めています。",
+    path: "/privacy",
+    image: await defaultOgImage(),
+  });
+}
 
 /** プライバシーポリシー（管理画面のバナー・サイト設定で編集する） */
 export default async function PrivacyPage() {

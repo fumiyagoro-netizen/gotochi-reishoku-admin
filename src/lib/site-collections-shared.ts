@@ -20,6 +20,15 @@ export type SiteCollectionKind = "news" | "judges" | "voices" | "partners" | "me
  * Blob ストアが private 設定なので保存先の URL を直接 <img src> にできず、/api/site/asset を通して配信する。
  * 空なら ""（Thumb などには `|| undefined` で渡す）。
  */
-export function siteAssetSrc(url: string | null | undefined): string {
-  return url ? `/api/site/asset?u=${encodeURIComponent(url)}` : "";
+export function siteAssetSrc(url: string | null | undefined, width?: number): string {
+  if (!url) return "";
+  return `/api/site/asset?u=${encodeURIComponent(url)}${width ? `&w=${width}` : ""}`;
+}
+
+/** 写真を縮めて配信するときに使える幅（/api/images と /api/site/asset の ?w=）。好きな値を渡されて負荷をかけられないよう固定 */
+export const IMAGE_WIDTHS = [320, 480, 640, 960, 1280];
+
+/** 公開サイトに出す商品写真の URL。幅を指定すると縮めた WebP になる */
+export function entryImageSrc(imageId: number, width?: number): string {
+  return `/api/images/${imageId}${width ? `?w=${width}` : ""}`;
 }
