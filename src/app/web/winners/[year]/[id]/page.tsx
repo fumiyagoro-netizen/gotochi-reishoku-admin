@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { loadSitePublicData } from "@/lib/site-public";
-import { PRIZE_STYLE, byPrizeThenId, editionRange, shareText, winnerPath, withWidth } from "@/lib/site-public-shared";
+import { PRIZE_STYLE, byPrizeThenId, editionRange, shareText, winnerOgImage, winnerPath, withWidth } from "@/lib/site-public-shared";
 import { siteBase } from "@/lib/site-links";
 import { excerpt, pageMeta } from "@/lib/site-meta";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
@@ -35,7 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ year: str
       120,
     ),
     path: winnerPath(w),
-    image: w.photos[0] ? withWidth(w.photos[0], 1280) : undefined,
+    // 共有したときは、商品写真に受賞ロゴと商品名を重ねた画像を出す（src/app/api/og）
+    image: { url: winnerOgImage(w), width: 1200, height: 630, alt: `${w.name}（第${w.edition}回 ${prize}）` },
   });
 }
 

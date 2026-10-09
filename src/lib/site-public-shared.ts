@@ -128,6 +128,68 @@ export function shareText(w: { name: string; edition: number; prize: PrizeKey })
   return `「${w.name}」第${w.edition}回 日本全国！ご当地冷凍食品大賞 ${PRIZE_NAME[w.prize]}受賞 #ご当地冷凍食品大賞`;
 }
 
+/**
+ * 受賞商品の共有用画像（og:image）の URL。中身（商品名・写真・賞など）が変わると ?v= が変わり、
+ * SNS や CDN に古い画像が残らない。見た目を作り直したときは OG_DESIGN を上げる。
+ */
+const OG_DESIGN = 1;
+export function winnerOgImage(w: Pick<SiteWinner, "id" | "name" | "company" | "prefecture" | "prize" | "edition" | "photos">): string {
+  const key = [OG_DESIGN, w.name, w.company, w.prefecture, w.prize, w.edition, w.photos[0] ?? ""].join("|");
+  let h = 0x811c9dc5;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return `/api/og/winner/${w.id}?v=${(h >>> 0).toString(36)}`;
+}
+
+/**
+ * サイト内検索のために文字をそろえる。全角・半角、大文字・小文字、カタカナ・ひらがな、空白の違いを無視する
+ * （「ギョウザ」で「ぎょうざ」、「ＡＫＩＴＡ」で「akita」、「第２回」で「第2回」が見つかる）。
+ */
+export function normalizeForSearch(s: string): string {
+  return s
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\u30a1-\u30f6]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
+    .replace(/\s+/g, "");
+}
+
+/** 検索語を空白で区切る（「秋田 ごはん」は両方を含む商品） */
+export function searchTokens(q: string): string[] {
+  return q.normalize("NFKC").split(/\s+/).map(normalizeForSearch).filter(Boolean);
+}
+
+/**
+ * 受賞商品が検索語に当てはまるか。0 は当てはまらない。点数が高いほど上に出す
+ * （商品名に含む ＞ 会社名・都道府県・地域・賞・開催回に含む ＞ ご当地のこだわりに含む）。
+ */
+export function searchScore(w: SiteWinner, tokens: string[]): number {
+  if (!tokens.length) return 1;
+  const name = normalizeForSearch(w.name);
+  const meta = normalizeForSearch(
+    [
+      w.company,
+      w.prefecture,
+      w.region !== null ? REGIONS[w.region] : "",
+      PRIZE_NAME[w.prize],
+      PRIZE_STYLE[w.prize].label,
+      `第${w.edition}回`,
+      `${w.year}年度`,
+      ...w.titles,
+    ].join(" "),
+  );
+  const appeal = normalizeForSearch(w.appeal);
+  let score = 0;
+  for (const t of tokens) {
+    if (name.includes(t)) score += 10;
+    else if (meta.includes(t)) score += 4;
+    else if (appeal.includes(t)) score += 1;
+    else return 0;
+  }
+  return score;
+}
+
 /** 年度別ページと同じ並び（賞の高い順、同じ賞は登録順） */
 export function byPrizeThenId(a: { prize: PrizeKey; id: number }, b: { prize: PrizeKey; id: number }): number {
   return PRIZE_STYLE[a.prize].rank - PRIZE_STYLE[b.prize].rank || a.id - b.id;

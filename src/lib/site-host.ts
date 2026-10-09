@@ -19,7 +19,7 @@ export function isPublicSiteHost(host: string): boolean {
   return host === PUBLIC_SITE_HOST || host === `www.${PUBLIC_SITE_HOST}`;
 }
 
-const SITE_PAGES = ["/winners", "/news", "/privacy"];
+const SITE_PAGES = ["/winners", "/news", "/privacy", "/search"];
 
 /** 公開サイトのURL（/、/winners/2026 など）を、実際のページ（/web、/web/winners/2026）に対応させる */
 export function publicSiteRewrite(pathname: string): string | null {

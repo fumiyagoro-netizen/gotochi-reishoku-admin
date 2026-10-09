@@ -758,6 +758,28 @@ a.tile:hover .tile-in{box-shadow:0 36px 70px -30px rgba(11,37,69,.45)}
 .pm-foot .pm-nav{margin-top:0}
 @media(max-width:760px){.pm-foot{width:calc(100% + 40px);margin:4px -20px -24px;padding:10px 20px 14px;bottom:-24px}}
 
+/* ---------- サイト内検索 ---------- */
+/* ヘッダーの虫めがね（受賞商品を探す） */
+.nav-search{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--ink);flex:none;transition:border-color .25s,color .25s,background .25s}
+.nav-search svg{width:18px;height:18px}
+.nav-search:hover{border-color:var(--blue);color:var(--blue)}
+.nav-in .nav-search + .nav-cta{margin-left:-14px}
+@media(max-width:900px){.nav-search{margin-left:auto}.nav-in .nav-search + .nav-cta{margin-left:0}}
+/* 一覧の上：開催回のタブとキーワード */
+.win-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 24px;margin-bottom:clamp(20px,3vw,30px)}
+.win-bar .tabs{margin-bottom:0}
+.win-search{position:relative;flex:1 1 300px;max-width:440px;margin:0}
+.win-search svg{position:absolute;left:16px;top:50%;width:18px;height:18px;transform:translateY(-50%);color:var(--mute);pointer-events:none}
+.win-search input{width:100%;height:48px;border:1.5px solid var(--line);border-radius:999px;background:var(--paper);padding:0 44px 0 44px;font:inherit;font-size:16px;color:var(--ink);outline:none;transition:border-color .25s,box-shadow .25s;-webkit-appearance:none;appearance:none}
+.win-search input::placeholder{color:#8A98A8}
+.win-search input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(10,79,143,.12)}
+.win-search input::-webkit-search-cancel-button{display:none}
+.win-search-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:50%;background:var(--ground);color:var(--mute);font-size:1.1rem;line-height:1;cursor:pointer}
+.win-search-x:hover{color:var(--ink)}
+.win-empty{margin:4px 0 18px;padding:22px 20px;border-radius:14px;background:var(--ground);color:var(--ink-2);font-size:.92rem;line-height:1.8}
+@media(max-width:640px){.win-search{max-width:none;flex-basis:100%}}
+.search-body{padding-bottom:clamp(48px,7vw,96px)}
+
 /* ---------- ヒーローの4商品（タブレット・スマホ） ----------
    広い画面ではふわふわ重ねて置くが、狭い画面では重なって読めなくなるので、重ならない格子に並べる。
    タブレット（横1列に4枚）は2枚目・4枚目を少し下げて動きを残す。スマホ（2列×2段）は上下がぶつからないようそろえる */

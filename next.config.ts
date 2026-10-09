@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
       "./assets/images/fta-logo.png",
     ],
     "/api/entries/[id]/pdf": ["./assets/fonts/NotoSansJP-Regular.ttf"],
+    // 共有用画像（src/lib/og-winner.tsx）は受賞ロゴを public/brand から読み、
+    // Google Fonts が取れないときは同梱の Noto Sans JP で描く
+    "/api/og/winner/[id]": ["./public/brand/em_*.png", "./assets/fonts/NotoSansJP-Regular.ttf"],
   },
   async headers() {
     return [

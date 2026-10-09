@@ -1,4 +1,5 @@
 import type { SitePublicData } from "@/lib/site-public";
+import { siteBase } from "@/lib/site-links";
 import { SiteNav } from "./chrome";
 import { FormButton } from "./form-button";
 
@@ -16,11 +17,13 @@ const NAV = [
 ];
 
 /** top は「トップページの URL」（公開ドメインでは "/"）。トップ自身で使うときは "" */
-export function SiteHeader({ top }: { top: string }) {
+export async function SiteHeader({ top }: { top: string }) {
+  const base = await siteBase();
   return (
     <SiteNav
       links={NAV.map((n) => ({ href: `${top}#${n.anchor}`, label: n.label }))}
       entryUrl="/entry"
+      searchHref={`${base}/search`}
       homeHref={top ? top : "#top"}
     />
   );

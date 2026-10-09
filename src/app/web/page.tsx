@@ -472,7 +472,7 @@ export default async function SiteTopPage() {
                   <p className="eyebrow">Archive</p>
                   <h2 className="h2">受賞商品</h2>
                   <p className="lead" style={{ marginTop: 10, maxWidth: "40em" }}>
-                    開催回と地域で絞り込めます。商品をクリックすると、写真とご当地のこだわりが開きます。
+                    商品名や都道府県で探したり、開催回と地域で絞り込んだりできます。商品をクリックすると、写真とご当地のこだわりが開きます。
                   </p>
                 </div>
               </div>

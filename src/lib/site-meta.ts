@@ -31,7 +31,8 @@ export function pageMeta({
   title: string;
   description: string;
   path: string;
-  image?: string;
+  /** 画像の URL。大きさが分かっているとき（共有用画像など）は { url, width, height, alt } */
+  image?: string | { url: string; width: number; height: number; alt?: string };
   type?: "website" | "article";
 }): Metadata {
   const full = `${title}｜${SITE_NAME}`;

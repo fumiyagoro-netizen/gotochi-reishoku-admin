@@ -28,10 +28,13 @@ export function Banner({ tag, text, linkText, url }: { tag: string; text: string
 export function SiteNav({
   links,
   entryUrl,
+  searchHref,
   homeHref = "#top",
 }: {
   links: { href: string; label: string }[];
   entryUrl: string;
+  /** 受賞商品の検索ページ */
+  searchHref: string;
   /** ロゴの行き先。トップでは #top、下層ページではトップのURL */
   homeHref?: string;
 }) {
@@ -44,6 +47,11 @@ export function SiteNav({
         <nav className="nav-links" aria-label="サイト内">
           {links.map((l) => <a key={l.href} href={l.href}>{l.label}</a>)}
         </nav>
+        <a className="nav-search" href={searchHref} aria-label="受賞商品を探す" title="受賞商品を探す">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
+          </svg>
+        </a>
         <a className="btn btn-primary btn-sm nav-cta" href={entryUrl} target="_blank" rel="noopener noreferrer">エントリー</a>
         <button className="nav-burger" id="burger" aria-label="メニュー" aria-expanded={open} aria-controls="navMobile" onClick={() => setOpen(!open)}>
           <span /><span />
@@ -51,6 +59,7 @@ export function SiteNav({
       </div>
       <div className="nav-mobile" id="navMobile" hidden={!open}>
         {links.map((l) => <a key={l.href} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>)}
+        <a href={searchHref} onClick={() => setOpen(false)}>受賞商品を探す</a>
         <a href={entryUrl} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>エントリー</a>
       </div>
     </header>
