@@ -3,6 +3,7 @@ import { EntryForm } from "@/components/entry-form";
 import { loadSitePublicData } from "@/lib/site-public";
 import { siteAssetSrc } from "@/lib/site-collections-shared";
 import { FormButton } from "../web/_components/form-button";
+import { siteBase } from "@/lib/site-links";
 
 export const dynamic = "force-dynamic";
 
@@ -24,33 +25,34 @@ function todayJst(): Date {
   return new Date(`${parts}T00:00:00+09:00`);
 }
 
-function Notice({ title, message }: { title: string; message: string }) {
+function Notice({ title, message, home }: { title: string; message: string; home: string }) {
   return (
     <section className="sec">
       <div className="wrap entry-notice">
         <h1 className="h2">{title}</h1>
         <p className="lead">{message}</p>
-        <a className="btn btn-primary" href="/web">トップページへ</a>
+        <a className="btn btn-primary" href={home}>トップページへ</a>
       </div>
     </section>
   );
 }
 
 export default async function EntryPage() {
+  const home = (await siteBase()) || "/";
   const award = await prisma.award.findFirst({
     where: { isActive: true },
     select: { id: true, year: true, name: true, entryStartDate: true, entryEndDate: true },
   });
 
   if (!award) {
-    return <Notice title="現在エントリーを受け付けておりません" message="次回の募集開始までお待ちください。" />;
+    return <Notice home={home} title="現在エントリーを受け付けておりません" message="次回の募集開始までお待ちください。" />;
   }
   const now = new Date();
   if (award.entryStartDate && now < award.entryStartDate) {
-    return <Notice title="エントリー受付はまだ開始されていません" message={`受付開始日：${fmt(award.entryStartDate)}`} />;
+    return <Notice home={home} title="エントリー受付はまだ開始されていません" message={`受付開始日：${fmt(award.entryStartDate)}`} />;
   }
   if (award.entryEndDate && now > award.entryEndDate) {
-    return <Notice title="エントリー受付は終了しました" message="たくさんのご応募ありがとうございました。" />;
+    return <Notice home={home} title="エントリー受付は終了しました" message="たくさんのご応募ありがとうございました。" />;
   }
 
   // 費用・審査の流れ・受賞特典は開催概要（サイト管理）から出す

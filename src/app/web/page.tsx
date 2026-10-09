@@ -5,6 +5,7 @@ import { GrandPrixCard, MovieButton, TopCard } from "./_components/cards";
 import { WinnersArchive } from "./_components/archive";
 import { VoicesRail } from "./_components/voices-rail";
 import { FormButton } from "./_components/form-button";
+import { siteBase } from "@/lib/site-links";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,8 @@ function Chevron() {
 }
 
 export default async function SiteTopPage() {
+  const base = await siteBase();
+  const top = base || "/";
   const data = await loadSitePublicData();
   const { config, current, featured, overview, winners, hero, judges, voices, news, partners, media, digest, stats, forms } = data;
 
@@ -280,7 +283,7 @@ export default async function SiteTopPage() {
                   {featuredCounts.filter((c) => c.n > 0).map((c) => <span key={c.key}>{c.label}<b>{c.n}</b></span>)}
                   <span>計<b>{featured.count}</b>品</span>
                 </div>
-                <a className="btn btn-light" href={`/web/winners/${featured.year}`}>第{featured.edition}回の受賞商品をすべて見る</a>
+                <a className="btn btn-light" href={`${base}/winners/${featured.year}`}>第{featured.edition}回の受賞商品をすべて見る</a>
               </div>
             </div>
           </section>
@@ -292,12 +295,12 @@ export default async function SiteTopPage() {
             <div className="wrap">
               <div className="sec-head" data-reveal>
                 <div><p className="eyebrow">News</p><h2 className="h2">お知らせ</h2></div>
-                <a className="link-more" href="/web/news">お知らせ一覧<Chevron /></a>
+                <a className="link-more" href={`${base}/news`}>お知らせ一覧<Chevron /></a>
               </div>
               <ol className="news-list" data-reveal-group>
                 {news.slice(0, 3).map((n) => (
                   <li key={n.id}>
-                    <a href={`/web/news/${n.id}`}>
+                    <a href={`${base}/news/${n.id}`}>
                       <div className="nm">
                         <time dateTime={n.date}>{n.date.replace(/-/g, ".")}</time>
                         <span className={`tag${n.category === "結果発表" ? " tag-gold" : ""}`}>{n.category}</span>
@@ -570,10 +573,10 @@ export default async function SiteTopPage() {
           <nav className="foot-links" aria-label="フッター">
             <a href="#overview">開催概要</a>
             <a href="#winners">受賞商品</a>
-            <a href="/web/news">お知らせ</a>
+            <a href={`${base}/news`}>お知らせ</a>
             <a href="/entry">エントリー</a>
             <FormButton form={forms.contact} className="foot-link-btn">お問い合わせ</FormButton>
-            <a href="/web/privacy">プライバシーポリシー</a>
+            <a href={`${base}/privacy`}>プライバシーポリシー</a>
             {config.footerLinks.map((l) => <a key={l.url} href={l.url}>{l.label}</a>)}
           </nav>
         </div>

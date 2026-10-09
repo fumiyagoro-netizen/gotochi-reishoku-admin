@@ -11,8 +11,7 @@ import { isSiteAssetUrl } from "@/lib/site-api";
  * 渡された URL は isSiteAssetUrl で「Vercel Blob の site/ 配下」に限る。site/ 配下は公開サイトに出すための
  * ファイルだけなので、応募者の添付（forms/）や商品写真（entries/ 等）はこのルートからは取れない。
  *
- * 今はログインが必要（middleware）。公開サイトを出すときに、src/lib/public-paths.ts の PUBLIC_PATHS に
- * "/api/site/asset" を足して誰でも読めるようにする（キャッシュも public に変える）。
+ * 公開サイトから使うので誰でも読める（src/lib/public-paths.ts の PUBLIC_PATHS）。
  */
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("u") || "";
@@ -30,7 +29,8 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": result.blob.contentType || "application/octet-stream",
         "Content-Disposition": "inline",
-        "Cache-Control": "private, max-age=86400",
+        // 中身は変わらないので、CDN にも長めに置いてよい
+        "Cache-Control": "public, max-age=86400, s-maxage=604800",
       },
     });
   } catch (error) {

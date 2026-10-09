@@ -1,3 +1,5 @@
+import { siteBase } from "@/lib/site-links";
+
 export const metadata = { title: "エントリーを受け付けました" };
 
 /** エントリー送信後の画面。受付番号を控えていただく */
@@ -7,6 +9,7 @@ export default async function EntryCompletePage({
   searchParams: Promise<{ no?: string }>;
 }) {
   const { no } = await searchParams;
+  const top = (await siteBase()) || "/";
 
   return (
     <section className="sec">
@@ -24,7 +27,7 @@ export default async function EntryCompletePage({
         </p>
         <div className="cta-btns" style={{ marginTop: 8 }}>
           <a className="btn btn-primary" href="/entry">別の商品をエントリーする</a>
-          <a className="btn btn-ghost" href="/web">トップページへ</a>
+          <a className="btn btn-ghost" href={top}>トップページへ</a>
         </div>
       </div>
     </section>

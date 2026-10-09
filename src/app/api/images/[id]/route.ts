@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
-import { PREVIEW_COOKIE, verifyPreviewToken } from "@/lib/preview-auth";
 
 export async function GET(
   request: NextRequest,
@@ -27,41 +26,34 @@ export async function GET(
   }
 
   // This route is in PUBLIC_PATHS (middleware never checks auth for it),
-  // because logged-out visitors need it to view the published /results
-  // page. Logged-in staff may view any image (admin screens rely on this
-  // for thumbnails/downloads of unpublished, in-review entries). Anonymous
-  // visitors may only view images that /results actually renders: the
-  // "main" image of an entry that won a prize in the latest award that has
-  // published winners. Everything else 404s (not 403) so a third party
-  // brute-forcing ids can't tell an unpublished image from a nonexistent one.
+  // because logged-out visitors need it to view the public site and the
+  // older /results page. Logged-in staff may view any image (admin screens
+  // rely on this for thumbnails/downloads of unpublished, in-review entries).
+  //
+  // Anonymous visitors may view:
+  // - 公開サイトに出している商品の写真（受賞あり・sitePublished・年度の「受賞商品を公開」が ON）
+  // - /results が出している、最新の受賞年度の商品のメイン写真（従来のルール）
+  // Everything else 404s (not 403) so a third party brute-forcing ids can't
+  // tell an unpublished image from a nonexistent one.
   const user = await getUserFromRequest(request);
   if (!user) {
-    // 公開前の確認用アクセス（Basic認証を通った人）は、公開サイトに出している商品の写真を見られる。
-    // 受賞していない商品や、サイトで非公開にしている商品・年度の写真は、ここでも出さない。
-    if (await verifyPreviewToken(request.cookies.get(PREVIEW_COOKIE)?.value)) {
-      const onSite =
-        image.entry.prizeLevel !== "" &&
-        image.entry.sitePublished &&
-        !!image.entry.award.siteSettings?.winnersPublished;
-      if (!onSite) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
-      }
-    } else {
+    const onSite =
+      image.entry.prizeLevel !== "" &&
+      image.entry.sitePublished &&
+      !!image.entry.award.siteSettings?.winnersPublished;
+
+    let onResults = false;
+    if (!onSite && image.imageType === "main" && image.entry.prizeLevel !== "") {
       const latestAward = await prisma.award.findFirst({
         where: { entries: { some: { prizeLevel: { not: "" } } } },
         orderBy: { year: "desc" },
         select: { id: true },
       });
+      onResults = !!latestAward && image.entry.awardId === latestAward.id;
+    }
 
-      const isPublic =
-        image.imageType === "main" &&
-        image.entry.prizeLevel !== "" &&
-        !!latestAward &&
-        image.entry.awardId === latestAward.id;
-
-      if (!isPublic) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
-      }
+    if (!onSite && !onResults) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
   }
 

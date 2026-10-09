@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { loadSitePublicData } from "@/lib/site-public";
+import { siteBase } from "@/lib/site-links";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 /** お知らせ本文 */
 export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const base = await siteBase();
+  const top = base || "/";
   const { id } = await params;
   const { news } = await loadSitePublicData();
   const item = news.find((n) => n.id === Number(id));
@@ -19,7 +22,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="wrap article">
-      <a className="page-back" href="/web/news">← お知らせ一覧</a>
+      <a className="page-back" href={`${base}/news`}>← お知らせ一覧</a>
       <div style={{ marginTop: 24 }}>
         <div className="article-meta">
           <time dateTime={item.date}>{item.date.replace(/-/g, ".")}</time>
@@ -29,7 +32,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
         {item.body && <div className="article-body">{item.body}</div>}
       </div>
       <div className="article-nav">
-        <a className="page-back" href="/web/news">← お知らせ一覧</a>
+        <a className="page-back" href={`${base}/news`}>← お知らせ一覧</a>
       </div>
     </div>
   );

@@ -1,15 +1,18 @@
 import { loadSitePublicData } from "@/lib/site-public";
+import { siteBase } from "@/lib/site-links";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "お知らせ" };
 
 /** お知らせ一覧 */
 export default async function NewsListPage() {
+  const base = await siteBase();
+  const top = base || "/";
   const { news } = await loadSitePublicData();
   return (
     <div className="wrap news-page">
       <div className="page-head">
-        <a className="page-back" href="/web">← トップに戻る</a>
+        <a className="page-back" href={top}>← トップに戻る</a>
         <p className="eyebrow" style={{ marginTop: 18 }}>News</p>
         <h1 className="h2">お知らせ</h1>
       </div>
@@ -19,7 +22,7 @@ export default async function NewsListPage() {
         <ol className="news-list">
           {news.map((n) => (
             <li key={n.id}>
-              <a href={`/web/news/${n.id}`}>
+              <a href={`${base}/news/${n.id}`}>
                 <div className="nm">
                   <time dateTime={n.date}>{n.date.replace(/-/g, ".")}</time>
                   <span className={`tag${n.category === "結果発表" ? " tag-gold" : ""}`}>{n.category}</span>

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { loadSitePublicData } from "@/lib/site-public";
 import { PRIZE_STYLE, editionRange } from "@/lib/site-public-shared";
 import { WinnerCard } from "../../_components/cards";
+import { siteBase } from "@/lib/site-links";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,8 @@ export async function generateMetadata({ params }: { params: Promise<{ year: str
 
 /** 年度ごとの受賞商品一覧。賞ごとにまとめて並べる */
 export default async function WinnersYearPage({ params }: { params: Promise<{ year: string }> }) {
+  const base = await siteBase();
+  const top = base || "/";
   const { year } = await params;
   const y = Number(year);
   const data = await loadSitePublicData();
@@ -33,7 +36,7 @@ export default async function WinnersYearPage({ params }: { params: Promise<{ ye
     <div className="yp yp-page">
       <div className="yp-top">
         <div className="wrap">
-          <a className="yp-back" href="/web">← トップに戻る</a>
+          <a className="yp-back" href={top}>← トップに戻る</a>
           <p className="yp-title">第{target.edition}回 日本全国！ご当地冷凍食品大賞 {target.range}　受賞商品一覧</p>
         </div>
       </div>
@@ -70,9 +73,9 @@ export default async function WinnersYearPage({ params }: { params: Promise<{ ye
         })}
       </div>
       <div className="wrap article-nav" style={{ paddingBottom: 60 }}>
-        <a className="page-back" href="/web">← トップに戻る</a>
+        <a className="page-back" href={top}>← トップに戻る</a>
         {data.years.filter((t) => t.year !== y).map((t) => (
-          <a className="page-back" style={{ marginLeft: 20 }} href={`/web/winners/${t.year}`} key={t.year}>
+          <a className="page-back" style={{ marginLeft: 20 }} href={`${base}/winners/${t.year}`} key={t.year}>
             第{t.edition}回（{editionRange(t.year)}）の受賞商品 →
           </a>
         ))}

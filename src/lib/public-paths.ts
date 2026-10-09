@@ -42,6 +42,13 @@ export const PUBLIC_PATHS = [
   // 公開サイトのブランド画像（public/brand の受賞ロゴとサイトロゴ）。ロゴそのものなので
   // 誰が見てもよい。管理画面のパス（/site）と混ざらないよう public/site から移した。
   "/brand",
+  // 公開サイト用のファイル配信（審査員の写真・ロゴ・受賞者の声の写真・リーフレット）。
+  // site/ 配下だけを返す（src/app/api/site/asset の isSiteAssetUrl）ので、応募者の添付などは取れない。
+  "/api/site/asset",
+  // 募集要項リーフレットの固定URL（旧サイトのPDFのURLもここへ転送する）
+  "/leaflet",
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 /** Public form page: /f/<slug> */

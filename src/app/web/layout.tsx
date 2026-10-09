@@ -3,18 +3,25 @@ import "./site.css";
 import { ModalProvider } from "./_components/modal-provider";
 import { SiteMotion } from "./_components/motion";
 import { previewEnabled } from "@/lib/preview-auth";
+import { onPublicSiteHost } from "@/lib/site-links";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 
-export const metadata: Metadata = {
-  title: { default: "日本全国！ご当地冷凍食品大賞", template: "%s｜日本全国！ご当地冷凍食品大賞" },
-  description: "全国から集まったご当地冷凍食品を、審査員が一品一品試食して評価するアワードです。",
-  // 公開前の確認中は検索結果に出さない（PREVIEW_USER を外すと通常の扱いに戻る）
-  robots: previewEnabled() ? { index: false, follow: false } : undefined,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  // 検索結果に出すのは公開ドメイン（gotouchireisyoku.com）だけ。
+  // 管理用ドメインのプレビューと、公開前の確認中（PREVIEW_USER がある間）は出さない。
+  const indexable = !previewEnabled() && (await onPublicSiteHost());
+  return {
+    metadataBase: new URL(PUBLIC_SITE_ORIGIN),
+    title: { default: "日本全国！ご当地冷凍食品大賞", template: "%s｜日本全国！ご当地冷凍食品大賞" },
+    description: "全国から集まったご当地冷凍食品を、審査員が一品一品試食して評価するアワードです。",
+    robots: indexable ? undefined : { index: false, follow: false },
+  };
+}
 
 /**
  * 公開サイト（gotouchireisyoku.com）の見た目。
- * 今は管理画面と同じアプリの /web に置いていてログインが要る（公開前の確認用）。
- * 公開するときは src/lib/public-paths.ts の PUBLIC_PATHS に "/web" と "/api/site/asset" を足す。
+ * 公開ドメイン（gotouchireisyoku.com）では middleware が / や /news をこのページに書き換えて出す。
+ * 管理用ドメインの /web は公開前の確認用（Basic認証）で、公開後は公開ドメインへ転送する。
  */
 export default function WebLayout({ children }: { children: React.ReactNode }) {
   return (

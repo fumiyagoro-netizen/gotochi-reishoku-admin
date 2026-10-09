@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../web/site.css";
 import { ModalProvider } from "../web/_components/modal-provider";
+import { siteBase } from "@/lib/site-links";
 
 export const metadata: Metadata = {
   title: "エントリー｜日本全国！ご当地冷凍食品大賞",
@@ -8,7 +9,9 @@ export const metadata: Metadata = {
 };
 
 /** エントリーフォームのページ。公開サイト（/web）と同じ見た目で出す */
-export default function EntryLayout({ children }: { children: React.ReactNode }) {
+export default async function EntryLayout({ children }: { children: React.ReactNode }) {
+  const base = await siteBase();
+  const top = base || "/";
   return (
     <div className="site-root">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -21,9 +24,9 @@ export default function EntryLayout({ children }: { children: React.ReactNode })
         <header className="nav is-scrolled">
           <div className="wrap nav-in">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <a className="brand" href="/web"><img src="/brand/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
+            <a className="brand" href={top}><img src="/brand/logo_blue.png" alt="日本全国！ご当地冷凍食品大賞" /></a>
             <nav className="nav-links" aria-label="サイト内">
-              <a href="/web">トップへ戻る</a>
+              <a href={top}>トップへ戻る</a>
             </nav>
           </div>
         </header>
@@ -31,7 +34,7 @@ export default function EntryLayout({ children }: { children: React.ReactNode })
         <footer className="foot">
           <div className="wrap foot-b">
             <small>© 一般社団法人未来の食卓</small>
-            <small><a href="/web/privacy">プライバシーポリシー</a></small>
+            <small><a href={`${base}/privacy`}>プライバシーポリシー</a></small>
           </div>
         </footer>
       </ModalProvider>
