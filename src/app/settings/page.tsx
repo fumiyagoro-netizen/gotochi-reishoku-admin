@@ -10,6 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/field-controls";
 import { CardSkeleton } from "@/components/ui/skeleton";
+import { BackupCard } from "@/components/settings/backup-card";
 
 interface FooterSettings {
   senderName: string;
@@ -261,6 +262,8 @@ export default function SettingsPage() {
             </Card>
           </form>
         )}
+
+        <BackupCard />
       </div>
     </PageContainer>
   );

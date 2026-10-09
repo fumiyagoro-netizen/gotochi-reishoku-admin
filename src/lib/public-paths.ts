@@ -51,6 +51,10 @@ export const PUBLIC_PATHS = [
   "/sitemap.xml",
   // 受賞商品を SNS で共有したときの画像（src/app/api/og）。公開サイトに出ている商品だけ描く
   "/api/og",
+  // 死活監視（.github/workflows/uptime.yml）。動いているか・DB につながるかだけを返す
+  "/api/health",
+  // 毎日のバックアップ（Vercel Cron）。ログインの代わりに、ルート自身が CRON_SECRET を確かめる
+  "/api/cron",
 ];
 
 /** Public form page: /f/<slug> */

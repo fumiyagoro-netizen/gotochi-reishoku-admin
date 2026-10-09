@@ -1,0 +1,58 @@
+# 死活監視：公開サイト・エントリーページ・管理画面・データベースが動いているかを10分おきに確かめる。
+# どれかが3回続けて失敗したらこのワークフローが「失敗」になり、GitHub から失敗の通知メールが届く
+# （届く先は GitHub アカウントの通知設定 → Actions。既定で「失敗したときだけ」メールが来る）。
+#
+# 注意：公開リポジトリの定期実行は、リポジトリに60日間コミットが無いと GitHub が自動で止める
+# （止まる前にメールで知らせが来る。Actions の画面で「Enable workflow」を押せば再開できる）。
+name: uptime
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check pages
+        shell: bash
+        run: |
+          set -u
+          # 名前|URL|中身に含まれているはずの文字
+          checks=(
+            "公開サイト|https://gotouchireisyoku.com/|ご当地冷凍食品大賞"
+            "データベース|https://gotouchireisyoku.com/api/health|\"ok\":true"
+            "エントリーページ|https://gotouchireisyoku.com/entry|エントリー"
+            "管理画面|https://dashboard.gotouchireisyoku.com/login|ログイン"
+          )
+          failed=0
+          for c in "${checks[@]}"; do
+            IFS='|' read -r name url expect <<< "$c"
+            ok=0
+            for attempt in 1 2 3; do
+              body=$(curl -sS -L --max-time 20 -w '\n%{http_code}' "$url" 2>&1) || true
+              code=$(printf '%s' "$body" | tail -n1)
+              if [ "$code" = "200" ] && printf '%s' "$body" | grep -qF "$expect"; then
+                ok=1
+                break
+              fi
+              echo "::warning::${name} ${attempt}回目: HTTP ${code}"
+              sleep 20
+            done
+            if [ "$ok" = 1 ]; then
+              echo "OK  ${name}  ${url}"
+            else
+              echo "::error::${name} が応答していません（${url}、最後の HTTP ${code}）"
+              failed=1
+            fi
+          done
+          exit $failed
