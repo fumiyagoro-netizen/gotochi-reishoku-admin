@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { track } from "@/lib/analytics";
 
 /**
  * 公開サイトの動き（プロトタイプの見た目をそのまま持ってきたもの）。
@@ -14,6 +15,18 @@ export function SiteMotion() {
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const cleanups: (() => void)[] = [];
     let cancelled = false;
+
+    /* エントリーとリーフレットのクリックを記録（どの節のボタンかも残す） */
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement)?.closest?.("a") as HTMLAnchorElement | null;
+      if (!a) return;
+      const href = a.getAttribute("href") || "";
+      const where = a.closest("section")?.id || (a.closest("header") ? "header" : a.closest("footer") ? "footer" : "page");
+      if (href === "/entry" || href.endsWith("/entry")) track("click_entry", { location: where });
+      else if (href.includes("/leaflet") || href.includes("%2Fleaflet%2F")) track("open_leaflet", { location: where });
+    };
+    document.addEventListener("click", onClick, true);
+    cleanups.push(() => document.removeEventListener("click", onClick, true));
 
     /* ヘッダー（下にスクロールしたら白く） */
     const nav = document.getElementById("nav");

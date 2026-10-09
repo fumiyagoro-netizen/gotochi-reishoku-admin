@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { PublicForm } from "@/components/public-form";
+import { track } from "@/lib/analytics";
 import type { FormField } from "@/lib/form-shared";
 import { PRIZE_STYLE, editionRange, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 
@@ -246,11 +247,24 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     };
   }, [content, close]);
 
+  // 開いたものは Google アナリティクスにも記録する（よく見られた受賞商品・フォームの利用などを後で集計するため）
   const ctx: Ctx = {
-    openProduct: (winner) => open({ kind: "product", winner }),
-    openVoice: (voice) => open({ kind: "voice", voice }),
-    openMovie: (videoId, title) => open({ kind: "movie", videoId, title }),
-    openForm: (form) => open({ kind: "form", form }),
+    openProduct: (winner) => {
+      track("view_winner", { item_name: winner.name, prize: winner.prize, edition: winner.edition });
+      open({ kind: "product", winner });
+    },
+    openVoice: (voice) => {
+      track("view_voice", { item_name: voice.productName });
+      open({ kind: "voice", voice });
+    },
+    openMovie: (videoId, title) => {
+      track("play_movie", { video_id: videoId, video_title: title });
+      open({ kind: "movie", videoId, title });
+    },
+    openForm: (form) => {
+      track("open_form", { form_name: form.title });
+      open({ kind: "form", form });
+    },
   };
 
   return (

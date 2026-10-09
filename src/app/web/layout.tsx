@@ -5,6 +5,7 @@ import { SiteMotion } from "./_components/motion";
 import { previewEnabled } from "@/lib/preview-auth";
 import { onPublicSiteHost } from "@/lib/site-links";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
+import { GoogleTag } from "./_components/analytics";
 
 export async function generateMetadata(): Promise<Metadata> {
   // 検索結果に出すのは公開ドメイン（gotouchireisyoku.com）だけ。
@@ -33,6 +34,7 @@ export default function WebLayout({ children }: { children: React.ReactNode }) {
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Manrope:wght@500;700;800&display=swap"
       />
+      <GoogleTag />
       <ModalProvider>
         <SiteMotion />
         {children}

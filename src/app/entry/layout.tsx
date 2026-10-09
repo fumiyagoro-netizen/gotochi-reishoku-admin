@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "../web/site.css";
 import { ModalProvider } from "../web/_components/modal-provider";
 import { siteBase } from "@/lib/site-links";
+import { GoogleTag } from "../web/_components/analytics";
 
 export const metadata: Metadata = {
   title: "エントリー｜日本全国！ご当地冷凍食品大賞",
@@ -20,6 +21,7 @@ export default async function EntryLayout({ children }: { children: React.ReactN
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Manrope:wght@500;700;800&display=swap"
       />
+      <GoogleTag />
       <ModalProvider>
         <header className="nav is-scrolled">
           <div className="wrap nav-in">
