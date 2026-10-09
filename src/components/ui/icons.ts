@@ -27,6 +27,7 @@ export {
   Newspaper,
   Handshake,
   Megaphone,
+  ChartBarBig,
   // 操作
   Search,
   ChevronLeft,

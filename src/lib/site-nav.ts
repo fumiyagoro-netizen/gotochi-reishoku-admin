@@ -10,6 +10,7 @@ import {
   Handshake,
   Megaphone,
   Upload,
+  ChartBarBig,
   type LucideIcon,
 } from "@/components/ui/icons";
 
@@ -34,6 +35,7 @@ export const SITE_NAV: { label: string; items: SiteNavItem[] }[] = [
     label: "概要",
     items: [
       { href: "/site", label: "公開状況", icon: Globe, description: "公開サイトにいま何が出ているか、年度の切り替え", ready: true },
+      { href: "/site/analytics", label: "アクセス状況", icon: ChartBarBig, description: "訪問者数・よく見られたページ・どこから来たか（Google アナリティクス）", ready: true },
     ],
   },
   {
