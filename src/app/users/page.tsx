@@ -280,8 +280,8 @@ function UserFormModal({
               プルダウン1行に収まる要約なので、権限を変えたらこちらも必ず直す。
               2026年10月にエントリーの編集・受賞設定・エントリーCSVを管理者限定にした。 */}
           <option value="admin">管理者 — すべての操作が可能</option>
-          <option value="representative">代表者 — 配信・フォーム・請求書・追客リスト（エントリーの編集は不可）</option>
-          <option value="editor">編集者 — 追客リストと商品到着の記録のみ</option>
+          <option value="representative">代表者 — メール配信・フォーム・請求書・追客リストが使える（エントリーの編集は不可）</option>
+          <option value="editor">編集者 — 商品到着の記録・追客リストが使える（エントリーの編集は不可）</option>
           <option value="viewer">閲覧者 — 閲覧のみ</option>
           <option value="judge">審査員 — 閲覧のみ＋審査コメントの投稿</option>
         </Select>

@@ -33,12 +33,12 @@ export const metadata = { title: "使い方" };
 /**
  * 管理システムの使い方。全権限が開ける（middleware のログイン必須だけで、権限による制限はしない）。
  *
- * 見ている人の権限がサーバーで分かるので、冒頭に「あなたの主な業務」をその権限の分だけ出し、
+ * 見ている人の権限がサーバーで分かるので、冒頭に「あなたの権限でできること」とその画面への近道を出し、
  * 権限表ではその人の列に色を付け、使えない画面・ボタンの説明は薄くして「使えません」と添える。
  *
  * 権限ごとの可否は src/lib/role-shared.ts の PERMISSIONS と、画面ごとのハードコード
  * （設定・ユーザー管理などは admin 固定）を 2026年10月13日に全権限で実際に操作して確かめたもの。
- * 権限を変えたら、この画面の WHO / MATRIX / ROLE_TASKS も合わせて直すこと。
+ * 権限を変えたら、この画面の各説明の who / MATRIX / ROLE_CAN / ROLE_SHORTCUTS も合わせて直すこと。
  */
 
 const CONTACT = { name: "御船", email: "f.mifune@fta.or.jp" };
@@ -145,7 +145,7 @@ function legendItems(name: HelpShotName, role: Role): AnnotatedItem[] {
 }
 
 // ---------------------------------------------------------------------------
-// 権限ごとの主な業務（事務局の整理: 2026年10月）
+// 冒頭の枠に並べる画面への近道
 // ---------------------------------------------------------------------------
 
 type Icon = ComponentType<{ className?: string }>;
@@ -154,7 +154,7 @@ type TaskKey = "entries" | "arrival" | "review" | "judging" | "comment" | "mail"
 const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?: string; icon: Icon; yearScoped: boolean }> = {
   entries: {
     title: "エントリーの確認",
-    body: "新しい応募が届いていないか、内容に不備がないかを確認します。",
+    body: "応募の一覧と、1件ごとの内容を見られます。",
     href: "/entries",
     howto: "howto-new-entry",
     icon: ClipboardList,
@@ -162,7 +162,7 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   arrival: {
     title: "商品の到着管理",
-    body: "審査用の商品が届いたら、エントリー詳細で到着を記録します。",
+    body: "審査用の商品が届いたことを、エントリーごとに記録できます。",
     href: "/reviews",
     howto: "howto-arrival",
     icon: PackageCheck,
@@ -170,14 +170,14 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   review: {
     title: "審査・受賞状況の確認",
-    body: "何件が審査を通過し、商品がどこまで届いているかを審査状況で、受賞は受賞一覧で確認します。",
+    body: "審査の進み具合と商品の到着状況を審査状況で、受賞を受賞一覧で見られます。",
     href: "/reviews",
     icon: ClipboardCheck,
     yearScoped: true,
   },
   judging: {
     title: "審査結果と受賞の記録",
-    body: "1次・2次審査の結果と、受賞をエントリー詳細で記録します。",
+    body: "1次・2次審査の結果と受賞を、エントリー詳細で記録できます。",
     href: "/entries",
     howto: "howto-review",
     icon: Trophy,
@@ -185,7 +185,7 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   comment: {
     title: "審査コメント",
-    body: "エントリー詳細を開き、審査での気づきを書き込みます。",
+    body: "エントリー詳細に、審査での気づきを書き込めます。",
     href: "/entries",
     howto: "howto-comment",
     icon: MessageSquare,
@@ -193,7 +193,7 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   mail: {
     title: "応募者へのメール",
-    body: "審査状況や受賞枠で宛先を絞って、まとめて送ります。",
+    body: "審査状況や受賞枠で宛先を絞って、まとめてメールを送れます。",
     href: "/entries/email",
     howto: "howto-mail",
     icon: Mail,
@@ -201,7 +201,7 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   prospects: {
     title: "追客",
-    body: "これから声をかけたいメーカーの連絡状況・担当者・メモを記録します。",
+    body: "これから声をかけたいメーカーの連絡状況・担当者・メモを記録できます。",
     href: "/prospects",
     howto: "howto-prospect",
     icon: Target,
@@ -209,7 +209,7 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   invoices: {
     title: "請求",
-    body: "エントリー費用などの請求書を作り、PDFで送ります。",
+    body: "エントリー費用などの請求書を作り、PDFで送れます。",
     href: "/invoices",
     howto: "howto-invoice",
     icon: Receipt,
@@ -217,34 +217,36 @@ const TASKS: Record<TaskKey, { title: string; body: string; href: string; howto?
   },
   settings: {
     title: "設定とユーザー管理",
-    body: "年度の追加、アカウントの発行と権限の変更、メールの差出人情報などです。",
+    body: "年度の追加、アカウントの発行と権限の変更、メールの差出人情報などを設定できます。",
     href: "/users",
     icon: Settings,
     yearScoped: false,
   },
 };
 
-const ROLE_TASKS: Record<Role, { lead: string; tasks: TaskKey[] }> = {
-  admin: {
-    lead: "すべての業務を担当できます。エントリーの編集、受賞の決定、CSVの取り込み、システムの設定は管理者だけの操作です。",
-    tasks: ["entries", "arrival", "judging", "mail", "prospects", "invoices", "settings"],
-  },
-  representative: {
-    lead: "エントリーと審査・受賞状況の確認、追客、請求が中心です。応募者へのメールやフォームも使えます。エントリーの内容の書き換えと受賞の設定はできません。",
-    tasks: ["entries", "review", "prospects", "invoices"],
-  },
-  editor: {
-    lead: "審査用の商品が届いたことの記録と、追客が中心です。",
-    tasks: ["arrival", "prospects"],
-  },
-  judge: {
-    lead: "エントリーと審査状況の確認、審査コメントの記入が中心です。ご担当者名やメールアドレスなどの個人情報は表示されません。",
-    tasks: ["entries", "review", "comment"],
-  },
-  viewer: {
-    lead: "エントリー・審査状況・受賞を見ることができます。ご担当者名やメールアドレスなどの個人情報は表示されません。",
-    tasks: ["entries", "review"],
-  },
+// 権限ごとに「できること」。役割の割り振り（誰が何を担当するか）ではなく、その権限で操作できる
+// 範囲を書く。下の MATRIX と食い違わないこと。冒頭の「あなたの権限でできること」と
+// 「権限のちがい」のカードの両方がこの文を使う。
+const ROLE_CAN: Record<Role, string> = {
+  admin:
+    "すべての操作ができます。エントリーの編集、受賞・審査状況の設定、CSVの取り込み、エントリーの削除、設定とユーザー管理は管理者だけができます。",
+  representative:
+    "エントリーの閲覧、商品到着の記録、審査コメント、応募者へのメール配信ができ、フォーム・メール配信リスト・請求書・追客リストも使えます。エントリーの編集と、受賞・審査状況の設定はできません。",
+  editor:
+    "エントリーの閲覧、商品到着の記録、追客リスト、Excel・PDFのダウンロードができます。エントリーの編集、受賞・審査状況の設定、メール配信はできません。",
+  viewer:
+    "エントリー・審査状況・受賞を見ることができます。応募企業のご担当者名・メールアドレス・電話番号は表示されません。",
+  judge:
+    "エントリー・審査状況・受賞を見ることと、審査コメントを書くことができます。応募企業のご担当者名・メールアドレス・電話番号は表示されません。",
+};
+
+// 冒頭の枠に並べる画面への近道（事務局の整理: 2026年10月）
+const ROLE_SHORTCUTS: Record<Role, TaskKey[]> = {
+  admin: ["entries", "arrival", "judging", "mail", "prospects", "invoices", "settings"],
+  representative: ["entries", "review", "prospects", "invoices"],
+  editor: ["arrival", "prospects"],
+  judge: ["entries", "review", "comment"],
+  viewer: ["entries", "review"],
 };
 
 // ---------------------------------------------------------------------------
@@ -268,13 +270,6 @@ const MATRIX: [string, Who][] = [
   ["設定・ユーザー管理・操作ログ", [A]],
 ];
 
-const ROLE_SUMMARY: Record<Role, string> = {
-  admin: "すべての操作ができます。",
-  representative: "メール配信・フォーム・請求書・追客リストを担当します。エントリーの中身は書き換えられません。",
-  editor: "追客リストの管理と、審査用の商品が届いたことの記録を担当します。",
-  viewer: "見るだけです。応募企業の個人情報は表示されません。",
-  judge: "見ることと、審査コメントを書くことができます。個人情報は表示されません。",
-};
 
 // ---------------------------------------------------------------------------
 
@@ -380,7 +375,7 @@ export default async function HelpPage({ searchParams }: Props) {
   const { year } = await searchParams;
   // サイドバーと同じく、年度で絞る画面へのリンクには表示中の年度を引き継ぐ
   const withYear = (href: string, scoped: boolean) => (scoped && year ? `${href}?year=${encodeURIComponent(year)}` : href);
-  const mine = ROLE_TASKS[role];
+  const shortcuts = ROLE_SHORTCUTS[role];
 
   return (
     <PageContainer width="list">
@@ -389,23 +384,23 @@ export default async function HelpPage({ searchParams }: Props) {
         description={`この管理システムでできることと、日々の作業の手順です。わからないことは${CONTACT.name}（${CONTACT.email}）までお問い合わせください。`}
       />
 
-      {/* あなたの主な業務 */}
+      {/* あなたの権限でできること */}
       <Card padding="md">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-base font-semibold text-ink">あなたの主な業務</h2>
+          <h2 className="text-base font-semibold text-ink">あなたの権限でできること</h2>
           <RoleBadge role={role} />
         </div>
-        <p className="mt-1 max-w-prose text-sm text-ink-muted">{mine.lead}</p>
+        <p className="mt-1 max-w-prose text-sm text-ink-muted">{ROLE_CAN[role]}下のボタンから、それぞれの画面と手順に移れます。</p>
         {/* 枚数で段組みを変え、最後の1枚だけが次の段に取り残されないようにする（7枚は 4+3、4枚は 4 か 2+2） */}
         <div
           className={cn(
             "mt-5 grid gap-3",
-            mine.tasks.length === 2 && "sm:grid-cols-2",
-            mine.tasks.length === 3 && "sm:grid-cols-3",
-            mine.tasks.length >= 4 && "sm:grid-cols-2 lg:grid-cols-4",
+            shortcuts.length === 2 && "sm:grid-cols-2",
+            shortcuts.length === 3 && "sm:grid-cols-3",
+            shortcuts.length >= 4 && "sm:grid-cols-2 lg:grid-cols-4",
           )}
         >
-          {mine.tasks.map((key) => {
+          {shortcuts.map((key) => {
             const t = TASKS[key];
             const Icon = t.icon;
             return (
@@ -475,7 +470,7 @@ export default async function HelpPage({ searchParams }: Props) {
                 <RoleBadge role={r} />
                 {r === role && <span className="text-caption font-medium text-accent">あなたの権限</span>}
               </div>
-              <p className="mt-2 text-caption text-ink-muted">{ROLE_SUMMARY[r]}</p>
+              <p className="mt-2 text-caption text-ink-muted">{ROLE_CAN[r]}</p>
             </div>
           ))}
         </div>
