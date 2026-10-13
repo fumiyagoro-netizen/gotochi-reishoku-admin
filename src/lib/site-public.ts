@@ -5,6 +5,7 @@ import { normalizeFooterLinks, type FooterLink } from "@/lib/site-config-shared"
 import { siteAssetSrc, MAX_HERO_ENTRIES } from "@/lib/site-collections-shared";
 import type { FormField } from "@/lib/form-shared";
 import {
+  PRIZE_STYLE,
   editionOf,
   editionRange,
   prizeKeyOf,
@@ -227,7 +228,11 @@ export async function loadSitePublicData() {
         company: v.entry.companyName,
         prefecture: v.entry.prefecture,
         tag: `第${edition}回 ${grandPrix ? `${GRAND_PRIX_TITLE}・` : ""}${v.entry.prizeLevel}`,
-        cls: grandPrix ? "b-gp" : v.entry.prizeLevel === "最高金賞" ? "b-top" : "b-gold",
+        // 賞の色は受賞商品のバッジと同じ（銀賞・銅賞が金色にならないように）
+        cls: (() => {
+          const key = prizeKeyOf(v.entry.prizeLevel, grandPrix);
+          return key === "gp" ? "b-gp" : key ? PRIZE_STYLE[key].cls : "b-gold";
+        })(),
       };
     });
 

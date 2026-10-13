@@ -152,7 +152,8 @@ export function HeroTiles({ winners }: { winners: SiteWinner[] }) {
               <span className="ph-l">PHOTO</span>
             </div>
             <div className="tile-b">
-              <span className={`badge ${w.prize === "gp" ? "b-gp" : "b-top"}`}>{w.prize === "gp" ? "グランプリ" : "最高金賞"}</span>
+              {/* グランプリはグランプリ、それ以外は実際の賞（手動で金賞などを選んだときも正しく出す） */}
+              <span className={`badge ${w.prize === "gp" ? "b-gp" : PRIZE_STYLE[w.prize].cls}`}>{w.prize === "gp" ? "グランプリ" : PRIZE_STYLE[w.prize].label}</span>
               <strong>{w.name}</strong>
               <small>{[w.prefecture, `第${w.edition}回`].filter(Boolean).join("｜")}</small>
             </div>
