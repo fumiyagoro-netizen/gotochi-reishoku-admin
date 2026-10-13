@@ -383,7 +383,7 @@ export default async function HelpPage({ searchParams }: Props) {
   const mine = ROLE_TASKS[role];
 
   return (
-    <PageContainer width="detail">
+    <PageContainer width="list">
       <PageHeader
         title="使い方"
         description={`この管理システムでできることと、日々の作業の手順です。わからないことは${CONTACT.name}（${CONTACT.email}）までお問い合わせください。`}
