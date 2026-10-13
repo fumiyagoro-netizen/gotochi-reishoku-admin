@@ -29,6 +29,7 @@ import {
   History,
   LogOut,
   Globe,
+  BookOpen,
   type LucideIcon,
 } from "@/components/ui/icons";
 
@@ -221,6 +222,16 @@ export function Sidebar({
 
       {/* User Info & Logout */}
       <div className="shrink-0 border-t border-line p-3">
+        {/* 使い方は全権限に出す。メニューを下までスクロールしなくても届くよう、
+            グループではなくお名前の上に固定で置く */}
+        <div className="mb-2">
+          <NavItem
+            href={hrefWithYear("/help")}
+            label="使い方"
+            icon={BookOpen}
+            active={pathname.startsWith("/help")}
+          />
+        </div>
         <div className="flex items-center gap-2.5 px-2 py-1.5 min-w-0">
           <Avatar initial={userName.charAt(0).toUpperCase()} title={userName} />
           <div className="min-w-0 flex-1">

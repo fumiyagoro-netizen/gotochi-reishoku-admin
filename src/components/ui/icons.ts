@@ -18,6 +18,7 @@ export {
   Snowflake,
   LogOut,
   Globe,
+  BookOpen,
   // サイト管理（src/lib/site-nav.ts）
   LayoutGrid,
   MessageSquareQuote,
