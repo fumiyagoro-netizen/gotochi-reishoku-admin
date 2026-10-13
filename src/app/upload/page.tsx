@@ -33,7 +33,7 @@ function UploadForm() {
   const [selectedYear, setSelectedYear] = useState(defaultYear);
   const { permissions } = useRole();
 
-  if (!permissions.canUpload) {
+  if (!permissions.canUploadEntryCsv) {
     return <NoPermission message="アップロード権限がありません" />;
   }
 

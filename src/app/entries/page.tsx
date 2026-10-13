@@ -115,7 +115,7 @@ export default async function EntriesPage({ searchParams }: Props) {
                 entries, and its own bulk-update instructions start with
                 "エントリー一覧からExcelをダウンロード". Mirrors how the contacts
                 CSV import lives under the contacts screen rather than in the nav. */}
-            {perms.canUpload && (
+            {perms.canUploadEntryCsv && (
               <ButtonLink href="/upload" variant="primary" icon={<Upload />}>
                 CSVアップロード
               </ButtonLink>

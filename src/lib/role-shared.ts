@@ -12,8 +12,9 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "すべての操作が可能",
-  representative: "設定・ユーザー管理・操作ログ・エントリー削除・年度管理を除く操作が可能",
-  editor: "削除・受賞設定・見込み客・フォーム・請求書以外の操作が可能（追客リストは利用可）",
+  representative:
+    "メール配信・フォーム・請求書・追客リストを担当。エントリーの編集／受賞・審査状況の設定／エントリーCSVの取り込みと、設定・ユーザー管理・操作ログ・年度管理・サイト管理は不可",
+  editor: "追客リストと商品到着の記録を担当。エントリーの編集・受賞設定・メール配信・フォーム・請求書は不可",
   viewer: "閲覧のみ（個人情報は非表示）",
   judge: "審査コメントの投稿のみ可能（その他は閲覧のみ・個人情報は非表示）",
 };
@@ -70,6 +71,29 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // no explicit user instruction either way for editor here — this is a
 // deliberate conservative default that should be revisited if editor turns
 // out to need it.
+// canEditEntry / canUploadEntryCsv はエントリー本体への書き込みを管理者だけに
+// 絞るためのフラグ（2026年10月に事務局の指示で分離）。canEdit / canUpload を
+// そのまま admin 限定にしなかったのは、あの2つがエントリー以外の機能と共有
+// されているため:
+//   - canEdit は canManageForms / canManageContacts と組で、フォームと
+//     メール配信リストの編集も通している。admin 限定にすると代表者が
+//     それらを編集できなくなる（指示に含まれていない巻き添え）。
+//   - canUpload は canManageProspects / canManageContacts と組で、追客リストの
+//     Excel 取り込みとメール配信リストの CSV 取り込みも通している。
+// そこでエントリー側だけを新しい2つのフラグに移し、canEdit / canUpload の値は
+// 変えていない。結果として editor の canEdit は「到達できる画面が無い」ため
+// 現在は効き目が無いが、値を触ると他機能の判定まで動くので据え置いている。
+//
+// canEditEntry は /api/entries/[id] の PATCH 全体の入口。ただし商品到着だけの
+// 更新（itemArrivalStatus 1項目のみ）はこの入口を通さず canSetItemArrival で
+// 判定する — 商品到着は編集者が日々記録する運用で、エントリー本文の編集権限とは
+// 別物だから（canSetPrize と canSetItemArrival を分けてあるのと同じ理由）。
+//
+// canUploadEntryCsv は /upload 画面と /api/upload・/api/upload/update。
+// 一括更新の CSV には「受賞」「審査状況」の列があり、ルート側は canSetPrize を
+// 見ていない（列ごとの権限判定をしていない）ため、canUpload のままだと編集者が
+// CSV 経由で受賞を書き換えられてしまう。管理者限定にすることでこの抜け道も塞がる。
+//
 // canManageSite gates the "サイト管理" area as a whole (/site pages and the
 // /api/site/* routes: 受賞商品の公開, お知らせ, 審査員, 開催概要 etc. — the public
 // website's content, see docs/site-migration/README.md §4). Admin-only for
@@ -81,6 +105,8 @@ export const PERMISSIONS = {
     canDelete: true,
     canSetPrize: true,
     canEdit: true,
+    canEditEntry: true,
+    canUploadEntryCsv: true,
     canUpload: true,
     canDownload: true,
     canSeePrivateInfo: true,
@@ -107,8 +133,10 @@ export const PERMISSIONS = {
   // and their API routes).
   representative: {
     canDelete: false,
-    canSetPrize: true,
+    canSetPrize: false,
     canEdit: true,
+    canEditEntry: false,
+    canUploadEntryCsv: false,
     canUpload: true,
     canDownload: true,
     canSeePrivateInfo: true,
@@ -125,6 +153,8 @@ export const PERMISSIONS = {
     canDelete: false,
     canSetPrize: false,
     canEdit: true,
+    canEditEntry: false,
+    canUploadEntryCsv: false,
     canUpload: true,
     canDownload: true,
     canSeePrivateInfo: true,
@@ -149,6 +179,8 @@ export const PERMISSIONS = {
     canDelete: false,
     canSetPrize: false,
     canEdit: false,
+    canEditEntry: false,
+    canUploadEntryCsv: false,
     canUpload: false,
     canDownload: false,
     canSeePrivateInfo: false,
@@ -168,6 +200,8 @@ export const PERMISSIONS = {
     canDelete: false,
     canSetPrize: false,
     canEdit: false,
+    canEditEntry: false,
+    canUploadEntryCsv: false,
     canUpload: false,
     canDownload: false,
     canSeePrivateInfo: false,

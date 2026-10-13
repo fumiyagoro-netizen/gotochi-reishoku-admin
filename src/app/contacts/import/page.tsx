@@ -33,8 +33,9 @@ function ImportForm() {
   }, []);
 
   // Part of the contacts feature (canManageContacts) — an editor still has
-  // canUpload=true (used for the unrelated entries CSV upload), so checking
+  // canUpload=true (used for the unrelated 追客リスト import), so checking
   // canUpload alone would let editor reach this page. Both must hold.
+  // （エントリーCSVの取り込みは canUploadEntryCsv に分離済み — role-shared.ts 参照）
   if (!permissions.canManageContacts || !permissions.canUpload) {
     return <NoPermission message="インポート権限がありません" />;
   }

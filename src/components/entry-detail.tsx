@@ -137,7 +137,7 @@ export function EntryDetail({
         actions={
           editing ? undefined : (
             <>
-              {permissions.canEdit && (
+              {permissions.canEditEntry && (
                 <Button variant="secondary" icon={<Pencil />} onClick={startEdit}>
                   編集
                 </Button>

@@ -276,9 +276,12 @@ function UserFormModal({
           value={userRole}
           onChange={(e) => setUserRole(e.target.value)}
         >
+          {/* 権限の実体は src/lib/role-shared.ts の PERMISSIONS。ここの文言は
+              プルダウン1行に収まる要約なので、権限を変えたらこちらも必ず直す。
+              2026年10月にエントリーの編集・受賞設定・エントリーCSVを管理者限定にした。 */}
           <option value="admin">管理者 — すべての操作が可能</option>
-          <option value="representative">代表者 — 設定・ユーザー管理・操作ログ・年度管理・削除以外</option>
-          <option value="editor">編集者 — 削除・受賞設定以外</option>
+          <option value="representative">代表者 — 配信・フォーム・請求書・追客リスト（エントリーの編集は不可）</option>
+          <option value="editor">編集者 — 追客リストと商品到着の記録のみ</option>
           <option value="viewer">閲覧者 — 閲覧のみ</option>
           <option value="judge">審査員 — 閲覧のみ＋審査コメントの投稿</option>
         </Select>

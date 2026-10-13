@@ -40,7 +40,8 @@ export default function FormsPage() {
   }, [fetchForms]);
 
   // Forms (フォーム) is gated by canManageForms, not canEdit: editor keeps
-  // canEdit=true for entries but must not reach the forms feature at all.
+  // canEdit=true but must not reach the forms feature at all.（エントリーの
+  // 編集は canEdit から canEditEntry に分離済み — src/lib/role-shared.ts 参照）
   // The API enforces this too; this only keeps the page from rendering an
   // empty shell.
   if (!permissions.canManageForms) {

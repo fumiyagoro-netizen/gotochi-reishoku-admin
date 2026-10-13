@@ -59,7 +59,16 @@ export async function PATCH(
     const perms = getPermissions(role);
     const body = await request.json();
 
-    if (!perms.canEdit) {
+    // 商品到着だけの更新（itemArrivalStatus 1項目のみ）は、エントリー本文の編集
+    // 権限ではなく下の canSetItemArrival で判定する。商品到着は代表者・編集者が
+    // 日々記録する運用で、エントリーの内容を書き換える行為とは別物だから
+    // （/api/entries/bulk-item-arrival が canSetItemArrival だけを見ているのと揃える）。
+    // EDITABLE_FIELDS に無いキーは下の組み立てで無視されるので、判定もそれに合わせる。
+    const touchedFields = EDITABLE_FIELDS.filter((key) => key in body);
+    const itemArrivalOnly =
+      touchedFields.length === 1 && touchedFields[0] === "itemArrivalStatus";
+
+    if (!itemArrivalOnly && !perms.canEditEntry) {
       return NextResponse.json(
         { success: false, message: "編集権限がありません" },
         { status: 403 }
