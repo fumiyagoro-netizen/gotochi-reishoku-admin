@@ -2,6 +2,7 @@ import { loadSitePublicData } from "@/lib/site-public";
 import { siteBase } from "@/lib/site-links";
 import { defaultOgImage, pageMeta } from "@/lib/site-meta";
 import { SiteFooter, SiteHeader } from "../_components/site-chrome";
+import { Linkify } from "../_components/linkify";
 
 export const dynamic = "force-dynamic";
 export async function generateMetadata() {
@@ -32,7 +33,7 @@ export default async function PrivacyPage() {
           <h1>プライバシーポリシー</h1>
           {updated && <p className="article-meta"><time>{updated} 改定</time></p>}
           {config.privacyBody ? (
-            <div className="article-body">{config.privacyBody}</div>
+            <div className="article-body"><Linkify text={config.privacyBody} /></div>
           ) : (
             <p className="news-empty">準備中です。</p>
           )}

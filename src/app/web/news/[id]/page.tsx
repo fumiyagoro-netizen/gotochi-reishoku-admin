@@ -6,6 +6,7 @@ import { JsonLd, breadcrumbLd } from "../../_components/json-ld";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 import { SiteFooter, SiteHeader } from "../../_components/site-chrome";
 import { SafeImg } from "../../_components/safe-img";
+import { Linkify } from "../../_components/linkify";
 import { newsImages, newsPlainText, parseNewsBody } from "@/lib/news-body";
 import { siteAssetSrc } from "@/lib/site-collections-shared";
 
@@ -75,13 +76,13 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
           <h1>{item.title}</h1>
           {blocks.map((b, i) =>
             b.type === "text" ? (
-              <div className="article-body" key={i}>{b.text}</div>
+              <div className="article-body" key={i}><Linkify text={b.text} /></div>
             ) : (
               <figure className="article-figure" key={i}>
                 <SafeImg
                   src={siteAssetSrc(b.url, 1280)}
                   srcSet={`${siteAssetSrc(b.url, 640)} 640w, ${siteAssetSrc(b.url, 1280)} 1280w`}
-                  sizes="(max-width: 820px) 100vw, 760px"
+                  sizes="(max-width: 1000px) 100vw, 904px"
                   alt={b.caption.trim() || item.title}
                   loading={i === 0 ? undefined : "lazy"}
                 />

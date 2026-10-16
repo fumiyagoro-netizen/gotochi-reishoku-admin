@@ -808,3 +808,11 @@ a.tile:hover .tile-in{box-shadow:0 36px 70px -30px rgba(11,37,69,.45)}
 .article-figure{margin:1.8em 0}
 .article-figure img{display:block;width:100%;height:auto;border-radius:14px;background:var(--ground)}
 .article-figure figcaption{margin-top:10px;font-size:.82rem;line-height:1.7;color:var(--mute);text-align:center}
+
+/* ---------- お知らせ・プライバシーポリシーの記事ページ ----------
+   幅を 46em（本文 640px）から広げ、タイトルが右まで伸びるようにする。行の長さをそろえる balance は
+   1行目が短くなるので、最後の行だけ極端に短くならない pretty にする */
+.article{max-width:1000px}
+.article h1{text-wrap:pretty}
+.article-body a{color:var(--blue);text-decoration:underline;text-underline-offset:3px;word-break:break-all}
+.article-body a:hover{color:var(--blue-deep)}
