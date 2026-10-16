@@ -1,3 +1,4 @@
+import { utcToJstDateInputValue } from "@/lib/award-dates";
 import { prisma } from "@/lib/prisma";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 
@@ -21,7 +22,7 @@ export async function GET() {
     { loc: "/news" },
     { loc: "/privacy" },
     ...years.map((y) => ({ loc: `/winners/${y.award.year}` })),
-    ...news.map((n) => ({ loc: `/news/${n.id}`, lastmod: n.updatedAt.toISOString().slice(0, 10) })),
+    ...news.map((n) => ({ loc: `/news/${n.id}`, lastmod: utcToJstDateInputValue(n.updatedAt) })),
     ...winners.map((w) => ({ loc: `/winners/${w.award.year}/${w.id}` })),
   ];
   const body =

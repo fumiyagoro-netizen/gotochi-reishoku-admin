@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { utcToJstDateInputValue } from "@/lib/award-dates";
 import { GRAND_PRIX_TITLE } from "@/lib/prize-shared";
 import { normalizeOverview, type SiteOverview } from "@/lib/site-overview-shared";
 import { normalizeFooterLinks, type FooterLink } from "@/lib/site-config-shared";
@@ -241,7 +242,8 @@ export async function loadSitePublicData() {
     title: n.title,
     body: n.body,
     category: n.category,
-    date: (n.publishedAt ?? n.createdAt).toISOString().slice(0, 10),
+    // 公開日は日本時間の0時で保存している。UTC のまま日付にすると前日になるので、日本時間で日付にする
+    date: utcToJstDateInputValue(n.publishedAt ?? n.createdAt),
     isPinned: n.isPinned,
   }));
 
