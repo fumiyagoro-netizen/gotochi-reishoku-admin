@@ -19,7 +19,13 @@ const FIELDS: FieldDef[] = [
   { key: "title", label: "タイトル", type: "text", required: true, maxLength: 200, full: true },
   { key: "category", label: "カテゴリ", type: "select", required: true, options: NEWS_CATEGORIES.map((c) => ({ value: c, label: c })) },
   { key: "publishedAt", label: "公開日", type: "date", hint: "一覧に出る日付。新しい順に並びます" },
-  { key: "body", label: "本文", type: "textarea", rows: 10, hint: "改行はそのまま表示します" },
+  {
+    key: "body",
+    label: "本文",
+    type: "newsBody",
+    rows: 12,
+    hint: "改行はそのまま表示します。[画像:…] の行は、サイトではその位置に画像として表示されます",
+  },
   { key: "isPublished", label: "公開する", type: "checkbox", hint: "外すと下書き（サイトに出ません）" },
   { key: "isPinned", label: "ピン留め", type: "checkbox", hint: "トップのお知らせで先頭に固定します" },
 ];

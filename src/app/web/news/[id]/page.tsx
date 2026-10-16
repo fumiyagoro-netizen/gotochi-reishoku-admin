@@ -5,6 +5,9 @@ import { defaultOgImage, excerpt, pageMeta, SITE_NAME } from "@/lib/site-meta";
 import { JsonLd, breadcrumbLd } from "../../_components/json-ld";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 import { SiteFooter, SiteHeader } from "../../_components/site-chrome";
+import { SafeImg } from "../../_components/safe-img";
+import { newsImages, newsPlainText, parseNewsBody } from "@/lib/news-body";
+import { siteAssetSrc } from "@/lib/site-collections-shared";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +16,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { news } = await loadSitePublicData();
   const item = news.find((n) => n.id === Number(id));
   if (!item) return { title: "お知らせ" };
+  // 本文に画像があれば、1枚目を共有したときの画像にする（無ければサイト共通の画像）
+  const firstImage = newsImages(item.body)[0];
   return pageMeta({
     title: item.title,
-    description: excerpt(item.body || item.title),
+    description: excerpt(newsPlainText(item.body) || item.title),
     path: `/news/${item.id}`,
-    image: await defaultOgImage(),
+    image: firstImage ? siteAssetSrc(firstImage.url, 1280) : await defaultOgImage(),
     type: "article",
   });
 }
@@ -32,6 +37,8 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
   const item = news.find((n) => n.id === Number(id));
   if (!item) notFound();
   const others = news.filter((n) => n.id !== item.id).slice(0, 3);
+  const blocks = parseNewsBody(item.body);
+  const firstImage = blocks.find((b) => b.type === "image");
 
   return (
     <>
@@ -44,6 +51,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
               "@type": "NewsArticle",
               headline: item.title,
               datePublished: item.date,
+              ...(firstImage?.type === "image" ? { image: `${PUBLIC_SITE_ORIGIN}${siteAssetSrc(firstImage.url, 1280)}` } : {}),
               mainEntityOfPage: `${PUBLIC_SITE_ORIGIN}/news/${item.id}`,
               publisher: { "@type": "Organization", name: "一般社団法人未来の食卓" },
               isPartOf: { "@type": "WebSite", name: SITE_NAME, url: PUBLIC_SITE_ORIGIN },
@@ -65,7 +73,22 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
             <span className={`tag${item.category === "結果発表" ? " tag-gold" : ""}`}>{item.category}</span>
           </div>
           <h1>{item.title}</h1>
-          {item.body && <div className="article-body">{item.body}</div>}
+          {blocks.map((b, i) =>
+            b.type === "text" ? (
+              <div className="article-body" key={i}>{b.text}</div>
+            ) : (
+              <figure className="article-figure" key={i}>
+                <SafeImg
+                  src={siteAssetSrc(b.url, 1280)}
+                  srcSet={`${siteAssetSrc(b.url, 640)} 640w, ${siteAssetSrc(b.url, 1280)} 1280w`}
+                  sizes="(max-width: 820px) 100vw, 760px"
+                  alt={b.caption.trim() || item.title}
+                  loading={i === 0 ? undefined : "lazy"}
+                />
+                {b.caption.trim() && <figcaption>{b.caption.trim()}</figcaption>}
+              </figure>
+            ),
+          )}
         </div>
         {others.length > 0 && (
           <section className="article-more">

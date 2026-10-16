@@ -3,8 +3,8 @@
 export const NEWS_CATEGORIES = ["開催情報", "結果発表", "メディア"] as const;
 export const PARTNER_KINDS = ["主催", "後援", "協力", "協賛"] as const;
 
-/** /api/site/upload の保存先の種類。画像は種類ごとの大きさに縮めて WebP にする。leaflet は PDF */
-export const SITE_UPLOAD_KINDS = ["judge", "partner", "voice", "og", "leaflet"] as const;
+/** /api/site/upload の保存先の種類。画像は種類ごとの大きさに縮めて WebP にする。leaflet は PDF。news はお知らせ本文の画像 */
+export const SITE_UPLOAD_KINDS = ["judge", "partner", "voice", "og", "leaflet", "news"] as const;
 export type SiteUploadKind = (typeof SITE_UPLOAD_KINDS)[number];
 
 export const MAX_VOICE_PHOTOS = 3;

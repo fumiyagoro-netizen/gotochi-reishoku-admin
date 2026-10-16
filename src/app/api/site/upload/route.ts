@@ -14,6 +14,7 @@ const IMAGE_MAX_EDGE: Record<Exclude<SiteUploadKind, "leaflet">, number> = {
   partner: 800,
   voice: 1600,
   og: 1200, // SNS 共有用（1200×630 で使う）
+  news: 1600, // お知らせ本文の画像（本文の幅いっぱいに出す）
 };
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 

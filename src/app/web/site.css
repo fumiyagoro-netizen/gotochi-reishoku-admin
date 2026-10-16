@@ -802,3 +802,9 @@ a.tile:hover .tile-in{box-shadow:0 36px 70px -30px rgba(11,37,69,.45)}
   .hero-r .tile-b{padding:10px 12px 12px}
   .hero-r .tile-b strong{font-size:.88rem}
 }
+
+/* ---------- お知らせ本文の画像（src/lib/news-body.ts の [画像:…] の行） ---------- */
+.article-body + .article-body,.article-figure + .article-body{margin-top:1.4em}
+.article-figure{margin:1.8em 0}
+.article-figure img{display:block;width:100%;height:auto;border-radius:14px;background:var(--ground)}
+.article-figure figcaption{margin-top:10px;font-size:.82rem;line-height:1.7;color:var(--mute);text-align:center}

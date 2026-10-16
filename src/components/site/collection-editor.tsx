@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { InlineConfirm } from "@/components/ui/inline-confirm";
 import { ArrowDown, ArrowUp, Pencil, Plus } from "@/components/ui/icons";
 import { ImageField, ImagesField } from "./site-image-field";
+import { NewsBodyField } from "./news-body-field";
 import type { SiteCollectionKind, SiteUploadKind } from "@/lib/site-collections-shared";
 
 /**
@@ -28,7 +29,9 @@ export type FieldDef =
   | (Common & { type: "date" })
   | (Common & { type: "checkbox" })
   | (Common & { type: "image"; uploadKind: SiteUploadKind; contain?: boolean })
-  | (Common & { type: "images"; uploadKind: SiteUploadKind; max: number });
+  | (Common & { type: "images"; uploadKind: SiteUploadKind; max: number })
+  /** お知らせの本文（文字＋「画像を挿入」。src/components/site/news-body-field.tsx） */
+  | (Common & { type: "newsBody"; rows?: number });
 
 export type Column<T> = { header: string; render: (item: T) => ReactNode; width?: string; nowrap?: boolean };
 
@@ -239,7 +242,7 @@ export function CollectionEditor<T extends { id: number }>({
         {editing && (
           <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
             {fields.map((f) => (
-              <div key={f.key} className={f.full || f.type === "textarea" || f.type === "images" ? "md:col-span-2" : undefined}>
+              <div key={f.key} className={f.full || f.type === "textarea" || f.type === "images" || f.type === "newsBody" ? "md:col-span-2" : undefined}>
                 <FieldControl field={f} value={editing.values[f.key]} onChange={(v) => set(f.key, v)} />
               </div>
             ))}
@@ -303,6 +306,9 @@ function FieldControl({ field: f, value, onChange }: { field: FieldDef; value: u
       control = (
         <ImagesField kind={f.uploadKind} max={f.max} value={Array.isArray(value) ? (value as string[]) : []} onChange={onChange} />
       );
+      break;
+    case "newsBody":
+      control = <NewsBodyField id={id} value={text} rows={f.rows} onChange={onChange} />;
       break;
   }
 
