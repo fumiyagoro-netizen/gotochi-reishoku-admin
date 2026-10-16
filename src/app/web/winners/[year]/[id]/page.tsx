@@ -8,6 +8,7 @@ import { WinnerCard, WinnerList } from "../../../_components/cards";
 import { SiteFooter, SiteHeader } from "../../../_components/site-chrome";
 import { EntryCta } from "../../../_components/entry-cta";
 import { ShareButtons } from "../../../_components/share-buttons";
+import { SafeImg } from "../../../_components/safe-img";
 import { JsonLd, breadcrumbLd } from "../../../_components/json-ld";
 
 export const dynamic = "force-dynamic";
@@ -94,15 +95,14 @@ export default async function WinnerPage({ params }: { params: Promise<{ year: s
           <div className="wp-main">
             <div className="wp-gallery">
               <div className={`ph ph-${w.region ?? 0}${w.photos[0] ? " has-img" : ""}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {w.photos[0] ? <img src={withWidth(w.photos[0], 1280)} alt={w.name} /> : <span className="ph-l">PHOTO</span>}
+                {w.photos[0] ? <SafeImg src={withWidth(w.photos[0], 1280)} alt={w.name} /> : <span className="ph-l">PHOTO</span>}
               </div>
               {w.photos.length > 1 && (
                 <div className="wp-thumbs">
                   {w.photos.slice(1).map((src, i) => (
                     <div className="ph has-img" key={src}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={withWidth(src, 640)} alt={`${w.name}（${i + 2}枚目）`} loading="lazy" />
+                      {/* 読み込めない写真は枠ごと隠す */}
+                      <SafeImg src={withWidth(src, 640)} alt={`${w.name}（${i + 2}枚目）`} loading="lazy" hideBox />
                     </div>
                   ))}
                 </div>

@@ -3,13 +3,13 @@
 import { createContext, useContext } from "react";
 import { PRIZE_STYLE, winnerPath, withWidth, type SiteVoiceItem, type SiteWinner } from "@/lib/site-public-shared";
 import { useSiteModal } from "./modal-provider";
+import { SafeImg } from "./safe-img";
 
 /** 写真の枠。写真が無いときは地域ごとの色違いのプレースホルダーを出す */
 function Photo({ src, region, className = "", alt = "" }: { src: string; region: number | null; className?: string; alt?: string }) {
   return (
     <div className={`ph ph-${region ?? 0}${src ? " has-img" : ""}${className ? ` ${className}` : ""}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {src ? <img src={src} alt={alt} loading="lazy" /> : null}
+      {src ? <SafeImg src={src} alt={alt} loading="lazy" /> : null}
       <span className="ph-l">PHOTO</span>
     </div>
   );
@@ -116,8 +116,7 @@ export function VoiceCard({ v, index }: { v: SiteVoiceItem; index: number }) {
       onClick={() => openVoice(v)}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openVoice(v); } }}>
       <div className={`voice-ph ph ph-${index % 6}${v.photos[0] ? " has-img" : ""}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {v.photos[0] ? <img src={withWidth(v.photos[0], 640)} alt={`${v.productName}の受賞者の声`} loading="lazy" /> : <span className="ph-l">PHOTO</span>}
+        {v.photos[0] ? <SafeImg src={withWidth(v.photos[0], 640)} alt={`${v.productName}の受賞者の声`} loading="lazy" /> : <span className="ph-l">PHOTO</span>}
       </div>
       <span className={`badge ${v.cls}`}>{v.tag}</span>
       <blockquote>{v.quote}</blockquote>
@@ -147,8 +146,7 @@ export function HeroTiles({ winners }: { winners: SiteWinner[] }) {
         >
           <div className="tile-in">
             <div className={`ph ph-${i}${w.photos[0] ? " has-img" : ""}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {w.photos[0] ? <img src={withWidth(w.photos[0], 480)} alt={w.name} /> : null}
+              {w.photos[0] ? <SafeImg src={withWidth(w.photos[0], 480)} alt={w.name} /> : null}
               <span className="ph-l">PHOTO</span>
             </div>
             <div className="tile-b">

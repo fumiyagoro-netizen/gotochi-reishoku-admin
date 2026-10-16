@@ -48,8 +48,11 @@ export function useSiteModal(): Ctx {
 }
 
 /** 写真スライド。1枚のときは矢印・ドットを出さない */
-function Slides({ photos, className, alt = "" }: { photos: string[]; className: string; alt?: string }) {
+function Slides({ photos: all, className, alt = "" }: { photos: string[]; className: string; alt?: string }) {
   const [i, setI] = useState(0);
+  // 読み込めなかった写真は外して、残りの写真だけで送る（壊れた画像のアイコンや空のコマを見せない）
+  const [broken, setBroken] = useState<string[]>([]);
+  const photos = all.filter((p) => !broken.includes(p));
   const n = photos.length;
   const startX = useRef<number | null>(null);
   const go = useCallback((k: number) => setI((k + n) % n), [n]);
@@ -75,11 +78,15 @@ function Slides({ photos, className, alt = "" }: { photos: string[]; className: 
         if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1));
       }}
     >
-      <div className="ss-track" style={{ transform: `translateX(${-i * 100}%)` }}>
+      <div className="ss-track" style={{ transform: `translateX(${-(i % n) * 100}%)` }}>
         {photos.map((src, k) => (
-          <div className="ss-slide ph ph-0 has-img" key={k}>
+          <div className="ss-slide ph ph-0 has-img" key={src}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={withWidth(src, 1280)} alt={alt ? `${alt}（${k + 1}枚目）` : ""} />
+            <img
+              src={withWidth(src, 1280)}
+              alt={alt ? `${alt}（${k + 1}枚目）` : ""}
+              onError={() => setBroken((b) => (b.includes(src) ? b : [...b, src]))}
+            />
           </div>
         ))}
       </div>
@@ -89,10 +96,10 @@ function Slides({ photos, className, alt = "" }: { photos: string[]; className: 
           <button className="ss-btn ss-next" type="button" aria-label="次の写真" onClick={() => go(i + 1)}>›</button>
           <div className="ss-dots">
             {photos.map((_, k) => (
-              <button key={k} type="button" className={`ss-dot${k === i ? " is-on" : ""}`} aria-label={`写真${k + 1}`} onClick={() => go(k)} />
+              <button key={k} type="button" className={`ss-dot${k === i % n ? " is-on" : ""}`} aria-label={`写真${k + 1}`} onClick={() => go(k)} />
             ))}
           </div>
-          <span className="ss-count"><b>{i + 1}</b>/{n}</span>
+          <span className="ss-count"><b>{(i % n) + 1}</b>/{n}</span>
         </>
       )}
     </div>

@@ -7,6 +7,7 @@ import { WinnersArchive } from "./_components/archive";
 import { VoicesRail } from "./_components/voices-rail";
 import { FormButton } from "./_components/form-button";
 import { JsonLd } from "./_components/json-ld";
+import { SafeImg } from "./_components/safe-img";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/site-host";
 import { siteBase } from "@/lib/site-links";
 
@@ -427,8 +428,7 @@ export default async function SiteTopPage() {
                 {judges.map((j, i) => (
                   <li className="judge" key={j.id}>
                     {j.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <div className="ph judge-ph has-img"><img src={withWidth(j.photo, 320)} alt={`審査員 ${j.name}`} loading="lazy" /></div>
+                      <div className="ph judge-ph has-img"><SafeImg src={withWidth(j.photo, 320)} alt={`審査員 ${j.name}`} loading="lazy" /></div>
                     ) : (
                       <div className={`ph judge-ph ph-init ph-${i % 6}`}>{j.name.slice(0, 1)}</div>
                     )}
