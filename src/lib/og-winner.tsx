@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import sharp from "@/lib/sharp";
 import { PRIZE_NAME, type PrizeKey } from "@/lib/site-public-shared";
 
 /**

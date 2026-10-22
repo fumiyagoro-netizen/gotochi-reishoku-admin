@@ -28,7 +28,7 @@
  */
 import { PDFDocument, PDFFont, PDFPage, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import sharp from "sharp";
+import sharp from "@/lib/sharp";
 import fs from "fs";
 import path from "path";
 

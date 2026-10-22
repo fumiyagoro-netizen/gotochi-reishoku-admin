@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { get } from "@vercel/blob";
-import sharp from "sharp";
+import sharp from "@/lib/sharp";
 import { isSiteAssetUrl } from "@/lib/site-api";
 import { IMAGE_WIDTHS } from "@/lib/site-collections-shared";
 

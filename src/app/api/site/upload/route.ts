@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import sharp from "sharp";
+import sharp from "@/lib/sharp";
 import { denyUnlessSiteManager } from "@/lib/site-api";
 import { SITE_UPLOAD_KINDS, SITE_UPLOAD_MAX_BYTES, type SiteUploadKind } from "@/lib/site-collections-shared";
 

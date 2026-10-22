@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import sharp from "sharp";
+import sharp from "@/lib/sharp";
 import { getUserFromRequest } from "@/lib/auth";
 import { IMAGE_WIDTHS } from "@/lib/site-collections-shared";
 
