@@ -1,13 +1,14 @@
 /** Server-side auth utilities */
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import { prisma } from "./prisma";
 import type { Role } from "./role-shared";
 
 // Re-export core utilities
 export { verifyToken, createToken, COOKIE_NAME, TOKEN_MAX_AGE } from "./auth-core";
 export type { TokenPayload } from "./auth-core";
-import { verifyToken, COOKIE_NAME } from "./auth-core";
+import { verifyToken, createToken, COOKIE_NAME, TOKEN_MAX_AGE } from "./auth-core";
 import type { TokenPayload } from "./auth-core";
 
 export async function hashPassword(password: string): Promise<string> {
@@ -90,4 +91,31 @@ export function getUserFromRequest(request: Request): Promise<TokenPayload | nul
 
   requestUserCache.set(request, result);
   return result;
+}
+
+/**
+ * ログイン成功時のセッション cookie を付ける。パスワードでもパスキーでも同じものを渡す
+ * （src/app/api/auth と src/app/api/auth/passkey）。
+ */
+export async function setSessionCookies(
+  res: NextResponse,
+  user: { id: number; email: string; role: string },
+): Promise<void> {
+  const token = await createToken({ userId: user.id, email: user.email, role: user.role as Role });
+
+  res.cookies.set(COOKIE_NAME, token, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: TOKEN_MAX_AGE,
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  // Also set the role cookie for backward compatibility
+  res.cookies.set("role", user.role, {
+    path: "/",
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: TOKEN_MAX_AGE,
+  });
 }

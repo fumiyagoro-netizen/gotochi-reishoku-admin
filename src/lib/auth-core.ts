@@ -105,3 +105,27 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     return null;
   }
 }
+
+/**
+ * 短い間だけ預ける値（パスキーのチャレンジ）を署名つきの文字列にする。
+ * ログイン用のトークンとは形（2区切り）と署名する文字列の接頭辞を変えてあり、
+ * これをログインのトークンとして差し出されても verifyToken は通らない。
+ */
+export async function createSignedValue(value: object, maxAgeSec: number): Promise<string> {
+  const body = b64url(JSON.stringify({ ...value, exp: Math.floor(Date.now() / 1000) + maxAgeSec }));
+  return `${body}.${await hmacSign(`signed-value.${body}`)}`;
+}
+
+export async function verifySignedValue<T>(signed: string): Promise<T | null> {
+  try {
+    const parts = signed.split(".");
+    if (parts.length !== 2) return null;
+    const [body, signature] = parts;
+    if (!(await hmacVerify(`signed-value.${body}`, signature))) return null;
+    const value = JSON.parse(b64urlDecode(body)) as T & { exp?: number };
+    if (!value.exp || value.exp < Math.floor(Date.now() / 1000)) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}

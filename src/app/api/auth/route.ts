@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verifyPassword, createToken, COOKIE_NAME, TOKEN_MAX_AGE } from "@/lib/auth";
+import { verifyPassword, setSessionCookies, COOKIE_NAME } from "@/lib/auth";
 import { writeAuditLog } from "@/lib/audit";
-import type { Role } from "@/lib/role-shared";
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,12 +31,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = await createToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role as Role,
-    });
-
     // Audit log
     await writeAuditLog({
       userId: user.id,
@@ -52,21 +45,7 @@ export async function POST(request: NextRequest) {
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
     });
 
-    res.cookies.set(COOKIE_NAME, token, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: TOKEN_MAX_AGE,
-      secure: process.env.NODE_ENV === "production",
-    });
-
-    // Also set the role cookie for backward compatibility
-    res.cookies.set("role", user.role, {
-      path: "/",
-      httpOnly: false,
-      sameSite: "lax",
-      maxAge: TOKEN_MAX_AGE,
-    });
+    await setSessionCookies(res, user);
 
     return res;
   } catch (error) {

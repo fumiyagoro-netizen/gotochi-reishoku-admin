@@ -9,10 +9,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, message: "権限がありません" }, { status: 403 });
   }
 
-  const users = await prisma.user.findMany({
-    select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
+  const rows = await prisma.user.findMany({
+    select: {
+      id: true, email: true, name: true, role: true, isActive: true, createdAt: true,
+      _count: { select: { passkeys: true } },
+    },
     orderBy: { createdAt: "asc" },
   });
+  const users = rows.map(({ _count, ...user }) => ({ ...user, passkeyCount: _count.passkeys }));
 
   return NextResponse.json({ success: true, users });
 }

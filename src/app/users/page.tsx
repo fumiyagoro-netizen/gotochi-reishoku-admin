@@ -23,6 +23,8 @@ interface User {
   role: string;
   isActive: boolean;
   createdAt: string;
+  /** 登録済みのパスキーの数（登録は本人がアカウント画面で行う） */
+  passkeyCount: number;
 }
 
 export default function UsersPage() {
@@ -69,7 +71,7 @@ export default function UsersPage() {
       />
 
       {loading ? (
-        <TableSkeleton cols={5} />
+        <TableSkeleton cols={6} />
       ) : (
         <Table>
           <thead>
@@ -77,6 +79,7 @@ export default function UsersPage() {
               <Th>名前</Th>
               <Th>メールアドレス</Th>
               <Th>権限</Th>
+              <Th>パスキー</Th>
               <Th>状態</Th>
               <Th>操作</Th>
             </tr>
@@ -89,6 +92,9 @@ export default function UsersPage() {
                 <Td>
                   {/* 役割→色は role-badge.tsx に一元化（代表者は紫、未知値は viewer 色＋生文字列） */}
                   <RoleBadge role={user.role} />
+                </Td>
+                <Td>
+                  {user.passkeyCount > 0 ? `${user.passkeyCount}件` : <span className="text-ink-faint">なし</span>}
                 </Td>
                 <Td>
                   {user.isActive ? (
@@ -113,7 +119,7 @@ export default function UsersPage() {
                 icon={Users}
                 title="ユーザーが登録されていません"
                 description="「ユーザー追加」から登録すると、ここに表示されます"
-                colSpan={5}
+                colSpan={6}
               />
             )}
           </tbody>
@@ -149,6 +155,28 @@ function UserFormModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [passkeyCount, setPasskeyCount] = useState(user?.passkeyCount ?? 0);
+  const [clearingPasskeys, setClearingPasskeys] = useState(false);
+
+  async function handleClearPasskeys() {
+    if (!confirm(`${user!.name} のパスキーをすべて解除しますか？（パスワードでのログインはそのまま使えます）`)) return;
+    setClearingPasskeys(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/users/${user!.id}/passkeys`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setPasskeyCount(0);
+        onSaved();
+      } else {
+        setError(data.message);
+      }
+    } catch {
+      setError("パスキーを解除できませんでした");
+    } finally {
+      setClearingPasskeys(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -286,6 +314,28 @@ function UserFormModal({
           <option value="judge">審査員 — 閲覧のみ＋審査コメントの投稿</option>
         </Select>
       </Field>
+
+      {isEdit && (
+        <Field
+          label="パスキー"
+          hint="登録は本人がアカウント画面で行います。端末の紛失や退職のときは、ここで解除してください。"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-ink">{passkeyCount > 0 ? `${passkeyCount}件 登録済み` : "登録なし"}</span>
+            {passkeyCount > 0 && (
+              <Button
+                variant="dangerGhost"
+                size="sm"
+                onClick={handleClearPasskeys}
+                loading={clearingPasskeys}
+                disabled={clearingPasskeys}
+              >
+                すべて解除
+              </Button>
+            )}
+          </div>
+        </Field>
+      )}
 
       {isEdit && (
         <Field inline label="有効">

@@ -17,6 +17,25 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   comments  EntryComment[]
+  passkeys  Passkey[]
+}
+
+// パスキー（WebAuthn）。1人が複数の端末を登録できる。id は認証器が返す credential ID（base64url）。
+// パスワードはそのまま残しており、パスキーはログイン方法の追加。
+model Passkey {
+  id         String    @id
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicKey  Bytes
+  counter    Int       @default(0)
+  transports String    @default("") // カンマ区切り（internal,hybrid など）
+  deviceType String    // singleDevice | multiDevice
+  backedUp   Boolean   @default(false)
+  name       String
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
 }
 
 model Award {

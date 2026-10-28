@@ -30,6 +30,7 @@ import {
   LogOut,
   Globe,
   BookOpen,
+  KeyRound,
   type LucideIcon,
 } from "@/components/ui/icons";
 
@@ -222,14 +223,20 @@ export function Sidebar({
 
       {/* User Info & Logout */}
       <div className="shrink-0 border-t border-line p-3">
-        {/* 使い方は全権限に出す。メニューを下までスクロールしなくても届くよう、
-            グループではなくお名前の上に固定で置く */}
+        {/* 使い方とアカウント（パスキー・パスワード）は全権限に出す。メニューを下までスクロール
+            しなくても届くよう、グループではなくお名前の上に固定で置く */}
         <div className="mb-2">
           <NavItem
             href={hrefWithYear("/help")}
             label="使い方"
             icon={BookOpen}
             active={pathname.startsWith("/help")}
+          />
+          <NavItem
+            href={hrefWithYear("/account")}
+            label="アカウント"
+            icon={KeyRound}
+            active={pathname.startsWith("/account")}
           />
         </div>
         <div className="flex items-center gap-2.5 px-2 py-1.5 min-w-0">
