@@ -32,7 +32,7 @@ export function publicSiteRewrite(pathname: string): string | null {
 
 /** 管理画面のページ（公開ドメインで開かれたら管理用ドメインへ送る） */
 const ADMIN_PAGES = [
-  "/login", "/entries", "/reviews", "/awards", "/award-settings", "/contacts", "/email-logs", "/forms",
+  "/login", "/campaigns", "/entries", "/reviews", "/awards", "/award-settings", "/contacts", "/email-logs", "/forms",
   "/invoices", "/logs", "/prospects", "/settings", "/site", "/ui-preview", "/upload", "/users",
 ];
 

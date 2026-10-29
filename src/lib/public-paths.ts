@@ -55,6 +55,11 @@ export const PUBLIC_PATHS = [
   "/api/health",
   // 毎日のバックアップ（Vercel Cron）。ログインの代わりに、ルート自身が CRON_SECRET を確かめる
   "/api/cron",
+  // 流通企画の申請ページ（src/app/retail/[token]）と、その送信先（src/app/api/retail/[token]）。
+  // 企業はログインしないので認証を外す。中身はURLに入る推測できない token（RetailInvite）で守り、
+  // token の担当者が答える商品・募集中の企画だけを出す・受け付ける
+  "/retail",
+  "/api/retail",
 ];
 
 /** Public form page: /f/<slug> */
@@ -83,7 +88,7 @@ export function matchesPathPrefix(pathname: string, prefix: string): boolean {
  */
 // "/web" は公開サイト本体（src/app/web）。まだ PUBLIC_PATHS に入れていないので
 // ログインが要る（社内確認用）。公開時に PUBLIC_PATHS へ移す。
-const PUBLIC_PAGE_PATHS = ["/entry", "/results", "/unsubscribe", "/web"];
+const PUBLIC_PAGE_PATHS = ["/entry", "/results", "/unsubscribe", "/web", "/retail"];
 
 /**
  * True if `pathname` belongs to the `(public)` route group, i.e. should

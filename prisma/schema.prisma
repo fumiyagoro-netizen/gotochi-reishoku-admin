@@ -211,6 +211,74 @@ model Entry {
   invoices             Invoice[]
   titles               EntryTitle[]
   siteVoices           SiteVoice[]
+  retailItems          RetailCampaignItem[]
+  retailContact        RetailEntryContact?
+}
+
+// ---------------------------------------------------------------- 流通企画（/campaigns）
+// 受賞商品を小売・通販（松屋銀座・楽天マートなど）で扱う企画。企画ごとに対象年度を選び、その年度の
+// 受賞商品について「企業の回答（参加希望）」と「事務局の確定（採用）」を別々に記録する。
+// 企業は担当者（メールアドレス）ごとの専用URL（RetailInvite）からログインなしで回答する。
+
+model RetailCampaign {
+  id          Int       @id @default(autoincrement())
+  name        String    // 企画名（例: 松屋銀座）
+  period      String    @default("") // 実施時期（自由記入。例: 2027年1月15日〜21日）
+  description String    @default("") // 企業向けの説明（申請ページに出す）
+  memo        String    @default("") // 事務局メモ（企業には出さない）
+  awardIds    Json      // 対象年度（Award.id の配列）。この年度の受賞商品が対象になる
+  status      String    @default("draft") // "draft" 準備中 | "open" 募集中 | "closed" 締切。申請ページに出すのは open だけ
+  deadline    DateTime? // 回答締切（JST のその日の終わり）。過ぎると申請ページで回答を変えられない
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  items       RetailCampaignItem[]
+}
+
+// 企画 × 受賞商品。対象の商品すべてに行を作るのではなく、回答か確定が入ったときに作る
+// （行が無い＝未回答・未定）。受賞の付け外しや対象年度の変更に、行の作り直しが要らないようにするため
+model RetailCampaignItem {
+  id                Int       @id @default(autoincrement())
+  campaignId        Int
+  entryId           Int
+  response          String    @default("") // 企業の回答: "" 未回答 | "yes" 参加希望 | "no" 参加しない
+  respondedAt       DateTime?
+  respondedVia      String    @default("") // "form" 申請ページ | "staff" 事務局が入力
+  respondentName    String    @default("") // 回答した人（申請ページで入力）
+  respondentContact String    @default("") // 回答した人の連絡先（電話番号など）
+  companyNote       String    @default("") // 企業からの連絡事項（申請ページで商品ごとに入力）
+  decision          String    @default("") // 事務局の確定: "" 未定 | "adopted" 採用 | "declined" 見送り
+  decidedAt         DateTime?
+  staffMemo         String    @default("") // 事務局メモ（企業には出さない）
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  campaign          RetailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  entry             Entry          @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, entryId])
+  @@index([entryId])
+}
+
+// 申請ページのURL（担当者＝メールアドレスごとに1つ）。URLを知っていれば誰でもその担当者の商品に
+// 回答できるので、漏れたときは token を作り直す（古いURLは開けなくなる）
+model RetailInvite {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique // 小文字・前後の空白なしで保存
+  token          String    @unique // URL に入る推測できない文字列（32バイトの乱数）
+  lastSentAt     DateTime? // 案内メールを最後に送った日時
+  lastAnsweredAt DateTime? // 申請ページから最後に回答した日時
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// 商品ごとの案内先の差し替え（担当者が替わった・別の人に答えてほしいとき）。行が無い商品は
+// エントリーのメールアドレスの担当者が答える。エントリー本体の担当者・メールアドレスは変えない
+model RetailEntryContact {
+  id        Int      @id @default(autoincrement())
+  entryId   Int      @unique
+  email     String   // 小文字・前後の空白なし
+  name      String   @default("") // 宛名（空ならエントリーの担当者名）
+  updatedAt DateTime @updatedAt
+  entry     Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {

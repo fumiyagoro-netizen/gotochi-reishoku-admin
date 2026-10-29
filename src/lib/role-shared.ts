@@ -13,8 +13,8 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   admin: "すべての操作が可能",
   representative:
-    "エントリーの閲覧・商品到着の記録・審査コメント・メール配信・フォーム・請求書・追客リストが可能。エントリーの編集／受賞・審査状況の設定／エントリーCSVの取り込みと、設定・ユーザー管理・操作ログ・年度管理・サイト管理は不可",
-  editor: "エントリーの閲覧・商品到着の記録・追客リスト・Excel/PDFのダウンロードが可能。エントリーの編集・受賞設定・メール配信・フォーム・請求書は不可",
+    "エントリーの閲覧・商品到着の記録・審査コメント・メール配信・フォーム・請求書・追客リスト・流通企画の閲覧が可能。エントリーの編集／受賞・審査状況の設定／エントリーCSVの取り込み／流通企画の登録・編集と、設定・ユーザー管理・操作ログ・年度管理・サイト管理は不可",
+  editor: "エントリーの閲覧・商品到着の記録・追客リスト・流通企画の閲覧・Excel/PDFのダウンロードが可能。エントリーの編集・受賞設定・メール配信・フォーム・請求書・流通企画の登録・編集は不可",
   viewer: "閲覧のみ（個人情報は非表示）",
   judge: "審査コメントの投稿のみ可能（その他は閲覧のみ・個人情報は非表示）",
 };
@@ -100,6 +100,11 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // now; widen it here (not in the pages) if 代表者 should edit site content.
 // src/app/site/layout.tsx gates every /site page with it; each /api/site/*
 // route must check it again because layouts don't run for API routes.
+//
+// canViewCampaigns / canManageCampaigns は「流通企画」（/campaigns、受賞商品を小売で扱う企画）。
+// 見るのは管理者・代表者・編集者、企画の登録・編集、参加の確定、案内メールと申請ページのURLは
+// 管理者だけ（2026年10月 事務局の指示）。URL を知っていれば誰でもその担当者の商品に回答できるので、
+// 案内・URL の画面は閲覧も canManageCampaigns で絞る。閲覧者・審査員は回答者の連絡先が出るため対象外。
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -125,6 +130,8 @@ export const PERMISSIONS = {
     canSetItemArrival: true,
     canManageInvoices: true,
     canManageSite: true,
+    canViewCampaigns: true,
+    canManageCampaigns: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -148,6 +155,8 @@ export const PERMISSIONS = {
     canSetItemArrival: true,
     canManageInvoices: true,
     canManageSite: false,
+    canViewCampaigns: true,
+    canManageCampaigns: false,
   },
   editor: {
     canDelete: false,
@@ -174,6 +183,8 @@ export const PERMISSIONS = {
     // see the comment above PERMISSIONS.
     canManageInvoices: false,
     canManageSite: false,
+    canViewCampaigns: true,
+    canManageCampaigns: false,
   },
   viewer: {
     canDelete: false,
@@ -192,6 +203,8 @@ export const PERMISSIONS = {
     canSetItemArrival: false,
     canManageInvoices: false,
     canManageSite: false,
+    canViewCampaigns: false,
+    canManageCampaigns: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -213,6 +226,8 @@ export const PERMISSIONS = {
     canSetItemArrival: false,
     canManageInvoices: false,
     canManageSite: false,
+    canViewCampaigns: false,
+    canManageCampaigns: false,
   },
 } as const;
 

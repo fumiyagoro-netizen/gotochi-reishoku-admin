@@ -134,6 +134,65 @@ export async function sendEmail({ to, subject, html, sentBy, attachments, cc }: 
   }
 }
 
+// 1人ずつ文面が違う業務連絡をまとめて送る（流通企画の案内: src/app/api/campaigns/invites）。
+// sendEmail と同じ差出人・Reply-To・EmailLog の残し方で、Resend の batch（100通ずつ）を使う。
+// 配信停止リンクは付けない（受賞企業への個別の業務連絡のため）。Suppression の除外は呼び出し側で行う。
+// 戻り値は messages と同じ並びで、送れたものは true
+export async function sendTransactionalBatch(
+  messages: { to: string; subject: string; html: string }[],
+  sentBy?: string,
+): Promise<boolean[]> {
+  const ok: boolean[] = messages.map(() => false);
+  if (messages.length === 0) return ok;
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not set, skipping batch email");
+    await prisma.emailLog.createMany({
+      data: messages.map((m) => ({ toEmail: m.to, subject: m.subject, status: "failed", sentBy: sentBy || "" })),
+    });
+    return ok;
+  }
+  const { contactEmail } = await getFooterSettingsShared();
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < messages.length; i += BATCH_SIZE) {
+    const chunk = messages.slice(i, i + BATCH_SIZE);
+    let ids: ({ id: string } | undefined)[] = [];
+    try {
+      const { data, error } = await getResend().batch.send(
+        chunk.map((m) => ({
+          from: `${FROM_NAME} <${FROM_EMAIL}>`,
+          to: [m.to],
+          subject: m.subject,
+          html: m.html,
+          ...(contactEmail ? { replyTo: contactEmail } : {}),
+        })),
+      );
+      if (error) console.error("Transactional batch send error:", error);
+      else ids = data?.data ?? [];
+    } catch (error) {
+      console.error("Transactional batch send exception:", error);
+    }
+    // data.data は送った順に並ぶ（sendMarketingEmail と同じ前提）
+    await prisma.emailLog.createMany({
+      data: chunk.map((m, idx) => ({
+        toEmail: m.to,
+        subject: m.subject,
+        status: ids[idx] ? "sent" : "failed",
+        sentBy: sentBy || "",
+        messageId: ids[idx]?.id ?? "",
+      })),
+    });
+    chunk.forEach((_m, idx) => {
+      ok[i + idx] = !!ids[idx];
+    });
+  }
+  return ok;
+}
+
+/** 設定画面の差出人情報（組織名・事務局・住所・問い合わせ先）のフッター */
+export async function transactionalFooterHtml(): Promise<string> {
+  return buildFooterHtml(await getFooterSettingsShared());
+}
+
 // Entry confirmation email to applicant
 export async function sendEntryConfirmation(params: {
   to: string;

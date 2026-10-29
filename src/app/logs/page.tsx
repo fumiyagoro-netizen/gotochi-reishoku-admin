@@ -50,6 +50,13 @@ const ACTION_LABELS: Record<
   site: { label: "サイト公開", tone: "info", dot: "bg-sky-500" },
   site_award: { label: "サイト年度設定", tone: "info", dot: "bg-sky-500" },
   site_import: { label: "取り込み", tone: "info", dot: "bg-sky-500" },
+  retail_invite: { label: "流通企画の案内", tone: "info", dot: "bg-sky-500" },
+  retail_answer: {
+    label: "流通企画の回答",
+    tone: "custom",
+    className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    dot: "bg-emerald-500",
+  },
   unsubscribe: { label: "配信停止", tone: "outline", dot: "bg-zinc-400" },
   resubscribe: {
     label: "配信再開",
