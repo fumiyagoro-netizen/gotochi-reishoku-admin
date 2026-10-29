@@ -10,6 +10,7 @@ import { ItemArrivalSelector, ItemArrivalBadge } from "./item-arrival-selector";
 import { EntryComments, type EntryCommentData } from "./entry-comments";
 import { useRole } from "@/lib/role-context";
 import { isPrizeLevel } from "@/lib/prize-shared";
+import type { EntryPhoto } from "@/lib/entry-photos-shared";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge, GrandPrixBadge, PrizeBadge } from "@/components/ui/badge";
@@ -17,13 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/field-controls";
 import { KeyValue, KeyValueList } from "@/components/ui/key-value";
 import { StickyActionBar } from "@/components/ui/sticky-action-bar";
-import { Download, Pencil, Trophy } from "@/components/ui/icons";
+import { Pencil, Trophy } from "@/components/ui/icons";
+import { EntryPhotos } from "./entry-photos";
 
-interface EntryImage {
-  id: number;
-  imageUrl: string;
-  imageType: string;
-}
 
 interface EntryData {
   id: number;
@@ -58,7 +55,7 @@ interface EntryData {
   prizeLevel: string;
   reviewStatus: string;
   itemArrivalStatus: string;
-  images: EntryImage[];
+  images: EntryPhoto[];
 }
 
 export function EntryDetail({
@@ -81,7 +78,6 @@ export function EntryDetail({
   const { permissions } = useRole();
 
   const mainImage = entry.images.find((img) => img.imageType === "main");
-  const subImages = entry.images.filter((img) => img.imageType === "sub");
 
   function startEdit() {
     setDraft({ ...entry });
@@ -110,7 +106,8 @@ export function EntryDetail({
       });
       const data = await res.json();
       if (data.success) {
-        setEntry({ ...draft });
+        // 編集中に写真を変えていても、写真は画面の今の状態を残す（draft は編集を始めた時点の写し）
+        setEntry((prev) => ({ ...draft, images: prev.images }));
         setEditing(false);
         router.refresh();
       } else {
@@ -300,41 +297,16 @@ export function EntryDetail({
           </Section>
         </div>
 
-        {(mainImage || subImages.length > 0) && (
+        {(entry.images.length > 0 || permissions.canEditEntry) && (
           <div className="mt-6">
             <Section title="商品写真">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {mainImage && (
-                  <div>
-                    <img
-                      src={`/api/images/${mainImage.id}`}
-                      alt="メインビジュアル"
-                      className="w-full aspect-square object-cover rounded-md border border-line bg-surface-muted"
-                    />
-                    <div className="flex items-center justify-center gap-3 mt-1.5">
-                      <p className="text-caption text-ink-subtle">メインビジュアル</p>
-                      {permissions.canDownload && (
-                        <ImageDownloadLink href={`/api/images/${mainImage.id}?download=1`} />
-                      )}
-                    </div>
-                  </div>
-                )}
-                {subImages.map((img, i) => (
-                  <div key={img.id}>
-                    <img
-                      src={`/api/images/${img.id}`}
-                      alt={`サブ画像 ${i + 1}`}
-                      className="w-full aspect-square object-cover rounded-md border border-line bg-surface-muted"
-                    />
-                    <div className="flex items-center justify-center gap-3 mt-1.5">
-                      <p className="text-caption text-ink-subtle">サブ画像 {i + 1}</p>
-                      {permissions.canDownload && (
-                        <ImageDownloadLink href={`/api/images/${img.id}?download=1`} />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <EntryPhotos
+                entryId={entry.id}
+                images={entry.images}
+                onChange={(images) => setEntry((prev) => ({ ...prev, images }))}
+                canEdit={permissions.canEditEntry}
+                canDownload={permissions.canDownload}
+              />
             </Section>
           </div>
         )}
@@ -395,20 +367,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <CardHeader as="h3" title={title} />
       <div className="p-5">{children}</div>
     </Card>
-  );
-}
-
-/** 商品写真の「ダウンロード」。<a download> のまま（要素種を変えない） */
-function ImageDownloadLink({ href }: { href: string }) {
-  return (
-    <a
-      href={href}
-      download
-      className="inline-flex items-center gap-1 rounded-sm text-caption text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-    >
-      <Download className="size-3.5" aria-hidden="true" />
-      ダウンロード
-    </a>
   );
 }
 
