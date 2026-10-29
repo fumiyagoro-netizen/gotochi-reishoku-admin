@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { Children, type ReactNode } from "react";
+import { Children, useState, type ReactNode } from "react";
 import type { Role } from "@/lib/role-shared";
 import { PERMISSIONS } from "@/lib/role-shared";
 import { cn } from "@/lib/cn";
 import { Brand } from "@/components/ui/brand";
 import { Avatar } from "@/components/ui/avatar";
 import { RoleBadge } from "@/components/ui/role-badge";
-import { Button } from "@/components/ui/button";
+import { Popover, MenuItem, MenuSeparator } from "@/components/ui/popover";
 import { Select, type SelectProps } from "@/components/ui/field-controls";
 import { SiteSidebar } from "@/components/site-sidebar";
 import { isSitePath } from "@/lib/site-nav";
@@ -31,6 +31,7 @@ import {
   Globe,
   BookOpen,
   KeyRound,
+  ChevronUp,
   type LucideIcon,
 } from "@/components/ui/icons";
 
@@ -115,6 +116,7 @@ export function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const currentYear = searchParams.get("year") || (awards.length > 0 ? String(awards[0].year) : "");
   const perms = PERMISSIONS[role];
 
@@ -221,42 +223,57 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* User Info & Logout */}
-      <div className="shrink-0 border-t border-line p-3">
-        {/* 使い方とアカウント（パスキー・パスワード）は全権限に出す。メニューを下までスクロール
-            しなくても届くよう、グループではなくお名前の上に固定で置く */}
-        <div className="mb-2">
-          <NavItem
-            href={hrefWithYear("/help")}
-            label="使い方"
-            icon={BookOpen}
-            active={pathname.startsWith("/help")}
-          />
-          <NavItem
-            href={hrefWithYear("/account")}
-            label="アカウント"
-            icon={KeyRound}
-            active={pathname.startsWith("/account")}
-          />
+      {/* 使い方 と お名前。アカウント（パスキー・パスワード）とログアウトはお名前を押すと開くメニューに
+          まとめ、下端を2行に収める。使い方は全権限に出し、メニューを下までスクロールしなくても届くよう
+          グループではなくここに固定で置く */}
+      <div className="shrink-0 space-y-0.5 border-t border-line p-3">
+        <NavItem
+          href={hrefWithYear("/help")}
+          label="使い方"
+          icon={BookOpen}
+          active={pathname.startsWith("/help")}
+        />
+        <div className="relative">
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={userMenuOpen}
+            onClick={() => setUserMenuOpen((open) => !open)}
+            className={cn(
+              "flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+              userMenuOpen || pathname.startsWith("/account") ? "bg-surface shadow-xs" : "hover:bg-surface",
+            )}
+          >
+            <Avatar initial={userName.charAt(0).toUpperCase()} title={userName} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm text-ink" title={userName}>
+                {userName}
+              </p>
+              <RoleBadge role={role} size="sm" />
+            </div>
+            <ChevronUp
+              className={cn("size-4 shrink-0 text-ink-subtle transition-transform", !userMenuOpen && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+          <Popover open={userMenuOpen} onClose={() => setUserMenuOpen(false)} placement="top">
+            <MenuItem
+              onClick={() => {
+                setUserMenuOpen(false);
+                router.push(hrefWithYear("/account"));
+              }}
+            >
+              <KeyRound className="size-4 text-ink-subtle" aria-hidden="true" />
+              アカウント
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem onClick={handleLogout}>
+              <LogOut className="size-4 text-ink-subtle" aria-hidden="true" />
+              ログアウト
+            </MenuItem>
+          </Popover>
         </div>
-        <div className="flex items-center gap-2.5 px-2 py-1.5 min-w-0">
-          <Avatar initial={userName.charAt(0).toUpperCase()} title={userName} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm text-ink" title={userName}>
-              {userName}
-            </p>
-            <RoleBadge role={role} size="sm" />
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-1 w-full justify-start"
-          icon={<LogOut aria-hidden="true" />}
-          onClick={handleLogout}
-        >
-          ログアウト
-        </Button>
       </div>
     </aside>
   );

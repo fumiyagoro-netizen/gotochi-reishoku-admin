@@ -7,6 +7,8 @@ import { Check } from "./icons";
 export type PopoverProps = {
   open: boolean;
   onClose: () => void;
+  /** 既定はトリガーの下。画面の下端にあるトリガー（サイドバーのお名前）は上に開く */
+  placement?: "bottom" | "top";
   children: ReactNode;
 };
 
@@ -14,7 +16,7 @@ export type PopoverProps = {
  * トリガーの下に出るメニュー。親の relative ラッパーは呼び出し側に置く。
  * トリガーには aria-expanded / aria-haspopup="menu" を呼び出し側で付ける。
  */
-export function Popover({ open, onClose, children }: PopoverProps) {
+export function Popover({ open, onClose, placement = "bottom", children }: PopoverProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,7 +45,10 @@ export function Popover({ open, onClose, children }: PopoverProps) {
     <div
       ref={panelRef}
       role="menu"
-      className="absolute left-0 top-full mt-1 z-20 min-w-48 rounded-lg border border-line bg-surface shadow-popover p-1"
+      className={cn(
+        "absolute left-0 z-20 min-w-48 rounded-lg border border-line bg-surface shadow-popover p-1",
+        placement === "top" ? "bottom-full mb-1" : "top-full mt-1",
+      )}
     >
       {children}
     </div>
