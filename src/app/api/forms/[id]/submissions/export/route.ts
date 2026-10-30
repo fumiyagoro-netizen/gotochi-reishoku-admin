@@ -75,7 +75,7 @@ export async function GET(
       const answers = (submission.answers as unknown as FormAnswers) || {};
       const contact = submission.contactId != null ? contactMap.get(submission.contactId) : null;
 
-      const row: Record<string, string> = {
+      const row: Record<string, string | ExcelJS.CellHyperlinkValue> = {
         // Formatted on the server, which runs in UTC — pin Asia/Tokyo so the
         // exported spreadsheet shows the Japan time the answer came in.
         createdAt: new Date(submission.createdAt).toLocaleString("ja-JP", {
@@ -86,6 +86,17 @@ export async function GET(
 
       for (const field of fields) {
         const value = answers[field.id];
+        if (field.type === "file" && value) {
+          // 添付は private な blob に保存しているので、その URL のままでは開けない。
+          // 回答一覧のリンクと同じく、ログインを確かめてから中身を返す
+          // /api/forms/attachment の URL にして書き出す。
+          const links = (Array.isArray(value) ? value : [value])
+            .filter((v) => /^https?:\/\//.test(v))
+            .map((v) => `${request.nextUrl.origin}/api/forms/attachment?url=${encodeURIComponent(v)}`);
+          // 1件ならクリックで開けるリンクにする（1つのセルに付けられるリンクは1つだけ）
+          row[field.id] = links.length === 1 ? { text: links[0], hyperlink: links[0] } : links.join("\n");
+          continue;
+        }
         row[field.id] = Array.isArray(value) ? value.join(", ") : (value ?? "");
       }
 
