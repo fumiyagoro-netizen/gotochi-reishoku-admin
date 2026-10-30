@@ -517,7 +517,7 @@ export default async function SiteTopPage() {
         {supporters.length > 0 && (
           <section className="sec partners" id="partners">
             <div className="wrap sec-head" data-reveal>
-              <div><p className="eyebrow">Partners</p><h2 className="h2">協賛・協力パートナー</h2></div>
+              <div><p className="eyebrow">Partners</p><h2 className="h2">パートナー企業・団体</h2></div>
             </div>
             <div className="logos" aria-label="パートナー一覧">
               <div className="logos-track">
