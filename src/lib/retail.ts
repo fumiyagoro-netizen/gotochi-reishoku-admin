@@ -9,7 +9,15 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "./prisma";
 import { GRAND_PRIX_TITLE } from "./prize-shared";
-import { isAnswerable, normalizeEmail, parseAwardIds, type InviteTag } from "./retail-shared";
+import {
+  adoptedButDeclined,
+  isAnswerable,
+  normalizeEmail,
+  parseAwardIds,
+  participationState,
+  type InviteTag,
+  type ParticipationState,
+} from "./retail-shared";
 
 const APP_URL = process.env.APP_URL || "https://dashboard.gotouchireisyoku.com";
 
@@ -259,6 +267,61 @@ export async function loadCampaignRows(campaign: { id: number; awardIds: unknown
       staffMemo: item?.staffMemo ?? "",
     };
   });
+}
+
+// ---------------------------------------------------------------- 参加状況（流通企画のトップ）
+
+export interface ParticipationCell {
+  state: ParticipationState;
+  /** 採用のあとに企業が「参加しない」と答えた */
+  conflict: boolean;
+}
+
+export interface ParticipationRow extends RetailProduct {
+  /** 企画 id → その企画での参加状況 */
+  cells: Record<number, ParticipationCell>;
+  adoptedCount: number;
+  pendingCount: number;
+}
+
+// 列（企画）の並び: 募集中 → 準備中 → 締切、同じ状態の中は登録順
+const STATUS_ORDER: Record<string, number> = { open: 0, draft: 1, closed: 2 };
+
+/**
+ * すべての企画と、どれかの企画の対象になっている受賞商品（対象年度から外れても回答・確定がある商品を含む）。
+ * サイドバーの年度には連動させない（企画は複数年度にまたがり、運用中の年度はまだ受賞が無いことがあるため）
+ */
+export async function loadParticipationOverview(): Promise<{ campaigns: CampaignSummary[]; rows: ParticipationRow[] }> {
+  const campaigns = (await loadCampaignSummaries()).sort(
+    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || a.id - b.id,
+  );
+  if (campaigns.length === 0) return { campaigns, rows: [] };
+
+  const [winners, items] = await Promise.all([
+    loadWinnerProducts([...new Set(campaigns.flatMap((c) => c.awardIds))]),
+    prisma.retailCampaignItem.findMany({ select: { campaignId: true, entryId: true, response: true, decision: true } }),
+  ]);
+  const recorded = items.filter((i) => i.response || i.decision);
+  const known = new Set(winners.map((p) => p.id));
+  const extra = await loadProductsByIds([...new Set(recorded.map((i) => i.entryId).filter((id) => !known.has(id)))]);
+  const itemOf = new Map(recorded.map((i) => [`${i.campaignId}:${i.entryId}`, i]));
+
+  const rows = [...winners, ...extra].sort(compareProducts).map((p) => {
+    const cells: Record<number, ParticipationCell> = {};
+    for (const c of campaigns) {
+      const item = itemOf.get(`${c.id}:${p.id}`);
+      const inScope = c.awardIds.includes(p.awardId) && p.prizeLevel !== "";
+      cells[c.id] = { state: participationState(item, inScope), conflict: adoptedButDeclined(item) };
+    }
+    const states = Object.values(cells).map((x) => x.state);
+    return {
+      ...p,
+      cells,
+      adoptedCount: states.filter((s) => s === "adopted").length,
+      pendingCount: states.filter((s) => s === "pending").length,
+    };
+  });
+  return { campaigns, rows };
 }
 
 // ---------------------------------------------------------------- 担当者ごとのまとまり（案内・URL）

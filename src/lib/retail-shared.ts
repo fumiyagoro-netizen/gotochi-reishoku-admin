@@ -53,6 +53,36 @@ export const DECISION_BADGE_CLASS: Record<RetailDecision, string> = {
   declined: "bg-rose-50 text-rose-700 ring-rose-600/20",
 };
 
+// 商品 × 企画の参加状況。事務局の確定を優先し、未定なら企業の回答で分ける
+// adopted=採用（この企画に出る）/ pending=参加希望で未定（確定待ち）/ declined=見送り / no=参加しない /
+// none=未回答 / outside=企画の対象年度の外（回答も確定も無い）
+export type ParticipationState = "adopted" | "pending" | "declined" | "no" | "none" | "outside";
+
+export const PARTICIPATION_LABELS: Record<ParticipationState, string> = {
+  adopted: "採用",
+  pending: "確定待ち",
+  declined: "見送り",
+  no: "参加しない",
+  none: "未回答",
+  outside: "対象外",
+};
+
+export function participationState(
+  item: { response: string; decision: string } | null | undefined,
+  inScope = true,
+): ParticipationState {
+  if (item?.decision === "adopted") return "adopted";
+  if (item?.decision === "declined") return "declined";
+  if (item?.response === "yes") return "pending";
+  if (item?.response === "no") return "no";
+  return inScope ? "none" : "outside";
+}
+
+/** 採用のあとに企業が「参加しない」と答えた（採用のまま見落とさないよう印を付ける） */
+export function adoptedButDeclined(item: { response: string; decision: string } | null | undefined): boolean {
+  return item?.decision === "adopted" && item.response === "no";
+}
+
 /** 申請ページで回答を受け付けるか（募集中かつ締切前） */
 export function isAnswerable(campaign: { status: string; deadline: Date | string | null }, now = new Date()): boolean {
   if (campaign.status !== "open") return false;

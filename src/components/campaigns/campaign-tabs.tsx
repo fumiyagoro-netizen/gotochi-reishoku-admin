@@ -5,10 +5,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { useRole } from "@/lib/role-context";
 
-// 流通企画の3画面の切り替え。?year= はサイドバーの年度選択をそのまま引き継ぐ
+// 流通企画の画面の切り替え。?year= はサイドバーの年度選択をそのまま引き継ぐ
 const TABS = [
-  { href: "/campaigns", label: "企画一覧", manageOnly: false },
-  { href: "/campaigns/matrix", label: "商品×企画の表", manageOnly: false },
+  { href: "/campaigns", label: "参加状況", manageOnly: false },
   { href: "/campaigns/invites", label: "案内・申請URL", manageOnly: true },
 ];
 
@@ -18,10 +17,7 @@ export function CampaignTabs() {
   const { permissions } = useRole();
   const year = searchParams.get("year");
 
-  const activeHref =
-    pathname.startsWith("/campaigns/matrix") ? "/campaigns/matrix"
-    : pathname.startsWith("/campaigns/invites") ? "/campaigns/invites"
-    : "/campaigns";
+  const activeHref = pathname.startsWith("/campaigns/invites") ? "/campaigns/invites" : "/campaigns";
 
   return (
     <nav aria-label="流通企画" className="mb-6 inline-flex rounded-md bg-surface-muted p-0.5">

@@ -100,7 +100,7 @@ export function InvitesManager({
       <EmptyState
         icon={Users}
         title="募集中の企画がありません"
-        description="企画一覧で企画の状態を「募集中」にすると、その対象商品の担当者がここに並びます"
+        description="企画の設定で状態を「募集中」にすると、その対象商品の担当者がここに並びます"
       />
     );
   }
