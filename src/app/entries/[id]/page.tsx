@@ -45,13 +45,18 @@ export default async function EntryDetailPage({ params }: Props) {
   });
 
   // 請求状況は管理者だけ（canSeeInvoiceStatus）。見えない役割では読みもしない
-  const invoices = perms.canSeeInvoiceStatus
-    ? await prisma.invoice.findMany({
-        where: { entryId },
-        orderBy: { issueDate: "desc" },
-        select: { id: true, sentAt: true },
-      })
-    : null;
+  const [invoices, mark] = perms.canSeeInvoiceStatus
+    ? await Promise.all([
+        prisma.invoice.findMany({
+          where: { entryId },
+          orderBy: { issueDate: "desc" },
+          select: { id: true, sentAt: true },
+        }),
+        // 手動の請求済みの印（既定では読まない列 — src/lib/prisma.ts）
+        prisma.entry.findUnique({ where: { id: entryId }, select: { invoiceMarkedAt: true } }),
+      ])
+    : [null, null];
+  const markedAt = mark?.invoiceMarkedAt ?? null;
 
   // viewer has canSeePrivateInfo=false and EntryDetail shows a masked
   // placeholder instead of the applicant's contact name / email / phone,
@@ -75,7 +80,16 @@ export default async function EntryDetailPage({ params }: Props) {
       }))}
       currentUserId={currentUser?.userId}
       grandPrix={entry.titles.some((t) => t.name === GRAND_PRIX_TITLE)}
-      invoice={invoices ? { status: invoiceStatusOf(entry.reviewStatus, invoices), latestId: invoices[0]?.id ?? null } : undefined}
+      invoice={
+        invoices
+          ? {
+              status: invoiceStatusOf(entry.reviewStatus, invoices, markedAt),
+              latestId: invoices[0]?.id ?? null,
+              // 送った請求書が無く、手動の印だけで請求済みになっている（＝取り消せる）
+              manual: !!markedAt && !invoices.some((inv) => inv.sentAt),
+            }
+          : undefined
+      }
     />
   );
 }

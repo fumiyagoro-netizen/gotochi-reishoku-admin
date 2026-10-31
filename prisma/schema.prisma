@@ -197,6 +197,11 @@ model Entry {
   // 増えない）、この規模でフルスキャンのコストは無視できる。reviewStatus と対称に
   // しておき、将来 reviewStatus に索引を張るならこちらも同時に検討する。
   itemArrivalStatus    String       @default("")
+  // 管理者が手動で「請求済み」にした日時（src/lib/invoice-status-shared.ts）。商品を複数エントリーした
+  // 企業には1商品の請求書で数量をまとめて請求するため、残りの商品には請求書が付かない — その商品を
+  // 請求済みとして扱うための印。null なら手動指定なし。誰が付けたかは操作ログ（invoice_mark）に残る。
+  // 請求状況は管理者だけに見せるので、src/lib/prisma.ts で既定では読まない（omit）ようにしてある。
+  invoiceMarkedAt      DateTime?
   // 公開サイト（docs/site-migration/README.md §3）。年度の「受賞商品を公開」が ON のとき、受賞のある
   // エントリーのうち sitePublished=true のものがサイトに出る。既定 true = 個別に外したものだけ非公開
   sitePublished        Boolean      @default(true)

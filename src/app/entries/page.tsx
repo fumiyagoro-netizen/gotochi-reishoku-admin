@@ -79,6 +79,8 @@ export default async function EntriesPage({ searchParams }: Props) {
         // 請求状況は見える人の分だけ読む（他の役割には送信日時すらブラウザへ渡さない）
         invoices: perms.canSeeInvoiceStatus ? { select: { sentAt: true } } : false,
       },
+      // 手動の請求済みの印も同じ（既定では読まない — src/lib/prisma.ts）
+      omit: { invoiceMarkedAt: !perms.canSeeInvoiceStatus },
     }),
     prisma.entry.count({ where }),
     prisma.entry.groupBy({
@@ -98,9 +100,9 @@ export default async function EntriesPage({ searchParams }: Props) {
   // before the data is handed to the "use client" EntryTable, not just
   // hidden in JSX. See src/lib/entry-privacy.ts.
   const visibleEntries = (perms.canSeePrivateInfo ? entries : entries.map(stripEntryPrivateFields)).map(
-    ({ invoices, ...entry }) =>
+    ({ invoices, invoiceMarkedAt, ...entry }) =>
       perms.canSeeInvoiceStatus
-        ? { ...entry, invoiceStatus: invoiceStatusOf(entry.reviewStatus, invoices ?? []) }
+        ? { ...entry, invoiceStatus: invoiceStatusOf(entry.reviewStatus, invoices ?? [], invoiceMarkedAt ?? null) }
         : entry,
   );
 

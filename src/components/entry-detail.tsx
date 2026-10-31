@@ -22,6 +22,7 @@ import { KeyValue, KeyValueList } from "@/components/ui/key-value";
 import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { Pencil, Trophy } from "@/components/ui/icons";
 import { EntryPhotos } from "./entry-photos";
+import { InvoiceMarkButton } from "./invoice-mark-button";
 
 
 interface EntryData {
@@ -73,7 +74,7 @@ export function EntryDetail({
   /** グランプリ（称号）が付いているか */
   grandPrix?: boolean;
   /** 請求状況。canSeeInvoiceStatus の人にだけサーバーが渡す（src/app/entries/[id]/page.tsx） */
-  invoice?: { status: InvoiceStatus | null; latestId: number | null };
+  invoice?: { status: InvoiceStatus | null; latestId: number | null; manual: boolean };
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
@@ -240,6 +241,10 @@ export function EntryDetail({
                         >
                           請求書を開く
                         </Link>
+                      )}
+                      {/* 複数商品をまとめて1商品の請求書で請求した残りの商品は、手動で請求済みにする */}
+                      {(invoice.status === "none" || invoice.manual) && (
+                        <InvoiceMarkButton entryId={entry.id} marked={invoice.manual} />
                       )}
                     </div>
                   )}

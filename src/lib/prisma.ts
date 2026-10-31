@@ -23,6 +23,9 @@ export const prisma =
   new PrismaClient({
     datasourceUrl: withConnectTimeout(process.env.DATABASE_URL),
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    // 請求状況（管理者だけに見せる）の手動の印は、エントリーを読むどの画面でも既定では読まない。
+    // エントリーを丸ごとブラウザへ渡す画面が多いため。使う所だけ select / omit: false で明示して読む
+    omit: { entry: { invoiceMarkedAt: true } },
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

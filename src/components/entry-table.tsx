@@ -24,6 +24,7 @@ import {
   Minus,
   Package,
   Plus,
+  Receipt,
   Trophy,
 } from "@/components/ui/icons";
 
@@ -66,7 +67,7 @@ export function EntryTable({
 }) {
   const { permissions } = useRole();
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState<"" | "prize" | "review" | "arrival">("");
+  const [bulkAction, setBulkAction] = useState<"" | "prize" | "review" | "arrival" | "invoice">("");
   const [applying, setApplying] = useState(false);
   const router = useRouter();
   // Both flags gate the checkbox column / bulk bar: editor has
@@ -74,7 +75,8 @@ export function EntryTable({
   // still needs to bulk-toggle item arrival, so the row/column visibility
   // can't be keyed on canSetPrize alone anymore. Each individual bulk
   // action button below stays gated on its own specific flag.
-  const canBulkSelect = permissions.canSetPrize || permissions.canSetItemArrival;
+  const canBulkSelect =
+    permissions.canSetPrize || permissions.canSetItemArrival || permissions.canSeeInvoiceStatus;
 
   // 空状態の colSpan は列構成（チェック列・担当者列の有無）に連動させる
   const colCount = 7 + (canBulkSelect ? 1 : 0) + (permissions.canSeePrivateInfo ? 1 : 0);
@@ -163,6 +165,30 @@ export function EntryTable({
     }
   }
 
+  // 手動の請求済み（複数商品をまとめて1商品の請求書で請求した残りの商品）— src/lib/invoice-status-shared.ts
+  async function applyInvoiceMark(marked: boolean) {
+    setApplying(true);
+    try {
+      const res = await fetch("/api/entries/invoice-mark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entryIds: Array.from(selected), marked }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelected(new Set());
+        setBulkAction("");
+        router.refresh();
+      } else {
+        alert(data.message);
+      }
+    } catch {
+      alert("一括設定に失敗しました");
+    } finally {
+      setApplying(false);
+    }
+  }
+
   return (
     <>
       {/* Bulk Action Bar */}
@@ -188,6 +214,24 @@ export function EntryTable({
                   商品到着を一括設定
                 </Button>
               )}
+              {permissions.canSeeInvoiceStatus && (
+                <Button size="sm" icon={<Receipt />} onClick={() => setBulkAction("invoice")}>
+                  請求状況を一括設定
+                </Button>
+              )}
+            </>
+          )}
+          {bulkAction === "invoice" && (
+            <>
+              <Button size="sm" icon={<Plus />} onClick={() => applyInvoiceMark(true)} disabled={applying}>
+                請求済みにする
+              </Button>
+              <Button size="sm" variant="dangerGhost" onClick={() => applyInvoiceMark(false)} disabled={applying}>
+                手動の請求済みを取り消す
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setBulkAction("")}>
+                キャンセル
+              </Button>
             </>
           )}
           {bulkAction === "prize" && (

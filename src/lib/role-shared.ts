@@ -109,7 +109,8 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // canSeeInvoiceStatus は、エントリー一覧・詳細に出す「請求状況」（未請求／請求書未送信／請求済み —
 // src/lib/invoice-status-shared.ts）と、一覧の請求状況での絞り込み。管理者だけ（2026年11月 事務局の指示）。
 // 請求書そのものを扱う canManageInvoices（代表者も持つ）とは別にしてある — 代表者に請求書の画面は
-// 残したまま、エントリー側の表示だけを管理者に絞るため。
+// 残したまま、エントリー側の表示だけを管理者に絞るため。手動で「請求済み」にする操作
+// （/api/entries/invoice-mark）も同じフラグで判定する — 見えない人が付け外しできても意味が無いため。
 export const PERMISSIONS = {
   admin: {
     canDelete: true,

@@ -57,6 +57,7 @@ const ACTION_LABELS: Record<
     className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
     dot: "bg-emerald-500",
   },
+  invoice_mark: { label: "請求状況", tone: "info", dot: "bg-sky-500" },
   unsubscribe: { label: "配信停止", tone: "outline", dot: "bg-zinc-400" },
   resubscribe: {
     label: "配信再開",
