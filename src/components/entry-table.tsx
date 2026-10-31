@@ -11,7 +11,8 @@ import { PRIZE_LEVELS, PRIZE_DOT_CLASS } from "@/lib/prize-shared";
 import { useRole } from "@/lib/role-context";
 import { cn } from "@/lib/cn";
 import { Table, Th, Td, Tr, Thumb } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Badge, InvoiceStatusBadge } from "@/components/ui/badge";
+import type { InvoiceStatus } from "@/lib/invoice-status-shared";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field-controls";
@@ -39,6 +40,8 @@ interface EntryRow {
   reviewStatus: string;
   itemArrivalStatus: string;
   images: { id: number; imageUrl: string }[];
+  /** canSeeInvoiceStatus の人にだけサーバーが入れる（src/app/entries/page.tsx）。null は請求の対象外 */
+  invoiceStatus?: InvoiceStatus | null;
 }
 
 // 一括設定では「選外」を付けない仕様のため、review-status-shared.ts の配列とは統合しない
@@ -325,6 +328,9 @@ export function EntryTable({
                 <PrizeBadge prizeLevel={entry.prizeLevel} />
                 {entry.prefecture && <Badge tone="neutral">{entry.prefecture}</Badge>}
                 <ReviewBadge status={entry.reviewStatus} />
+                {permissions.canSeeInvoiceStatus && entry.invoiceStatus && (
+                  <InvoiceStatusBadge status={entry.invoiceStatus} />
+                )}
                 <ItemArrivalBadge status={entry.itemArrivalStatus} />
                 <span className="text-caption text-ink-subtle">{entry.answeredAt.split(" ")[0]}</span>
               </div>
@@ -401,7 +407,13 @@ export function EntryTable({
                   </Td>
                 )}
                 <Td>
-                  <ReviewBadge status={entry.reviewStatus} />
+                  {/* 請求状況は審査状況の隣（請求は1次審査を通った商品だけなので） */}
+                  <div className="flex flex-wrap items-center gap-1">
+                    <ReviewBadge status={entry.reviewStatus} />
+                    {permissions.canSeeInvoiceStatus && entry.invoiceStatus && (
+                      <InvoiceStatusBadge status={entry.invoiceStatus} />
+                    )}
+                  </div>
                 </Td>
                 <Td>
                   <ItemArrivalBadge status={entry.itemArrivalStatus} />

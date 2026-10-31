@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { Ban, CircleCheck, Package, PackageCheck, Trophy } from "./icons";
+import { Ban, CircleCheck, Package, PackageCheck, Receipt, Trophy } from "./icons";
 import { GRAND_PRIX_BADGE_CLASS, PRIZE_BADGE_CLASS, isPrizeLevel } from "@/lib/prize-shared";
 import {
   REVIEW_BADGE_CLASS,
@@ -12,6 +12,7 @@ import {
   ITEM_ARRIVAL_STATUSES,
   parseItemArrivalStatuses,
 } from "@/lib/item-arrival-shared";
+import { INVOICE_STATUSES, type InvoiceStatus } from "@/lib/invoice-status-shared";
 
 export type BadgeTone =
   | "neutral"
@@ -124,6 +125,22 @@ export function ReviewBadge({ status, size }: { status: string; size?: BadgeSize
         );
       })}
     </div>
+  );
+}
+
+const INVOICE_STATUS_TONE: Record<InvoiceStatus, BadgeTone> = {
+  none: "outline",
+  unsent: "warning",
+  sent: "success",
+};
+
+/** エントリーの請求状況（未請求／請求書未送信／請求済み）。出すかどうかは呼ぶ側が canSeeInvoiceStatus で決める */
+export function InvoiceStatusBadge({ status, size }: { status: InvoiceStatus; size?: BadgeSize }) {
+  const label = INVOICE_STATUSES.find((s) => s.value === status)?.label ?? status;
+  return (
+    <Badge tone={INVOICE_STATUS_TONE[status]} size={size} icon={<Receipt />}>
+      {label}
+    </Badge>
   );
 }
 

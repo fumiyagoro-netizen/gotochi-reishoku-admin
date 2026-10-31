@@ -5,6 +5,7 @@ import { getCachedCurrentUser } from "@/lib/auth";
 import { maskEntryPrivateFields } from "@/lib/entry-privacy";
 import { EntryDetail } from "@/components/entry-detail";
 import { GRAND_PRIX_TITLE } from "@/lib/prize-shared";
+import { invoiceStatusOf } from "@/lib/invoice-status-shared";
 
 // ブラウザタブの名前（layout の template で「| ご当地冷凍食品大賞」が付く）
 export const metadata = { title: "エントリー詳細" };
@@ -43,6 +44,15 @@ export default async function EntryDetailPage({ params }: Props) {
     orderBy: { createdAt: "desc" },
   });
 
+  // 請求状況は管理者だけ（canSeeInvoiceStatus）。見えない役割では読みもしない
+  const invoices = perms.canSeeInvoiceStatus
+    ? await prisma.invoice.findMany({
+        where: { entryId },
+        orderBy: { issueDate: "desc" },
+        select: { id: true, sentAt: true },
+      })
+    : null;
+
   // viewer has canSeePrivateInfo=false and EntryDetail shows a masked
   // placeholder instead of the applicant's contact name / email / phone,
   // but Server Component props are shipped to the browser verbatim
@@ -65,6 +75,7 @@ export default async function EntryDetailPage({ params }: Props) {
       }))}
       currentUserId={currentUser?.userId}
       grandPrix={entry.titles.some((t) => t.name === GRAND_PRIX_TITLE)}
+      invoice={invoices ? { status: invoiceStatusOf(entry.reviewStatus, invoices), latestId: invoices[0]?.id ?? null } : undefined}
     />
   );
 }

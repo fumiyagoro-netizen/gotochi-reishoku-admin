@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DeleteEntryButton } from "./delete-entry-button";
 import { PdfDownloadButton } from "./pdf-download-button";
@@ -13,7 +14,8 @@ import { isPrizeLevel } from "@/lib/prize-shared";
 import type { EntryPhoto } from "@/lib/entry-photos-shared";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Card, CardHeader } from "@/components/ui/card";
-import { Badge, GrandPrixBadge, PrizeBadge } from "@/components/ui/badge";
+import { Badge, GrandPrixBadge, InvoiceStatusBadge, PrizeBadge } from "@/components/ui/badge";
+import type { InvoiceStatus } from "@/lib/invoice-status-shared";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/field-controls";
 import { KeyValue, KeyValueList } from "@/components/ui/key-value";
@@ -63,12 +65,15 @@ export function EntryDetail({
   comments,
   currentUserId,
   grandPrix = false,
+  invoice,
 }: {
   entry: EntryData;
   comments: EntryCommentData[];
   currentUserId?: number;
   /** グランプリ（称号）が付いているか */
   grandPrix?: boolean;
+  /** 請求状況。canSeeInvoiceStatus の人にだけサーバーが渡す（src/app/entries/[id]/page.tsx） */
+  invoice?: { status: InvoiceStatus | null; latestId: number | null };
 }) {
   const [entry, setEntry] = useState(initialEntry);
   const [editing, setEditing] = useState(false);
@@ -198,7 +203,7 @@ export function EntryDetail({
                   <Badge tone="neutral">回答番号: {entry.answerNo}</Badge>
                 </div>
               </div>
-              {/* 受賞／審査／到着を横 1 行に。中身が null の枠は empty:hidden で gap に数えない */}
+              {/* 受賞／審査（＋請求）／到着を横 1 行に。中身が null の枠は empty:hidden で gap に数えない */}
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <div className="empty:hidden">
                   {permissions.canSetPrize ? (
@@ -217,12 +222,27 @@ export function EntryDetail({
                     )
                   ) : null}
                 </div>
-                <div className="empty:hidden">
+                <div className="flex flex-wrap items-center gap-2 empty:hidden">
                   {permissions.canSetPrize ? (
                     <ReviewStatusSelector entryId={entry.id} currentStatus={entry.reviewStatus} />
                   ) : entry.reviewStatus ? (
                     <ReviewBadge status={entry.reviewStatus} />
                   ) : null}
+                  {/* 請求は1次審査を通った商品だけなので、請求状況は審査状況の隣に置く（対象外は null） */}
+                  {permissions.canSeeInvoiceStatus && invoice?.status && (
+                    <div className="flex items-center gap-2">
+                      <InvoiceStatusBadge status={invoice.status} />
+                      {/* 請求書が複数あるときは発行日がいちばん新しいもの */}
+                      {permissions.canManageInvoices && invoice.latestId !== null && (
+                        <Link
+                          href={`/invoices/${invoice.latestId}/edit`}
+                          className="rounded-md text-caption text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                        >
+                          請求書を開く
+                        </Link>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="empty:hidden">
                   {permissions.canSetItemArrival ? (

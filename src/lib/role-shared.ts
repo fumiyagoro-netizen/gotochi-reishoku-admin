@@ -105,6 +105,11 @@ export const ROLE_DESCRIPTIONS: Record<Role, string> = {
 // 見るのは管理者・代表者・編集者、企画の登録・編集、参加の確定、案内メールと申請ページのURLは
 // 管理者だけ（2026年10月 事務局の指示）。URL を知っていれば誰でもその担当者の商品に回答できるので、
 // 案内・URL の画面は閲覧も canManageCampaigns で絞る。閲覧者・審査員は回答者の連絡先が出るため対象外。
+//
+// canSeeInvoiceStatus は、エントリー一覧・詳細に出す「請求状況」（未請求／請求書未送信／請求済み —
+// src/lib/invoice-status-shared.ts）と、一覧の請求状況での絞り込み。管理者だけ（2026年11月 事務局の指示）。
+// 請求書そのものを扱う canManageInvoices（代表者も持つ）とは別にしてある — 代表者に請求書の画面は
+// 残したまま、エントリー側の表示だけを管理者に絞るため。
 export const PERMISSIONS = {
   admin: {
     canDelete: true,
@@ -132,6 +137,7 @@ export const PERMISSIONS = {
     canManageSite: true,
     canViewCampaigns: true,
     canManageCampaigns: true,
+    canSeeInvoiceStatus: true,
   },
   // Sits between admin and editor: same as admin except cannot delete entries.
   // Settings/user-management/audit-log/award-management access is NOT
@@ -157,6 +163,7 @@ export const PERMISSIONS = {
     canManageSite: false,
     canViewCampaigns: true,
     canManageCampaigns: false,
+    canSeeInvoiceStatus: false,
   },
   editor: {
     canDelete: false,
@@ -185,6 +192,7 @@ export const PERMISSIONS = {
     canManageSite: false,
     canViewCampaigns: true,
     canManageCampaigns: false,
+    canSeeInvoiceStatus: false,
   },
   viewer: {
     canDelete: false,
@@ -205,6 +213,7 @@ export const PERMISSIONS = {
     canManageSite: false,
     canViewCampaigns: false,
     canManageCampaigns: false,
+    canSeeInvoiceStatus: false,
   },
   // Same as viewer in every respect (read-only, no private info) except it
   // may post entry review comments. Introduced so outside judges can leave
@@ -228,6 +237,7 @@ export const PERMISSIONS = {
     canManageSite: false,
     canViewCampaigns: false,
     canManageCampaigns: false,
+    canSeeInvoiceStatus: false,
   },
 } as const;
 

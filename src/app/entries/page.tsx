@@ -2,6 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { resolveAwardId, resolveAwardYear } from "@/lib/award";
 import { getCurrentRole, getPermissions } from "@/lib/role";
 import { stripEntryPrivateFields } from "@/lib/entry-privacy";
+import {
+  INVOICE_STATUSES,
+  invoiceStatusOf,
+  invoiceStatusWhere,
+  isInvoiceStatus,
+} from "@/lib/invoice-status-shared";
 import { EntryTable } from "@/components/entry-table";
 import { PageContainer, PageHeader } from "@/components/ui/page";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -18,6 +24,7 @@ interface Props {
   searchParams: Promise<{
     q?: string;
     category?: string;
+    invoice?: string;
     page?: string;
     year?: string;
   }>;
@@ -35,6 +42,9 @@ export default async function EntriesPage({ searchParams }: Props) {
   const yearParam = year ? `&year=${year}` : "";
   const role = await getCurrentRole();
   const perms = getPermissions(role);
+  // 請求状況の絞り込みは見える人（管理者）だけ。他の役割では URL に付いていても無視する
+  const invoice =
+    perms.canSeeInvoiceStatus && params.invoice && isInvoiceStatus(params.invoice) ? params.invoice : "";
 
   const where = {
     AND: [
@@ -51,6 +61,7 @@ export default async function EntriesPage({ searchParams }: Props) {
           }
         : {},
       category ? { productCategory: category } : {},
+      invoice ? invoiceStatusWhere(invoice) : {},
     ],
   };
 
@@ -65,6 +76,8 @@ export default async function EntriesPage({ searchParams }: Props) {
           where: { imageType: "main" },
           take: 1,
         },
+        // 請求状況は見える人の分だけ読む（他の役割には送信日時すらブラウザへ渡さない）
+        invoices: perms.canSeeInvoiceStatus ? { select: { sentAt: true } } : false,
       },
     }),
     prisma.entry.count({ where }),
@@ -84,11 +97,14 @@ export default async function EntriesPage({ searchParams }: Props) {
   // contact name / email / phone / submitter IP must be stripped here,
   // before the data is handed to the "use client" EntryTable, not just
   // hidden in JSX. See src/lib/entry-privacy.ts.
-  const visibleEntries = perms.canSeePrivateInfo
-    ? entries
-    : entries.map(stripEntryPrivateFields);
+  const visibleEntries = (perms.canSeePrivateInfo ? entries : entries.map(stripEntryPrivateFields)).map(
+    ({ invoices, ...entry }) =>
+      perms.canSeeInvoiceStatus
+        ? { ...entry, invoiceStatus: invoiceStatusOf(entry.reviewStatus, invoices ?? []) }
+        : entry,
+  );
 
-  const filtered = Boolean(q || category);
+  const filtered = Boolean(q || category || invoice);
 
   return (
     <PageContainer>
@@ -159,6 +175,23 @@ export default async function EntriesPage({ searchParams }: Props) {
                 ))}
               </Select>
             </div>
+            {perms.canSeeInvoiceStatus && (
+              <div className="w-40">
+                <Select
+                  name="invoice"
+                  defaultValue={invoice}
+                  aria-label="請求状況"
+                  data-active={invoice ? "true" : undefined}
+                >
+                  <option value="">請求状況：すべて</option>
+                  {INVOICE_STATUSES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
             <Button type="submit" icon={<Search />}>
               検索
             </Button>
@@ -175,7 +208,7 @@ export default async function EntriesPage({ searchParams }: Props) {
         totalPages={totalPages}
         total={total}
         pageSize={PAGE_SIZE}
-        hrefFor={(n) => `/entries?q=${q}&category=${category}&page=${n}${yearParam}`}
+        hrefFor={(n) => `/entries?q=${q}&category=${category}${invoice ? `&invoice=${invoice}` : ""}&page=${n}${yearParam}`}
       />
     </PageContainer>
   );
