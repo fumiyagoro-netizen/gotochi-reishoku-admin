@@ -46,7 +46,8 @@ export function EmptyState({
     return (
       <tr>
         <td colSpan={colSpan} className={cn("px-4 text-center", padding)}>
-          {body}
+          {/* スマホでは表が画面より広く横にスクロールするので、文言を見えている幅の中に留める */}
+          <div className="max-md:sticky max-md:left-0 max-md:w-[calc(100vw-4.25rem)]">{body}</div>
         </td>
       </tr>
     );

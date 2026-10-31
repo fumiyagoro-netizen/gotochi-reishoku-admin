@@ -16,6 +16,7 @@ export {
   Users,
   Settings,
   History,
+  Menu,
   Snowflake,
   LogOut,
   Globe,

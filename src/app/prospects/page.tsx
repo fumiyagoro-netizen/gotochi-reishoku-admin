@@ -535,7 +535,7 @@ function ProspectFormModal({
     >
       {error && <Alert tone="danger">{error}</Alert>}
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
         <Field label="メーカー名">
           <Input
             type="text"
@@ -597,7 +597,7 @@ function ProspectFormModal({
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
         <Field label="担当者">
           <Input
             type="text"

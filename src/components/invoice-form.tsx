@@ -451,7 +451,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-x-6 gap-y-5">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-3">
             <Field label="発行日">
               <Input
                 type="date"
@@ -489,7 +489,7 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
           title="明細"
           actions={
             <>
-              <div className="w-64">
+              <div className="w-full sm:w-64">
                 <Select
                   size="sm"
                   value={selectedMasterId}
@@ -520,8 +520,9 @@ export function InvoiceForm({ initial }: { initial?: InvoiceData }) {
         />
 
         {/* Card を二重にしないため Table 部品ではなく素の table に Th / Td / Tr を使う */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm [&_td]:py-1.5">
+        {/* relative と最低幅の理由は ui/table.tsx の Table と同じ */}
+        <div className="relative overflow-x-auto">
+          <table className="w-full text-sm [&_td]:py-1.5 max-md:min-w-[40rem]">
             <thead>
               <tr>
                 <Th width="w-36">日付</Th>

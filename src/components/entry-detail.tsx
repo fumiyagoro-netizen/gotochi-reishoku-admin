@@ -152,9 +152,9 @@ export function EntryDetail({
 
       {/* もとは html2canvas の撮影範囲だった箱。PDF はサーバー側で組むようになったので
           撮影のための存在理由は無くなったが、詳細を白い紙のように見せる枠として残す
-          （外すと余白と背景が変わるため）。負マージンは PageContainer の px-8 と
-          PageHeader の mb-6 を打ち消して、横幅 1024px の見え方を保つためのもの */}
-      <div id="entry-detail" className="-mx-8 -mt-6 bg-surface p-8">
+          （外すと余白と背景が変わるため）。負マージンは PageContainer の左右余白と
+          PageHeader の mb-6 を打ち消して、横幅 1024px の見え方を保つためのもの。スマホでは余白ごと詰める */}
+      <div id="entry-detail" className="-mx-4 -mt-6 bg-surface p-4 md:-mx-8 md:p-8">
         {/* PrizeSelector のポップオーバーがはみ出すので、このカードには clip を付けない */}
         <Card className="mb-6">
           <div className="flex items-start gap-4">
@@ -167,7 +167,8 @@ export function EntryDetail({
             )}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-                <div className="min-w-0 flex-1">
+                {/* basis-48: 幅が足りないとき（スマホ）は見出しを縦に潰さず、右のバッジを下の行へ回す */}
+                <div className="min-w-0 flex-1 basis-48">
                   <h2 className="text-lg font-semibold text-ink">
                     {editing ? (
                       <Input

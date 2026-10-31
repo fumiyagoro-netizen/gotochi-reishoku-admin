@@ -174,7 +174,7 @@ export default function AwardSettingsPage() {
                   <Alert tone="danger">{error}</Alert>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                 <Field label="年度">
                   <Input
                     type="number"
@@ -213,8 +213,9 @@ export default function AwardSettingsPage() {
         {awards.map((award) => (
           // 受付中の年度だけ枠を強調する（ボタン色ではなく面で「今の状態」を示す）
           <Card key={award.id} tone={award.isActive ? "active" : "default"}>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-4">
+            {/* 幅が足りないとき（スマホ）はボタン列を年度名の下の行へ回す */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex min-w-0 flex-1 basis-60 items-center gap-4">
                 <div className="shrink-0 text-center">
                   <p className="text-2xl font-semibold tabular-nums tracking-tight text-ink">{award.year}</p>
                   <p className="text-caption text-ink-subtle">年度</p>
@@ -270,7 +271,7 @@ export default function AwardSettingsPage() {
             {/* Edit panel */}
             {editingId === award.id && (
               <div className="mt-4 space-y-5 border-t border-line pt-4">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                   <Field label="受付開始日">
                     <Input
                       type="date"

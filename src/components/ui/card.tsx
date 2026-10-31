@@ -74,12 +74,13 @@ export type CardHeaderProps = {
 /** Card padding="none" の先頭に置く見出し行 */
 export function CardHeader({ title, description, actions, as }: CardHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+    // 幅が足りないとき（スマホ）は actions を見出しの下の行へ回す
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5">
       <div className="min-w-0">
         <CardTitle as={as}>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { useRole } from "@/lib/role-context";
 import { cn } from "@/lib/cn";
 import { Table, Th, Td, Tr, Thumb } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field-controls";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -290,92 +291,141 @@ export function EntryTable({
         </BulkActionBar>
       )}
 
-      {/* Table */}
-      <Table>
-        <thead>
-          <tr>
+      {/* スマホ（md 未満）は表をやめ、1件ずつのカードで並べる。中身と並び順は表と同じ */}
+      <div className="space-y-2 md:hidden">
+        {canBulkSelect && entries.length > 0 && (
+          <label className="flex items-center gap-2 px-3 text-caption text-ink-muted">
+            <Checkbox checked={selected.size === entries.length} onChange={toggleAll} />
+            このページをすべて選択
+          </label>
+        )}
+        {entries.map((entry) => (
+          <Card key={entry.id} padding="none" className={cn("flex items-start gap-3 p-3", selected.has(entry.id) && "border-ink")}>
             {canBulkSelect && (
-              <Th width="w-10" srLabel="選択">
+              <div className="pt-2.5">
                 <Checkbox
-                  checked={entries.length > 0 && selected.size === entries.length}
-                  onChange={toggleAll}
-                  aria-label="このページの全件を選択"
+                  checked={selected.has(entry.id)}
+                  onChange={() => toggle(entry.id)}
+                  aria-label={`${entry.productName}を選択`}
                 />
-              </Th>
+              </div>
             )}
-            <Th width="w-16">写真</Th>
-            <Th>商品名</Th>
-            <Th>企業名</Th>
-            <Th width="w-24">ご当地</Th>
-            {permissions.canSeePrivateInfo && <Th>担当者</Th>}
-            <Th>審査状況</Th>
-            <Th>商品到着</Th>
-            <Th>回答日</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {entries.map((entry) => (
-            <Tr key={entry.id} selected={selected.has(entry.id)}>
+            <Thumb src={entry.images[0] ? `/api/images/${entry.images[0].id}` : undefined} alt="" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <div>
+                <Link href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`} className={cn(LINK_CLASS, "font-medium")}>
+                  {entry.productName}
+                </Link>
+                <p className="text-caption text-ink-muted">
+                  {entry.companyName}
+                  {permissions.canSeePrivateInfo && `（${entry.contactLastName} ${entry.contactFirstName}）`}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <PrizeBadge prizeLevel={entry.prizeLevel} />
+                {entry.prefecture && <Badge tone="neutral">{entry.prefecture}</Badge>}
+                <ReviewBadge status={entry.reviewStatus} />
+                <ItemArrivalBadge status={entry.itemArrivalStatus} />
+                <span className="text-caption text-ink-subtle">{entry.answeredAt.split(" ")[0]}</span>
+              </div>
+            </div>
+          </Card>
+        ))}
+        {entries.length === 0 && (
+          <Card className="text-center text-sm text-ink-muted">
+            {filtered ? "検索条件に一致するエントリーがありません" : "エントリーデータがありません"}
+          </Card>
+        )}
+      </div>
+
+      {/* Table */}
+      <div className="hidden md:block">
+        <Table>
+          <thead>
+            <tr>
               {canBulkSelect && (
-                <Td>
+                <Th width="w-10" srLabel="選択">
                   <Checkbox
-                    checked={selected.has(entry.id)}
-                    onChange={() => toggle(entry.id)}
-                    aria-label={`${entry.productName}を選択`}
+                    checked={entries.length > 0 && selected.size === entries.length}
+                    onChange={toggleAll}
+                    aria-label="このページの全件を選択"
+                  />
+                </Th>
+              )}
+              <Th width="w-16">写真</Th>
+              <Th>商品名</Th>
+              <Th>企業名</Th>
+              <Th width="w-24">ご当地</Th>
+              {permissions.canSeePrivateInfo && <Th>担当者</Th>}
+              <Th>審査状況</Th>
+              <Th>商品到着</Th>
+              <Th>回答日</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((entry) => (
+              <Tr key={entry.id} selected={selected.has(entry.id)}>
+                {canBulkSelect && (
+                  <Td>
+                    <Checkbox
+                      checked={selected.has(entry.id)}
+                      onChange={() => toggle(entry.id)}
+                      aria-label={`${entry.productName}を選択`}
+                    />
+                  </Td>
+                )}
+                <Td>
+                  <Thumb
+                    src={entry.images[0] ? `/api/images/${entry.images[0].id}` : undefined}
+                    alt=""
                   />
                 </Td>
-              )}
-              <Td>
-                <Thumb
-                  src={entry.images[0] ? `/api/images/${entry.images[0].id}` : undefined}
-                  alt=""
-                />
-              </Td>
-              <Td primary>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
-                    className={LINK_CLASS}
-                  >
-                    {entry.productName}
-                  </Link>
-                  <PrizeBadge prizeLevel={entry.prizeLevel} />
-                </div>
-              </Td>
-              <Td>{entry.companyName}</Td>
-              <Td>
-                {entry.prefecture && <Badge tone="neutral">{entry.prefecture}</Badge>}
-              </Td>
-              {permissions.canSeePrivateInfo && (
-                <Td>
-                  {entry.contactLastName} {entry.contactFirstName}
+                <Td primary>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/entries/${entry.id}${year ? `?year=${year}` : ""}`}
+                      className={LINK_CLASS}
+                    >
+                      {entry.productName}
+                    </Link>
+                    <PrizeBadge prizeLevel={entry.prizeLevel} />
+                  </div>
                 </Td>
-              )}
-              <Td>
-                <ReviewBadge status={entry.reviewStatus} />
-              </Td>
-              <Td>
-                <ItemArrivalBadge status={entry.itemArrivalStatus} />
-              </Td>
-              <Td subtle nowrap>
-                {entry.answeredAt.split(" ")[0]}
-              </Td>
-            </Tr>
-          ))}
-          {entries.length === 0 && (
-            <EmptyState
-              colSpan={colCount}
-              icon={ClipboardList}
-              title="エントリーデータがありません"
-              description={
-                filtered
-                  ? "検索条件に一致するエントリーがありません。条件を変えるかクリアしてください"
-                  : "エントリーが取り込まれると、ここに表示されます"
-              }
-            />
-          )}
-        </tbody>
-      </Table>
+                <Td>{entry.companyName}</Td>
+                <Td>
+                  {entry.prefecture && <Badge tone="neutral">{entry.prefecture}</Badge>}
+                </Td>
+                {permissions.canSeePrivateInfo && (
+                  <Td>
+                    {entry.contactLastName} {entry.contactFirstName}
+                  </Td>
+                )}
+                <Td>
+                  <ReviewBadge status={entry.reviewStatus} />
+                </Td>
+                <Td>
+                  <ItemArrivalBadge status={entry.itemArrivalStatus} />
+                </Td>
+                <Td subtle nowrap>
+                  {entry.answeredAt.split(" ")[0]}
+                </Td>
+              </Tr>
+            ))}
+            {entries.length === 0 && (
+              <EmptyState
+                colSpan={colCount}
+                icon={ClipboardList}
+                title="エントリーデータがありません"
+                description={
+                  filtered
+                    ? "検索条件に一致するエントリーがありません。条件を変えるかクリアしてください"
+                    : "エントリーが取り込まれると、ここに表示されます"
+                }
+              />
+            )}
+          </tbody>
+        </Table>
+      </div>
     </>
   );
 }

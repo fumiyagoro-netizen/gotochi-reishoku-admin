@@ -16,11 +16,15 @@ export type TableProps = {
 export function Table({ fixed, density = "default", children }: TableProps) {
   return (
     <Card padding="none" clip>
-      <div className="overflow-x-auto">
+      {/* relative: セル内の sr-only（position:absolute）の基準をこの枠にし、横スクロールの外へはみ出させない
+          （基準が body だと、表の右端の位置にページ全体が横に広がる） */}
+      <div className="relative overflow-x-auto">
         {/* density は context を使わず table 側から td を指定する（hooks なしでサーバーから使うため） */}
         <table
           className={cn(
-            "w-full text-sm",
+            // スマホ（md 未満）は列が縦に潰れないよう、表と文字のセルに最低幅を持たせ、外側の overflow-x-auto で
+            // 横にスクロールさせる（チェック・写真・ボタン・アイコンだけのセルは狭いままでよいので除く）
+            "w-full text-sm max-md:min-w-[40rem] max-md:[&_td:not(:has(input,img,svg,button))]:min-w-24",
             fixed && "table-fixed",
             density === "compact" && "[&_td]:py-1.5",
           )}

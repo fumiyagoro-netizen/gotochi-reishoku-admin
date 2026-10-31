@@ -11,9 +11,9 @@ const WIDTH: Record<PageWidth, string> = {
   detail: "max-w-5xl",
 };
 
-/** ページ全体の余白と最大幅。一覧 = list、入力フォーム = form、詳細 = detail */
+/** ページ全体の余白と最大幅。一覧 = list、入力フォーム = form、詳細 = detail。余白はスマホ（md 未満）で詰める */
 export function PageContainer({ width = "list", children }: { width?: PageWidth; children: ReactNode }) {
-  return <div className={cn("w-full min-w-0 px-8 py-6", WIDTH[width])}>{children}</div>;
+  return <div className={cn("w-full min-w-0 px-4 py-4 md:px-8 md:py-6", WIDTH[width])}>{children}</div>;
 }
 
 export type BackLinkProps = {
@@ -73,7 +73,8 @@ export function PageHeader({
           {backLabel ?? "戻る"}
         </BackLink>
       )}
-      <div className="flex items-start justify-between gap-4">
+      {/* スマホ（sm 未満）は見出しの下にボタン列を回す */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         {/* 見出し側を flex-1（basis 0）にすると、余った幅は見出しが取り、actions は自分の幅がページ幅を
             超えたときだけ縮んで折り返す。長い件名（email-logs 明細）は従来どおり先に truncate される */}
         <div className="min-w-0 flex-1">
@@ -92,7 +93,7 @@ export function PageHeader({
           </h1>
           {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
         </div>
-        {actions && <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>}
+        {actions && <div className="flex flex-wrap items-center gap-2 sm:justify-end">{actions}</div>}
       </div>
       {children && <div className="mt-5">{children}</div>}
     </div>

@@ -180,7 +180,7 @@ export default async function SiteHomePage() {
           </Table>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <Card padding="none" as="section">
             <CardHeader title="トップページの構成" description="上から順。押すと編集画面へ移ります" />
             <ul className="divide-y divide-line">

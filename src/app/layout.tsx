@@ -51,9 +51,10 @@ export default async function RootLayout({
         <RoleProvider role={user.role}>
           <div className="admin-shell flex min-h-screen">
             <SidebarWrapper awards={awards} role={user.role} userName={user.email} />
-            {/* サイドバーは fixed なので、幅 spacing.sidebar と同じ pl-sidebar で本文を逃がす。
+            {/* サイドバーは fixed なので、幅 spacing.sidebar と同じ md:pl-sidebar で本文を逃がす。スマホ（md 未満）は
+                メニューを引き出し式にし、上のバー（h-14）の分を pt-14 で空ける（sidebar-wrapper.tsx）。
                 min-w-0 は幅広テーブルで main が横にはみ出さないため */}
-            <main className="flex-1 pl-sidebar min-w-0">{children}</main>
+            <main className="flex-1 min-w-0 pt-14 md:pl-sidebar md:pt-0">{children}</main>
           </div>
         </RoleProvider>
       </body>

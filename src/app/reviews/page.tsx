@@ -155,7 +155,7 @@ export default async function ReviewsPage({ searchParams }: Props) {
 
       <div className="mb-6 space-y-4">
         {/* Status Summary Cards */}
-        <FilterGroup label="審査状況" className="grid grid-cols-3 gap-3">
+        <FilterGroup label="審査状況" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {REVIEW_TILES.map((value) => (
             <FilterTile
               key={value}
@@ -174,7 +174,7 @@ export default async function ReviewsPage({ searchParams }: Props) {
             that still haven't arrived. */}
         <FilterGroup
           label="商品到着状況（同じタイルをもう一度押すと解除）"
-          className="grid grid-cols-3 gap-3"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3"
         >
           {ARRIVAL_FILTERS.map((af) => (
             <FilterTile

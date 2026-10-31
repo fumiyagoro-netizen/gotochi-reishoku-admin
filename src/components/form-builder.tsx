@@ -273,7 +273,7 @@ export function FormBuilder({ initial }: { initial?: FormData }) {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
             <Field label="状態">
               <Select value={form.status} onChange={(e) => update("status", e.target.value)}>
                 <option value="draft">下書き</option>
@@ -555,7 +555,7 @@ function FieldEditor({
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
             <Field label="種類">
               <Select
                 size="sm"
@@ -686,7 +686,7 @@ function FieldEditor({
           )}
 
           {!isDisplay && (
-            <div className="grid grid-cols-2 items-end gap-x-4 gap-y-4">
+            <div className="grid grid-cols-1 items-end gap-x-4 gap-y-4 sm:grid-cols-2">
               <Field label="連絡先へのマッピング">
                 <Select
                   size="sm"

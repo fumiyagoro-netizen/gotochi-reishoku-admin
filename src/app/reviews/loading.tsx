@@ -9,7 +9,7 @@ export default function Loading() {
       <div className="mb-6 space-y-4">
         <div>
           <Skeleton className="mb-1.5 h-4 w-16" />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Skeleton className="h-14" />
             <Skeleton className="h-14" />
             <Skeleton className="h-14" />
@@ -17,7 +17,7 @@ export default function Loading() {
         </div>
         <div>
           <Skeleton className="mb-1.5 h-4 w-40" />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Skeleton className="h-14" />
             <Skeleton className="h-14" />
             <Skeleton className="h-14" />
