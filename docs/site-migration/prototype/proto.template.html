@@ -546,6 +546,23 @@ html.is-locked,html.is-locked body{overflow:hidden}
   .marquee-track,.logos-track{animation:none}
   .timeline{--p:1}
 }
+
+/* ===== v6: モーダルは高さを一定にして、本文だけスクロール ===== */
+/* 以前は .modal-box ごとスクロールしていたため、長い文章だと写真まで一緒に流れ、
+   文章量でモーダルの高さも大きく変わっていた。写真側は固定して本文だけ動かす。 */
+.modal-box{overflow:hidden}
+.pm,.vm{height:min(78vh,640px)}
+.pm-ph,.vm-ph{height:100%;min-height:0}
+.pm-body,.vm-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;align-content:start}
+/* スクロールできることが分かるよう、本文の下端をうっすら隠す */
+.pm-body,.vm-body{scrollbar-width:thin}
+@media(max-width:760px){
+  .pm,.vm{height:min(86dvh,780px);grid-template-columns:1fr;grid-template-rows:minmax(0,40%) minmax(0,1fr)}
+  .pm-ph,.vm-ph{aspect-ratio:auto;height:100%;min-height:0}
+}
+@media(max-height:560px){
+  .pm,.vm{height:calc(100dvh - 32px)}
+}
 </style>
 
 <div class="banner" id="banner">
