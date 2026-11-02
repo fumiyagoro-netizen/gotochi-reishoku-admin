@@ -1,4 +1,7 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { SITE_PUBLIC_REVALIDATE_SECONDS, SITE_PUBLIC_TAG } from "@/lib/site-cache";
 import { utcToJstDateInputValue } from "@/lib/award-dates";
 import { GRAND_PRIX_TITLE } from "@/lib/prize-shared";
 import { normalizeOverview, type SiteOverview } from "@/lib/site-overview-shared";
@@ -45,7 +48,7 @@ export type SiteHeroTile = {
   grandPrix: boolean;
 };
 
-export type SitePublicData = Awaited<ReturnType<typeof loadSitePublicData>>;
+export type SitePublicData = Awaited<ReturnType<typeof buildSitePublicData>>;
 
 /** 商品写真の URL。サイト用に選んだ写真（sitePhotoIds）が先、無ければメイン→サブの順 */
 function photoUrls(
@@ -62,7 +65,8 @@ function photoUrls(
   return ordered.slice(0, 3).map((id) => `/api/images/${id}`);
 }
 
-export async function loadSitePublicData() {
+/** データベースから組み立てる本体。ためておく版（loadSitePublicData）から呼ぶ */
+async function buildSitePublicData() {
   const [configRow, awards, newsRows, voiceRows, partnerRows, mediaRows] = await Promise.all([
     prisma.siteConfig.findUnique({ where: { id: 1 } }),
     prisma.award.findMany({ include: { siteSettings: true }, orderBy: { year: "desc" } }),
@@ -285,6 +289,7 @@ export async function loadSitePublicData() {
       ? {
           awardId: current.id,
           year: current.year,
+          name: current.name,
           edition: editionOf(current.year),
           entryStart: current.entryStartDate,
           entryEnd: current.entryEndDate,
@@ -328,3 +333,35 @@ export async function loadSitePublicData() {
     },
   };
 }
+
+// ためておく版。中身は JSON にして保存されるので、日付は文字列で戻ってくる — 下の reviveDates で Date に戻す
+const cachedSitePublicData = unstable_cache(buildSitePublicData, ["site-public-data"], {
+  revalidate: SITE_PUBLIC_REVALIDATE_SECONDS,
+  tags: [SITE_PUBLIC_TAG],
+});
+
+const toDate = (v: Date | string | null): Date | null => (v == null ? null : new Date(v));
+
+function reviveDates(d: SitePublicData): SitePublicData {
+  return {
+    ...d,
+    config: {
+      ...d.config,
+      bannerFrom: toDate(d.config.bannerFrom),
+      bannerTo: toDate(d.config.bannerTo),
+      privacyUpdatedAt: toDate(d.config.privacyUpdatedAt),
+    },
+    current: d.current
+      ? { ...d.current, entryStart: toDate(d.current.entryStart), entryEnd: toDate(d.current.entryEnd) }
+      : null,
+    featured: d.featured ? { ...d.featured, announceDate: toDate(d.featured.announceDate) } : null,
+    years: d.years.map((y) => ({ ...y, announceDate: toDate(y.announceDate) })),
+  };
+}
+
+/**
+ * 公開サイトに出す中身。最大10分ためておき、そのあいだはデータベースを読まない（src/lib/site-cache.ts）。
+ * 管理画面などで関係するデータを書き換えたら、すぐ捨てられて次の表示で読み直す。
+ * 1回の表示の中では1回だけ読む（ページ本体と generateMetadata が同時に呼ぶので、読み直しが重ならないように）
+ */
+export const loadSitePublicData = cache(async (): Promise<SitePublicData> => reviveDates(await cachedSitePublicData()));

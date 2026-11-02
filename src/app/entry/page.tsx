@@ -1,7 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { EntryForm } from "@/components/entry-form";
 import { loadSitePublicData } from "@/lib/site-public";
-import { siteAssetSrc } from "@/lib/site-collections-shared";
 import { FormButton } from "../web/_components/form-button";
 import { siteBase } from "@/lib/site-links";
 
@@ -39,10 +37,16 @@ function Notice({ title, message, home }: { title: string; message: string; home
 
 export default async function EntryPage() {
   const home = (await siteBase()) || "/";
-  const award = await prisma.award.findFirst({
-    where: { isActive: true },
-    select: { id: true, year: true, name: true, entryStartDate: true, entryEndDate: true },
-  });
+  // 募集中の年度・開催概要などは、ためておいた公開サイトの中身から読む（src/lib/site-cache.ts）
+  const site = await loadSitePublicData();
+  const current = site.current?.isActive ? site.current : null;
+  const award = current && {
+    id: current.awardId,
+    year: current.year,
+    name: current.name,
+    entryStartDate: current.entryStart,
+    entryEndDate: current.entryEnd,
+  };
 
   if (!award) {
     return <Notice home={home} title="現在エントリーを受け付けておりません" message="次回の募集開始までお待ちください。" />;
@@ -56,15 +60,12 @@ export default async function EntryPage() {
   }
 
   // 費用・審査の流れ・受賞特典は開催概要（サイト管理）から出す
-  const site = await loadSitePublicData();
   const { overview, forms, stats } = site;
   const today = todayJst();
   const daysLeft = award.entryEndDate ? Math.ceil((award.entryEndDate.getTime() - today.getTime()) / 86_400_000) : null;
   const fees = overview.fees.filter((f) => f.label && f.amount != null && f.from && f.to);
   const nowFee = fees.find((f) => today >= new Date(`${f.from}T00:00:00+09:00`) && today <= new Date(`${f.to}T00:00:00+09:00`));
-  const leaflet = siteAssetSrc(
-    (await prisma.siteAwardSettings.findUnique({ where: { awardId: award.id }, select: { leafletUrl: true } }))?.leafletUrl ?? "",
-  );
+  const leaflet = current.leafletUrl;
   const perks = overview.perks
     .split(/[／\n]/)
     .map((s) => s.trim())

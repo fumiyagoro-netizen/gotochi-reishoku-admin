@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
-import { siteAssetSrc } from "@/lib/site-collections-shared";
+import { loadSitePublicData } from "@/lib/site-public";
 
 /**
  * 公開サイトの各ページの検索・SNS 共有向けの情報（サーバー専用）。
@@ -8,10 +7,10 @@ import { siteAssetSrc } from "@/lib/site-collections-shared";
  */
 export const SITE_NAME = "日本全国！ご当地冷凍食品大賞";
 
-/** 管理画面の「バナー・サイト設定」で入れた OGP 画像（ページ固有の画像が無いときに使う） */
+/** 管理画面の「バナー・サイト設定」で入れた OGP 画像（ページ固有の画像が無いときに使う）。ためておいた公開サイトの中身から読む */
 export async function defaultOgImage(): Promise<string | undefined> {
-  const row = await prisma.siteConfig.findUnique({ where: { id: 1 }, select: { ogImageUrl: true } });
-  return row?.ogImageUrl ? siteAssetSrc(row.ogImageUrl) : undefined;
+  const { config } = await loadSitePublicData();
+  return config.ogImageUrl || undefined;
 }
 
 /** 長い文を説明文向けに1文〜120字ほどに縮める */
